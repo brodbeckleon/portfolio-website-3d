@@ -28,13 +28,13 @@
 		"prettier-plugin-svelte": "^3.4.0",
 		"svelte": "^5.41.0",
 		"svelte-check": "^4.3.3",
+		"three": "^0.181.1",
 		"typescript": "^5.9.3",
 		"typescript-eslint": "^8.46.1",
 		"vite": "^7.1.10"
 	},
 	"dependencies": {
 		"@types/three": "^0.181.0",
-		"three": "^0.181.1",
 		"three-stdlib": "^2.36.0"
 	}
 }
