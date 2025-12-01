@@ -7,5 +7,10 @@
 	"welcome_message_1": "こんにちは、私は<strong>{name}</strong>です。",
 	"welcome_message_2": "<strong>{place}</strong> のフルスタック開発者およびビジュアルアーティスト。",
 	"welcome_message_3": "ITおよびクリエイティブプロジェクトを実行します。",
-	"welcome_message_4": "コーヒーを飲んで<strong>さあ、仕事に取り掛かろう</strong>❗"
+	"welcome_message_4": "コーヒーを飲んで<strong>さあ、仕事に取り掛かろう</strong>❗",
+
+	"early_web": "初期ウェブ",
+	"frutiger_aero": "フルティガー・エアロ",
+	"modern_minimal": "モダン・ミニマル",
+	"liquid_glass": "リキッド・グラス"
 }

@@ -5,7 +5,7 @@
 
 <div class="layout">
     <div class="title-bar">
-        <TitleBar />
+        <TitleBar liquidGlass={true} />
     </div>
     <div class="container">
         <ThreePortfolio/>

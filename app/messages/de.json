@@ -7,5 +7,10 @@
 	"welcome_message_1": "Hallo, ich bin <strong>{name}</strong>.",
 	"welcome_message_2": "Ein Full-Stack-Entwickler und visueller Künstler in <strong>{place}</strong>.",
 	"welcome_message_3": "Ich setze IT- und Kreativprojekte um.",
-	"welcome_message_4": "Lass uns einen Kaffee trinken <strong>& loslegen</strong>❗"
+	"welcome_message_4": "Lass uns einen Kaffee trinken <strong>& loslegen</strong>❗",
+
+	"early_web": "Early Web",
+	"frutiger_aero": "Frutiger Aero",
+	"modern_minimal": "Modern Minimal",
+	"liquid_glass": "Liquid Glass"
 }
