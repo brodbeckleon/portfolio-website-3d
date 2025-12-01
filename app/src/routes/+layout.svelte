@@ -1,5 +1,6 @@
 <script lang="ts">
 	import favicon from '$lib/assets/favicon.svg';
+	import TitleBar from '../components/TitleBar.svelte';
 
 	let { children } = $props();
 </script>

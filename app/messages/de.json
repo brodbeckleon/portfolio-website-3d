@@ -1,0 +1,11 @@
+{
+	"$schema": "https://inlang.com/schema/inlang-message-format",
+
+	"leon_shinichi": "Léon Shin'ichi",
+	"zurich_switzerland": "Zürich, Schweiz",
+
+	"welcome_message_1": "Hallo, ich bin <strong>{name}</strong>.",
+	"welcome_message_2": "Ein Full-Stack-Entwickler und visueller Künstler in <strong>{place}</strong>.",
+	"welcome_message_3": "Ich setze IT- und Kreativprojekte um.",
+	"welcome_message_4": "Lass uns einen Kaffee trinken <strong>& loslegen</strong>❗"
+}
