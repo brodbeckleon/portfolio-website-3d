@@ -2,7 +2,8 @@
 	import * as THREE from 'three';
 	import { GLTFLoader } from 'three-stdlib';
 	import { OrbitControls } from 'three-stdlib';
-	import { DoubleSide, FrontSide, Mesh, MeshStandardMaterial, SkinnedMesh } from 'three';
+	import { FrontSide, Mesh, MeshStandardMaterial } from 'three';
+	import { goto } from '$app/navigation';
 
 	/**
 	 * Svelte Action for initializing the Three.js scene.
@@ -19,7 +20,7 @@
 		renderer.setSize(node.clientWidth, node.clientHeight);
 		renderer.shadowMap.enabled = true;
 		renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-		node.appendChild(renderer.domElement); // The action appends the canvas here
+		node.appendChild(renderer.domElement);
 
 		// --- Floor ---
 		const floorGeo = new THREE.PlaneGeometry(10, 10);
@@ -39,7 +40,7 @@
 		scene.add(directionalLight);
 
 		// --- Glowing point lights (off initially) ---
-		const cameraGlow = new THREE.PointLight(0xff8800, 0, 3, 2); // color, intensity, distance, decay
+		const cameraGlow = new THREE.PointLight(0xff8800, 0, 3, 2);
 		cameraGlow.position.set(-0.3, 0.5, 0);
 		cameraGlow.castShadow = true;
 		scene.add(cameraGlow);
@@ -63,17 +64,9 @@
 
 				if (child instanceof Mesh) {
 					const material = child.material as MeshStandardMaterial;
-
 					material.transparent = false;
-
-					// 2. Ensure it writes to the depth buffer, which opaque objects always should.
 					material.depthWrite = true;
-
-					// 3. Reset the 'side' property. If the normals are correct, this is best for performance.
-					// If the model disappears again, it means you have BOTH problems: transparency AND inverted normals.
-					material.side = FrontSide; // Use FrontSide as the default
-
-					// Force the material to update with these new properties
+					material.side = FrontSide;
 					material.needsUpdate = true;
 				}
 			});
@@ -88,7 +81,8 @@
 			scene.add(macbookModel);
 		});
 
-		// --- Controls ---
+		// --- Controls (optional - very limited movement) ---
+		// If you don't need any camera rotation, you can remove OrbitControls entirely
 		const controls = new OrbitControls(camera, renderer.domElement);
 		controls.enableDamping = true;
 		controls.dampingFactor = 0.05;
@@ -111,16 +105,20 @@
 		}
 
 		function onClick() {
-			if (hoveredObject) {
-				// Check the parent or grandparent, depending on the GLTF structure
-				if (hoveredObject.parent === cameraModel || hoveredObject.parent?.parent === cameraModel) {
-					focusOn(cameraModel!, 'photography');
-				} else if (
-					hoveredObject.parent === macbookModel ||
-					hoveredObject.parent?.parent === macbookModel
-				) {
-					focusOn(macbookModel!, 'computerscience');
+			if (!hoveredObject || !cameraModel || !macbookModel) return;
+
+			// Check if clicked object belongs to camera or macbook model
+			let current: THREE.Object3D | null = hoveredObject;
+			while (current) {
+				if (current === macbookModel) {
+					goto('/it');
+					return;
 				}
+				if (current === cameraModel) {
+					goto('/photography');
+					return;
+				}
+				current = current.parent;
 			}
 		}
 
@@ -137,28 +135,30 @@
 			animationFrameId = requestAnimationFrame(animate);
 			controls.update();
 
-			raycaster.setFromCamera(mouse, camera);
-			const models = [cameraModel, macbookModel].filter(Boolean) as THREE.Object3D[];
-
-			if (models.length > 0) {
-				const intersects = raycaster.intersectObjects(models, true);
+			// Only check hover if models are loaded
+			if (cameraModel && macbookModel) {
+				raycaster.setFromCamera(mouse, camera);
+				const intersects = raycaster.intersectObjects([cameraModel, macbookModel], true);
 
 				if (intersects.length > 0) {
-					const target = intersects[0].object;
-					hoveredObject = target;
+					hoveredObject = intersects[0].object;
 
 					// Traverse up to find the root model object
-					let parent = hoveredObject.parent;
-					while (parent && !models.includes(parent)) {
-						parent = parent.parent;
+					let current: THREE.Object3D | null = hoveredObject;
+					while (current && current !== cameraModel && current !== macbookModel) {
+						current = current.parent;
 					}
 
-					if (parent === cameraModel) {
+					if (current === cameraModel) {
 						cameraTargetIntensity = 2.5;
 						computerTargetIntensity = 0;
-					} else if (parent === macbookModel) {
+					} else if (current === macbookModel) {
 						cameraTargetIntensity = 0;
 						computerTargetIntensity = 2.5;
+					} else {
+						hoveredObject = null;
+						cameraTargetIntensity = 0;
+						computerTargetIntensity = 0;
 					}
 				} else {
 					hoveredObject = null;
@@ -182,31 +182,6 @@
 			renderer.render(scene, camera);
 		}
 
-		// --- Camera focus animation ---
-		function focusOn(obj: THREE.Object3D, portfolio: string) {
-			const targetPos = new THREE.Vector3();
-			obj.getWorldPosition(targetPos);
-			const start = camera.position.clone();
-			const end = targetPos.clone().add(new THREE.Vector3(0, 0.5, 2));
-
-			let progress = 0;
-			const duration = 1.2;
-			let focusAnimationId: number;
-
-			function move() {
-				progress += 0.02 / duration;
-				if (progress < 1) {
-					camera.position.lerpVectors(start, end, progress);
-					focusAnimationId = requestAnimationFrame(move);
-				} else {
-					camera.position.copy(end); // Ensure it ends at the exact position
-					console.log('Open portfolio:', portfolio);
-					// TODO: Trigger UI transition
-				}
-			}
-			move();
-		}
-
 		animate();
 
 		// --- Resize ---
@@ -220,15 +195,10 @@
 		// --- Cleanup ---
 		return {
 			destroy() {
-				// Stop the animation loop
 				cancelAnimationFrame(animationFrameId);
-
-				// Remove all event listeners
 				window.removeEventListener('mousemove', onMouseMove);
 				window.removeEventListener('click', onClick);
 				window.removeEventListener('resize', handleResize);
-
-				// Important: Dispose of Three.js objects to free up GPU memory
 				renderer.dispose();
 				controls.dispose();
 				scene.traverse((object) => {
@@ -242,8 +212,4 @@
 	};
 </script>
 
-<!--
-  Use the action on the div.
-  The 'onMount' and 'bind:this' are no longer needed.
--->
 <div use:threeSceneAction class="scene" style="width:100%; height:100vh;"></div>
