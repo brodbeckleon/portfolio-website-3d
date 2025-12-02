@@ -1,6 +1,13 @@
 <script lang="ts">
 	import { ChevronDown, Earth } from '@lucide/svelte';
 	import { getLocale, setLocale } from '$lib/paraglide/runtime';
+    import type {WebEras} from "$lib/Types.ts";
+
+    interface LanguageDropDownProps {
+        era: WebEras;
+    }
+
+    let { era }: LanguageDropDownProps = $props();
 
 	let showLangDropdown = $state(false);
 
@@ -25,9 +32,14 @@
 	let current = getLocale();
 </script>
 
-<div class="language-dropdown">
+<div class="language-dropdown"
+     class:liquid-glass={era === 'liquid_glass'}
+     class:early-web={era === 'early_web'}
+     class:frutiger-aero={era === 'frutiger_aero'}
+     class:modern-minimal={era === 'modern_minimal'}
+>
 	<button class="dropdown-btn" onclick={toggleDropdown}>
-		<Earth class="icon" />
+		<Earth class="icon" strokeWidth={2}/>
 		<span class="lang-label">{availableLocaleNames[current]}</span>
 		<ChevronDown class={showLangDropdown ? 'chevron rotated' : 'chevron'} />
 	</button>
@@ -121,5 +133,38 @@
 
 	:global(.chevron.rotated) {
 		transform: rotate(180deg);
+	}
+
+	/* Liquid Glass Styling */
+	.language-dropdown.liquid-glass .dropdown-btn {
+		background: rgba(255, 255, 255, 0.15);
+		backdrop-filter: blur(5px);
+		-webkit-backdrop-filter: blur(5px);
+		border: 1px solid rgba(255, 255, 255, 0.3);
+		border-radius: 9999px;
+		color: white;
+	}
+
+	.language-dropdown.liquid-glass .dropdown-btn:hover {
+		background: rgba(255, 255, 255, 0.25);
+		transform: scale(1.03);
+	}
+
+	.language-dropdown.liquid-glass .language-dropdown-menu {
+		background: rgba(255, 255, 255, 0.15);
+		backdrop-filter: blur(5px);
+		-webkit-backdrop-filter: blur(5px);
+		border: 1px solid rgba(255, 255, 255, 0.3);
+		border-radius: 15px;
+    }
+
+	.language-dropdown.liquid-glass .dropdown-item {
+		color: white;
+	}
+
+	.language-dropdown.liquid-glass .dropdown-item:hover {
+		background: rgba(255, 255, 255, 0.3);
+		color: white;
+		border-radius: 9999px;
 	}
 </style>

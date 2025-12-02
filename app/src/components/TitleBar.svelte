@@ -19,13 +19,13 @@
 	class:modern-minimal={era === 'modern_minimal'}
 >
 	<div class="title-bar_left">
-		<Socials />
+		<Socials era={era} />
 	</div>
 	<h1 class="main_title" class:liquid-glass={era === 'liquid_glass'}>
 		{m.leon_shinichi()}
 	</h1>
 	<div class="title-bar_right">
-		<LanguageDropDown />
+		<LanguageDropDown era={era} />
 	</div>
 </div>
 
@@ -33,16 +33,30 @@
 	.title-bar {
 		display: flex;
 		align-items: center;
-		padding: 0 1rem;
+		position: relative;
 		margin: 2rem auto;
 	}
 
+	.title-bar_left {
+		flex: 1;
+		display: flex;
+		align-items: center;
+		justify-content: flex-start;
+        margin-left: 1rem;
+	}
+
 	.title-bar_right {
-		margin-right: 1rem;
-		align-items: flex-end;
+		flex: 1;
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+        margin-right: 1rem;
 	}
 
 	.main_title {
+		position: absolute;
+		left: 50%;
+		transform: translateX(-50%);
 		text-align: center;
 	}
 
@@ -61,9 +75,12 @@
 		background: rgba(255, 255, 255, 0.15);
 		backdrop-filter: blur(5px);
 		-webkit-backdrop-filter: blur(5px);
-		border-radius: 16px;
+		border-radius: 9999px;
 		border: 1px solid rgba(255, 255, 255, 0.3);
-		padding: 1rem;
+		padding-top: 1rem;
+		padding-bottom: 1rem;
+		padding-left: 2rem;
+		padding-right: 2rem;
 	}
 
 	/* Early Web Era Styling */
