@@ -2,6 +2,7 @@
 	import { m } from '$lib/paraglide/messages';
 	import LanguageDropDown from './LanguageDropDown.svelte';
     import type {WebEras} from "$lib/Types.ts";
+    import Socials from "./Socials.svelte";
 
     interface TitleBarProps {
         era: WebEras;
@@ -11,10 +12,11 @@
 </script>
 
 <div class="title-bar" class:liquid-glass={era === 'liquid_glass'} class:early-web={era === 'early_web'} class:frutiger-aero={era === 'frutiger_aero'} class:modern-minimal={era === 'modern_minimal'}>
-	<div class="title-bar_left">
 
+    <div class="title-bar_left">
+        <Socials/>
     </div>
-    <h1 class="main_title">
+    <h1 class="main_title" class:liquid-glass={era === 'liquid_glass'}>
         {m.leon_shinichi()}
     </h1>
     <div class="title-bar_right">
@@ -24,53 +26,40 @@
 
 <style lang="css">
     .title-bar {
-        position: relative;
         display: flex;
         align-items: center;
-        justify-content: space-between;
         padding: 0 1rem;
         margin: 2rem auto;
     }
 
-    .main_title {
-        position: absolute;
-        left: 50%;
-        transform: translateX(-50%);
-    }
-
-	.title-bar {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-	}
     .title-bar_right {
-        margin-right: 5vw;
+        margin-right: 1rem;
+        align-items: flex-end;
     }
 
-	/* Liquid Glass Styling */
-	.title-bar.liquid-glass {
-		background: rgba(255, 255, 255, 0.1);
-		backdrop-filter: blur(20px) saturate(180%);
-		-webkit-backdrop-filter: blur(20px) saturate(180%);
-		border: 1px solid rgba(255, 255, 255, 0.2);
-		border-radius: 16px;
-		padding: 1rem 2rem;
-		box-shadow: 
-			0 8px 32px rgba(0, 0, 0, 0.1),
-			inset 0 1px 0 rgba(255, 255, 255, 0.3);
-	}
+    .main_title {
+        text-align: center;
+    }
 
-	.title-bar.liquid-glass .main_title {
-		color: rgba(255, 255, 255, 0.95);
-		text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-		font-weight: 300;
-		letter-spacing: 2px;
-	}
+    /* Liquid Glass Styling */
+    .title-bar.liquid-glass {
+        z-index: 1000;
+        width: 100%;
+        color: #fff;
+        position: fixed;
+    }
 
-	.title-bar.liquid-glass :global(.language-dropdown) {
-		backdrop-filter: blur(10px);
-		-webkit-backdrop-filter: blur(10px);
-	}
+    .main_title.liquid-glass {
+        font-family: "Helvetica Neue", sans-serif;
+        font-size: 3rem;
+        width: fit-content;
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+        border-radius: 16px;
+        border: 1px solid rgba(255,255,255,0.3);
+        padding: 1rem;
+    }
 
 	/* Early Web Era Styling */
 	.title-bar.early-web {
