@@ -180,6 +180,42 @@ import { GLTFLoader, OrbitControls, EffectComposer, RenderPass, UnrealBloomPass 
 		const angle = THREE.MathUtils.degToRad(60);
 		controls.minPolarAngle = angle;
 		controls.maxPolarAngle = angle;
+		const controlsRotationSpeed = 0.0012;
+		const orbitOffset = new THREE.Vector3();
+		const rotateAroundTarget = (delta: number) => {
+			orbitOffset.copy(camera.position).sub(controls.target);
+			const cos = Math.cos(delta);
+			const sin = Math.sin(delta);
+			const rotatedX = orbitOffset.x * cos - orbitOffset.z * sin;
+			const rotatedZ = orbitOffset.x * sin + orbitOffset.z * cos;
+			orbitOffset.x = rotatedX;
+			orbitOffset.z = rotatedZ;
+			camera.position.copy(controls.target).add(orbitOffset);
+			camera.lookAt(controls.target);
+		};
+
+		const dragThresholdSq = 25;
+		let pointerDownPos: { x: number; y: number } | null = null;
+		let suppressNextClick = false;
+		const handlePointerDown = (event: PointerEvent) => {
+			pointerDownPos = { x: event.clientX, y: event.clientY };
+			suppressNextClick = false;
+		};
+		const handlePointerMove = (event: PointerEvent) => {
+			if (!pointerDownPos) return;
+			const dx = event.clientX - pointerDownPos.x;
+			const dy = event.clientY - pointerDownPos.y;
+			if (dx * dx + dy * dy > dragThresholdSq) {
+				suppressNextClick = true;
+			}
+		};
+		const handlePointerUp = () => {
+			pointerDownPos = null;
+		};
+		renderer.domElement.addEventListener('pointerdown', handlePointerDown);
+		renderer.domElement.addEventListener('pointermove', handlePointerMove);
+		renderer.domElement.addEventListener('pointerup', handlePointerUp);
+		renderer.domElement.addEventListener('pointerleave', handlePointerUp);
 
 		// --- Hover Detection ---
 		const raycaster = new THREE.Raycaster();
@@ -193,7 +229,8 @@ import { GLTFLoader, OrbitControls, EffectComposer, RenderPass, UnrealBloomPass 
 		}
 
 		function onClick() {
-			if (!hoveredObject || !cameraModel || !macbookModel) return;
+			if (suppressNextClick || !hoveredObject || !cameraModel || !macbookModel) return;
+			suppressNextClick = false;
 
 			// Check if clicked object belongs to camera or macbook model
 			let current: THREE.Object3D | null = hoveredObject;
@@ -212,6 +249,12 @@ import { GLTFLoader, OrbitControls, EffectComposer, RenderPass, UnrealBloomPass 
 
 		window.addEventListener('mousemove', onMouseMove);
 		window.addEventListener('click', onClick);
+		const onWheel = (event: WheelEvent) => {
+			event.preventDefault();
+			rotateAroundTarget(event.deltaY * controlsRotationSpeed);
+			controls.update();
+		};
+		renderer.domElement.addEventListener('wheel', onWheel, { passive: false });
 
 		// --- Highlight Animation States ---
 		let cameraTargetHighlight = 0;
@@ -300,6 +343,11 @@ import { GLTFLoader, OrbitControls, EffectComposer, RenderPass, UnrealBloomPass 
 				window.removeEventListener('mousemove', onMouseMove);
 				window.removeEventListener('click', onClick);
 				window.removeEventListener('resize', handleResize);
+				renderer.domElement.removeEventListener('wheel', onWheel);
+				renderer.domElement.removeEventListener('pointerdown', handlePointerDown);
+				renderer.domElement.removeEventListener('pointermove', handlePointerMove);
+				renderer.domElement.removeEventListener('pointerup', handlePointerUp);
+				renderer.domElement.removeEventListener('pointerleave', handlePointerUp);
 				renderer.dispose();
 				controls.dispose();
 				scene.traverse((object) => {
