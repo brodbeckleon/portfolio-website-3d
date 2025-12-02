@@ -19,13 +19,13 @@
 	class:modern-minimal={era === 'modern_minimal'}
 >
 	<div class="title-bar_left">
-		<Socials era={era} />
+		<Socials {era} />
 	</div>
 	<h1 class="main_title" class:liquid-glass={era === 'liquid_glass'}>
 		{m.leon_shinichi()}
 	</h1>
 	<div class="title-bar_right">
-		<LanguageDropDown era={era} />
+		<LanguageDropDown {era} />
 	</div>
 </div>
 
@@ -42,7 +42,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: flex-start;
-        margin-left: 1rem;
+		margin-left: 1rem;
 	}
 
 	.title-bar_right {
@@ -50,7 +50,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: flex-end;
-        margin-right: 1rem;
+		margin-right: 1rem;
 	}
 
 	.main_title {
