@@ -1,65 +1,70 @@
 <script lang="ts">
 	import { m } from '$lib/paraglide/messages';
 	import LanguageDropDown from './LanguageDropDown.svelte';
-    import type {WebEras} from "$lib/Types.ts";
-    import Socials from "./Socials.svelte";
+	import type { WebEras } from '$lib/Types.ts';
+	import Socials from './Socials.svelte';
 
-    interface TitleBarProps {
-        era: WebEras;
-    }
+	interface TitleBarProps {
+		era: WebEras;
+	}
 
 	let { era }: TitleBarProps = $props();
 </script>
 
-<div class="title-bar" class:liquid-glass={era === 'liquid_glass'} class:early-web={era === 'early_web'} class:frutiger-aero={era === 'frutiger_aero'} class:modern-minimal={era === 'modern_minimal'}>
-
-    <div class="title-bar_left">
-        <Socials/>
-    </div>
-    <h1 class="main_title" class:liquid-glass={era === 'liquid_glass'}>
-        {m.leon_shinichi()}
-    </h1>
-    <div class="title-bar_right">
-        <LanguageDropDown />
-    </div>
+<div
+	class="title-bar"
+	class:liquid-glass={era === 'liquid_glass'}
+	class:early-web={era === 'early_web'}
+	class:frutiger-aero={era === 'frutiger_aero'}
+	class:modern-minimal={era === 'modern_minimal'}
+>
+	<div class="title-bar_left">
+		<Socials />
+	</div>
+	<h1 class="main_title" class:liquid-glass={era === 'liquid_glass'}>
+		{m.leon_shinichi()}
+	</h1>
+	<div class="title-bar_right">
+		<LanguageDropDown />
+	</div>
 </div>
 
 <style lang="css">
-    .title-bar {
-        display: flex;
-        align-items: center;
-        padding: 0 1rem;
-        margin: 2rem auto;
-    }
+	.title-bar {
+		display: flex;
+		align-items: center;
+		padding: 0 1rem;
+		margin: 2rem auto;
+	}
 
-    .title-bar_right {
-        margin-right: 1rem;
-        align-items: flex-end;
-    }
+	.title-bar_right {
+		margin-right: 1rem;
+		align-items: flex-end;
+	}
 
-    .main_title {
-        text-align: center;
-    }
+	.main_title {
+		text-align: center;
+	}
 
-    /* Liquid Glass Styling */
-    .title-bar.liquid-glass {
-        z-index: 1000;
-        width: 100%;
-        color: #fff;
-        position: fixed;
-    }
+	/* Liquid Glass Styling */
+	.title-bar.liquid-glass {
+		z-index: 1000;
+		width: 100%;
+		color: #fff;
+		position: fixed;
+	}
 
-    .main_title.liquid-glass {
-        font-family: "Helvetica Neue", sans-serif;
-        font-size: 3rem;
-        width: fit-content;
-        background: rgba(255, 255, 255, 0.15);
-        backdrop-filter: blur(5px);
-        -webkit-backdrop-filter: blur(5px);
-        border-radius: 16px;
-        border: 1px solid rgba(255,255,255,0.3);
-        padding: 1rem;
-    }
+	.main_title.liquid-glass {
+		font-family: 'Helvetica Neue', sans-serif;
+		font-size: 3rem;
+		width: fit-content;
+		background: rgba(255, 255, 255, 0.15);
+		backdrop-filter: blur(5px);
+		-webkit-backdrop-filter: blur(5px);
+		border-radius: 16px;
+		border: 1px solid rgba(255, 255, 255, 0.3);
+		padding: 1rem;
+	}
 
 	/* Early Web Era Styling */
 	.title-bar.early-web {
@@ -67,14 +72,14 @@
 		border: 3px solid #000;
 		border-radius: 0;
 		padding: 0.5rem 1rem;
-		box-shadow: 
+		box-shadow:
 			4px 4px 0px #000,
 			inset 0 0 20px rgba(0, 0, 0, 0.1);
 	}
 
 	.title-bar.early-web .main_title {
 		color: #ffff00;
-		text-shadow: 
+		text-shadow:
 			2px 2px 0px #000,
 			-1px -1px 0px #000,
 			1px -1px 0px #000,
@@ -104,7 +109,7 @@
 		border: 2px solid rgba(255, 255, 255, 0.5);
 		border-radius: 20px;
 		padding: 1rem 2rem;
-		box-shadow: 
+		box-shadow:
 			0 10px 30px rgba(135, 206, 250, 0.3),
 			inset 0 1px 0 rgba(255, 255, 255, 0.6),
 			inset 0 -1px 0 rgba(0, 0, 0, 0.1);
@@ -114,7 +119,7 @@
 
 	.title-bar.frutiger-aero .main_title {
 		color: #1a5490;
-		text-shadow: 
+		text-shadow:
 			0 2px 4px rgba(255, 255, 255, 0.8),
 			0 -1px 2px rgba(0, 0, 0, 0.2);
 		font-weight: 600;

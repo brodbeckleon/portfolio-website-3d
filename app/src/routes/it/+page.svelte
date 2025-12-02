@@ -1,7 +1,7 @@
 <script lang="ts">
 	import ThreeStateToggle from '../../components/ThreeStateToggle.svelte';
 	import TitleBar from '../../components/TitleBar.svelte';
-    import type { WebEras } from "$lib/Types.ts";
+	import type { WebEras } from '$lib/Types.ts';
 
 	let web_era: WebEras = $derived('frutiger_aero');
 </script>

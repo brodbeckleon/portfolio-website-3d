@@ -1,11 +1,11 @@
 <script>
 	import ThreePortfolio from '../components/ThreePortfolio.svelte';
-    import TitleBar from "../components/TitleBar.svelte";
+	import TitleBar from '../components/TitleBar.svelte';
 </script>
 
 <div class="home-page">
-    <TitleBar era="liquid_glass" />
-    <ThreePortfolio/>
+	<TitleBar era="liquid_glass" />
+	<ThreePortfolio />
 </div>
 
 <style lang="css">

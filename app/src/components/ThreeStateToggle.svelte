@@ -1,25 +1,22 @@
 <script lang="ts">
+	import type { WebEras } from '$lib/Types.ts';
+	import { web_era_labels, toggleable_eras } from '$lib/Types.ts';
 
-	import type {WebEras} from "$lib/Types.ts";
-    import { web_era_labels, toggleable_eras } from "$lib/Types.ts";
-
-    let { web_era = $bindable('frutiger_aero' as WebEras) } = $props();
+	let { web_era = $bindable('frutiger_aero' as WebEras) } = $props();
 
 	function selectEra(era: WebEras) {
 		web_era = era;
 	}
 </script>
 
-<div class="toggle" 
+<div
+	class="toggle"
 	class:early-web={web_era === 'early_web'}
 	class:frutiger-aero={web_era === 'frutiger_aero'}
 	class:modern-minimal={web_era === 'modern_minimal'}
 >
 	{#each toggleable_eras as era}
-		<button 
-			class:selected={web_era === era}
-			onclick={() => selectEra(era)}
-		>
+		<button class:selected={web_era === era} onclick={() => selectEra(era)}>
 			{web_era_labels[era]}
 		</button>
 	{/each}
@@ -71,7 +68,7 @@
 	.toggle.early-web button.selected {
 		background: #ffff00;
 		color: #000;
-		text-shadow: 
+		text-shadow:
 			1px 1px 0px #000,
 			-1px -1px 0px #000;
 		box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
@@ -82,7 +79,7 @@
 		border: 2px solid rgba(255, 255, 255, 0.5);
 		border-radius: 20px;
 		background: linear-gradient(135deg, rgba(135, 206, 250, 0.8) 0%, rgba(176, 224, 230, 0.8) 100%);
-		box-shadow: 
+		box-shadow:
 			0 10px 30px rgba(135, 206, 250, 0.3),
 			inset 0 1px 0 rgba(255, 255, 255, 0.6),
 			inset 0 -1px 0 rgba(0, 0, 0, 0.1);
@@ -110,10 +107,10 @@
 		background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(240, 248, 255, 0.9) 100%);
 		color: #1a5490;
 		font-weight: 600;
-		text-shadow: 
+		text-shadow:
 			0 1px 2px rgba(255, 255, 255, 0.8),
 			0 -1px 1px rgba(0, 0, 0, 0.1);
-		box-shadow: 
+		box-shadow:
 			0 4px 8px rgba(135, 206, 250, 0.2),
 			inset 0 1px 0 rgba(255, 255, 255, 0.8);
 	}
