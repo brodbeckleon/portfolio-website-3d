@@ -44,7 +44,7 @@
 		display: flex;
 		align-items: center;
 		position: relative;
-		margin: 2rem auto;
+		margin: 3rem auto;
 	}
 
 	.title-bar_left {

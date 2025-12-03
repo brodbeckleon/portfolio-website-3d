@@ -9,6 +9,9 @@
 		UnrealBloomPass
 	} from 'three-stdlib';
 	import { goto } from '$app/navigation';
+	import { m } from '$lib/paraglide/messages';
+
+	const isHelperNeeded: boolean = false; //for testing purposes. shows where the desklamp is
 
 	/**
 	 * Svelte Action for initializing the Three.js scene.
@@ -36,42 +39,117 @@
 			0.3,
 			0.85
 		);
-		bloomPass.threshold = 0.5;
-		bloomPass.strength = 1.1;
-		bloomPass.radius = 0.5;
+
+		bloomPass.strength = 0.7;
+		bloomPass.radius = 0.3;
+		bloomPass.threshold = 0.7;
 		composer.addPass(bloomPass);
 
 		// --- Floor ---
 		const floorGeo = new THREE.PlaneGeometry(10, 10);
-		const floorMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a });
+		const floorMat = new THREE.MeshStandardMaterial({
+			color: 0x2a1e15, // Rich dark brown
+			roughness: 0.9,
+			metalness: 0.1
+		});
 		const floor = new THREE.Mesh(floorGeo, floorMat);
 		floor.rotation.x = -Math.PI / 2;
 		floor.receiveShadow = true;
 		scene.add(floor);
 
 		// --- Lights ---
-		const ambient = new THREE.AmbientLight(0xffffff, 1.5);
+		const ambient = new THREE.AmbientLight(0x3d342a, 0.4);
 		scene.add(ambient);
 
-		const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-		directionalLight.position.set(5, 10, 7.5);
+		const directionalLight = new THREE.DirectionalLight(0xffd5a5, 2.8);
+		directionalLight.position.set(0, 1.8, 0.5);
 		directionalLight.castShadow = true;
+		directionalLight.shadow.mapSize.width = 1024;
+		directionalLight.shadow.mapSize.height = 1024;
+		directionalLight.shadow.camera.near = 0.2;
+		directionalLight.shadow.camera.left = -1.5;
+		directionalLight.shadow.camera.right = 1.5;
+		directionalLight.shadow.camera.top = 1.5;
+		directionalLight.shadow.camera.bottom = -1.5;
+		directionalLight.shadow.camera.far = 5;
 		scene.add(directionalLight);
 
+		const lightTarget = new THREE.Object3D();
+		lightTarget.position.set(0.2, 0.3, -0.6);
+		scene.add(lightTarget);
+		directionalLight.target = lightTarget;
+
+		const deskLampSpotLight = new THREE.SpotLight(0xffe0a0, 1, 0, Math.PI / 3, 0.9, 1); //color, itensity, distance, angle, pneumbra, decay
+		deskLampSpotLight.position.set(-0.48, 0.55, -0.37);
+		deskLampSpotLight.castShadow = true;
+		deskLampSpotLight.shadow.mapSize.width = 512;
+		deskLampSpotLight.shadow.mapSize.height = 512;
+		deskLampSpotLight.shadow.intensity = 2;
+		scene.add(deskLampSpotLight);
+
+		const deskLampPointLight = new THREE.PointLight(0xffe0a0, 0.3, 4);
+		deskLampPointLight.position.set(
+			deskLampSpotLight.position.x,
+			deskLampSpotLight.position.y,
+			deskLampSpotLight.position.z
+		);
+		deskLampPointLight.castShadow = false;
+		scene.add(deskLampPointLight);
+
+		if (isHelperNeeded) {
+			const helper = new THREE.SpotLightHelper(deskLampSpotLight, 0.1);
+			scene.add(helper);
+
+			const helper2 = new THREE.PointLightHelper(deskLampPointLight, 0.1, 0xff0000);
+			scene.add(helper2);
+		}
+
 		// --- Text Labels ---
-		function createTextTexture(text: string, fontSize: number = 32): THREE.CanvasTexture {
+		function stripHtml(html: string): string {
+			const tmp = document.createElement('div');
+			tmp.innerHTML = html;
+			return tmp.textContent || tmp.innerText || '';
+		}
+
+		function createTextTexture(
+			text: string,
+			fontSize: number = 32,
+			fillColor: string = '#111111',
+			textAlignment: CanvasTextAlign = 'center',
+			isBold: boolean = false
+		): THREE.CanvasTexture {
+			const cleanText = stripHtml(text);
+
+			const lines = cleanText.split('\n');
+			const lineHeight = fontSize * 1.5;
+			const canvasWidth = 1024;
+			const canvasHeight = Math.max(256, lines.length * lineHeight + 40);
+
 			const canvas = document.createElement('canvas');
 			const context = canvas.getContext('2d')!;
-			canvas.width = 512;
-			canvas.height = 128;
+			canvas.width = canvasWidth;
+			canvas.height = canvasHeight;
 
-			context.fillStyle = '#111111'; // Dark gray
-			context.font = `bold ${fontSize}px Helvetica Neue`;
-			context.textAlign = 'center';
+			context.clearRect(0, 0, canvasWidth, canvasHeight);
+
+			context.fillStyle = fillColor;
+			context.font = `${isBold ? 'bold ' : ''}${fontSize}px Helvetica Neue, Arial, sans-serif`;
+			context.textAlign = textAlignment;
 			context.textBaseline = 'middle';
-			context.fillText(text, canvas.width / 2, canvas.height / 2);
 
-			return new THREE.CanvasTexture(canvas);
+			const startY = canvasHeight / 2 - ((lines.length - 1) * lineHeight) / 2;
+
+			const xPosition = textAlignment === 'right' ? canvasWidth - 40 : canvasWidth / 2;
+
+			lines.forEach((line, index) => {
+				context.fillText(line, xPosition, startY + index * lineHeight);
+			});
+
+			const texture = new THREE.CanvasTexture(canvas);
+			texture.minFilter = THREE.LinearFilter;
+			texture.magFilter = THREE.LinearFilter;
+			texture.generateMipmaps = false;
+			return texture;
 		}
 
 		const TEXT_BASE_EMISSIVE = 0;
@@ -85,30 +163,33 @@
 			height: number = 0.3,
 			rotation: number = 0,
 			heightOffset: number = 0.01,
-			renderOrder: number = 0
+			renderOrder: number = 0,
+			fillColor: string = '#111111',
+			textAlignment: CanvasTextAlign = 'center',
+			isBold: boolean = false,
+			fontSize: number = 28
 		): THREE.Mesh {
-			const texture = createTextTexture(text);
-			texture.needsUpdate = true;
+			const texture = createTextTexture(text, fontSize, fillColor, textAlignment, isBold);
 
 			const material = new THREE.MeshStandardMaterial({
 				map: texture,
 				transparent: true,
-				emissive: 0x000000,
-				emissiveIntensity: 0,
 				depthWrite: true,
+				side: THREE.DoubleSide,
 				polygonOffset: true,
-				polygonOffsetFactor: renderOrder === 0 ? -1 : 1,
-				polygonOffsetUnits: renderOrder === 0 ? -1 : 1
+				polygonOffsetFactor: -1,
+				polygonOffsetUnits: -1
 			});
 
-			material.toneMapped = false;
-			material.emissiveIntensity = TEXT_BASE_EMISSIVE;
+			const aspectRatio = texture.image.width / texture.image.height;
+			const adjustedWidth = height * aspectRatio;
 
-			const geometry = new THREE.PlaneGeometry(width, height);
+			const geometry = new THREE.PlaneGeometry(adjustedWidth, height);
 			const plane = new THREE.Mesh(geometry, material);
+
 			plane.rotation.x = -Math.PI / 2;
 			plane.position.copy(position);
-			plane.position.y = heightOffset; // Slightly above floor to avoid z-fighting
+			plane.position.y = heightOffset;
 			plane.rotateZ(rotation);
 			plane.renderOrder = renderOrder;
 
@@ -116,25 +197,61 @@
 			return plane;
 		}
 
+		// Photography text
 		const photographyText = createTextPlane(
-			'photography',
-			new THREE.Vector3(-0.5, 0, 0.1),
+			m.photography(),
+			new THREE.Vector3(-0.45, 0, 0),
 			scene,
 			1.2,
-			0.3,
-			(Math.PI / 180) * -30,
-			0.02,
-			1
+			0.2,
+			(Math.PI / 180) * 30,
+			0.001,
+			1,
+			'#111111',
+			'center',
+			true,
+			80
 		);
+
+		// IT text
 		const itText = createTextPlane(
-			'information technology',
-			new THREE.Vector3(0.3, 0, 0.3),
+			m.information_technology(),
+			new THREE.Vector3(0.2, 0, -0.15),
 			scene,
 			1.2,
-			0.3,
+			0.2,
 			0,
-			0.03,
-			2
+			0.002,
+			2,
+			'#111111',
+			'center',
+			true,
+			80
+		);
+
+		// Welcome text - properly formatted
+		const welcomeTextString =
+			m.welcome_message_1({ name: m.leon_shinichi() }) +
+			'\n' +
+			m.welcome_message_2({ place: m.zurich_switzerland() }) +
+			'\n' +
+			m.welcome_message_3() +
+			'\n' +
+			m.welcome_message_4();
+
+		createTextPlane(
+			welcomeTextString,
+			new THREE.Vector3(0.08, 0, 0.15),
+			scene,
+			1.5,
+			0.6,
+			(Math.PI / 180) * 25,
+			0.003,
+			3,
+			'#FFFFFF',
+			'center',
+			false,
+			14
 		);
 
 		const CAMERA_HIGHLIGHT_COLOR = new THREE.Color(0xff8800);
@@ -167,13 +284,15 @@
 
 		const loader = new GLTFLoader();
 		let cameraModel: THREE.Object3D;
-		let macbookModel: THREE.Object3D;
+		let macintoshModel: THREE.Object3D;
+		let deskLampModel: THREE.Object3D;
+		let coffeeMugModel: THREE.Object3D;
 
 		loader.load('/models/camera.glb', (gltf) => {
 			cameraModel = gltf.scene;
-			cameraModel.position.set(-0.3, 0, 0);
+			cameraModel.position.set(-0.5, 0, -0.2);
 			cameraModel.scale.set(1.7, 1.7, 1.7);
-			cameraModel.rotation.y = (Math.PI / 180) * -30;
+			cameraModel.rotation.y = (Math.PI / 180) * 40;
 
 			cameraModel.traverse((child) => {
 				child.castShadow = true;
@@ -196,9 +315,9 @@
 		});
 
 		loader.load('/models/computer.glb', (gltf) => {
-			macbookModel = gltf.scene;
-			macbookModel.position.set(0.3, 0, 0);
-			macbookModel.traverse((obj) => {
+			macintoshModel = gltf.scene;
+			macintoshModel.position.set(0.3, 0, -0.5);
+			macintoshModel.traverse((obj) => {
 				obj.castShadow = true;
 				if (obj instanceof Mesh) {
 					computerHighlightMeshes.push(obj);
@@ -209,11 +328,31 @@
 					}
 				}
 			});
-			scene.add(macbookModel);
+			scene.add(macintoshModel);
 		});
 
-		// --- Controls (optional - very limited movement) ---
-		// If you don't need any camera rotation, you can remove OrbitControls entirely
+		loader.load('/models/desk_lamp.glb', (gltf) => {
+			deskLampModel = gltf.scene;
+			deskLampModel.position.set(-0.7, 0, -0.5);
+			deskLampModel.scale.set(0.55, 0.55, 0.55);
+			deskLampModel.rotation.y = (Math.PI / 180) * 60;
+			deskLampModel.traverse((obj) => {
+				obj.castShadow = true;
+			});
+			scene.add(deskLampModel);
+		});
+
+		loader.load('/models/coffee_cup.glb', (gltf) => {
+			coffeeMugModel = gltf.scene;
+			coffeeMugModel.position.set(0.6, 0, -0.25);
+			coffeeMugModel.rotation.y = (Math.PI / 180) * 150;
+			coffeeMugModel.traverse((obj) => {
+				obj.castShadow = true;
+			});
+			scene.add(coffeeMugModel);
+		});
+
+		// --- Controls ---
 		const controls = new OrbitControls(camera, renderer.domElement);
 		controls.enableDamping = true;
 		controls.dampingFactor = 0.05;
@@ -272,13 +411,12 @@
 		}
 
 		function onClick() {
-			if (suppressNextClick || !hoveredObject || !cameraModel || !macbookModel) return;
+			if (suppressNextClick || !hoveredObject || !cameraModel || !macintoshModel) return;
 			suppressNextClick = false;
 
-			// Check if clicked object belongs to camera or macbook model
 			let current: THREE.Object3D | null = hoveredObject;
 			while (current) {
-				if (current === macbookModel) {
+				if (current === macintoshModel) {
 					goto('/it');
 					return;
 				}
@@ -311,24 +449,22 @@
 			animationFrameId = requestAnimationFrame(animate);
 			controls.update();
 
-			// Only check hover if models are loaded
-			if (cameraModel && macbookModel) {
+			if (cameraModel && macintoshModel) {
 				raycaster.setFromCamera(mouse, camera);
-				const intersects = raycaster.intersectObjects([cameraModel, macbookModel], true);
+				const intersects = raycaster.intersectObjects([cameraModel, macintoshModel], true);
 
 				if (intersects.length > 0) {
 					hoveredObject = intersects[0].object;
 
-					// Traverse up to find the root model object
 					let current: THREE.Object3D | null = hoveredObject;
-					while (current && current !== cameraModel && current !== macbookModel) {
+					while (current && current !== cameraModel && current !== macintoshModel) {
 						current = current.parent;
 					}
 
 					if (current === cameraModel) {
 						cameraTargetHighlight = 1;
 						computerTargetHighlight = 0;
-					} else if (current === macbookModel) {
+					} else if (current === macintoshModel) {
 						cameraTargetHighlight = 0;
 						computerTargetHighlight = 1;
 					} else {
@@ -343,14 +479,12 @@
 				}
 			}
 
-			// Smooth highlight transitions
 			cameraHighlight += (cameraTargetHighlight - cameraHighlight) * 0.08;
 			computerHighlight += (computerTargetHighlight - computerHighlight) * 0.08;
 
 			updateMeshesHighlight(cameraHighlightMeshes, CAMERA_HIGHLIGHT_COLOR, cameraHighlight);
 			updateMeshesHighlight(computerHighlightMeshes, COMPUTER_HIGHLIGHT_COLOR, computerHighlight);
 
-			// Update text glow based on hover state
 			const photographyMaterial = photographyText.material as MeshStandardMaterial;
 			const itMaterial = itText.material as MeshStandardMaterial;
 
@@ -401,6 +535,7 @@
 						object.material.dispose();
 					}
 				});
+				if (lightTarget) scene.remove(lightTarget); // Cleanup light target
 			}
 		};
 	};
