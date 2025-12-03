@@ -4,7 +4,7 @@
 </script>
 
 <div class="home-page">
-	<TitleBar era="liquid_glass" />
+	<TitleBar era="glassmorphism" />
 	<ThreePortfolio />
 </div>
 

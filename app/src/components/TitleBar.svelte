@@ -3,17 +3,22 @@
 	import LanguageDropDown from './LanguageDropDown.svelte';
 	import type { WebEras } from '$lib/Types.ts';
 	import Socials from './Socials.svelte';
+	import { goto } from '$app/navigation';
 
 	interface TitleBarProps {
 		era: WebEras;
 	}
 
 	let { era }: TitleBarProps = $props();
+
+	function returnToHomepage() {
+		goto('/');
+	}
 </script>
 
 <div
 	class="title-bar"
-	class:liquid-glass={era === 'liquid_glass'}
+	class:glassmorphism={era === 'glassmorphism'}
 	class:early-web={era === 'early_web'}
 	class:frutiger-aero={era === 'frutiger_aero'}
 	class:modern-minimal={era === 'modern_minimal'}
@@ -21,7 +26,12 @@
 	<div class="title-bar_left">
 		<Socials {era} />
 	</div>
-	<h1 class="main_title" class:liquid-glass={era === 'liquid_glass'}>
+	<h1
+		class="main_title"
+		class:glassmorphism={era === 'glassmorphism'}
+		aria-label={m.return_to_homepage()}
+		onclick={() => returnToHomepage()}
+	>
 		{m.leon_shinichi()}
 	</h1>
 	<div class="title-bar_right">
@@ -58,29 +68,59 @@
 		left: 50%;
 		transform: translateX(-50%);
 		text-align: center;
+		cursor: pointer;
 	}
 
-	/* Liquid Glass Styling */
-	.title-bar.liquid-glass {
+	/* Glassmorphism Styling */
+	.title-bar.glassmorphism {
 		z-index: 1000;
 		width: 100%;
 		color: #fff;
 		position: fixed;
 	}
 
-	.main_title.liquid-glass {
+	.main_title.glassmorphism {
 		font-family: 'Helvetica Neue', sans-serif;
 		font-size: 3rem;
 		width: fit-content;
-		background: rgba(255, 255, 255, 0.15);
-		backdrop-filter: blur(5px);
-		-webkit-backdrop-filter: blur(5px);
+
+		background: rgba(255, 255, 255, 0.1);
+		backdrop-filter: blur(10px);
+		-webkit-backdrop-filter: blur(10px);
 		border-radius: 9999px;
 		border: 1px solid rgba(255, 255, 255, 0.3);
-		padding-top: 1rem;
-		padding-bottom: 1rem;
-		padding-left: 2rem;
-		padding-right: 2rem;
+		box-shadow:
+			0 8px 32px rgba(0, 0, 0, 0.1),
+			inset 0 1px 0 rgba(200, 200, 200, 0.5),
+			inset 0 -1px 0 rgba(200, 200, 200, 0.1),
+			inset 0 0 5px 2px rgba(200, 200, 200, 0.5);
+		overflow: hidden !important;
+		padding: 1rem 2rem;
+	}
+
+	.main_title.glassmorphism::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		height: 1px;
+		background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+	}
+
+	.main_title.glassmorphism::after {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 1px;
+		height: 100%;
+		background: linear-gradient(
+			180deg,
+			rgba(255, 255, 255, 0.8),
+			transparent,
+			rgba(255, 255, 255, 0.3)
+		);
 	}
 
 	/* Early Web Era Styling */
@@ -90,17 +130,17 @@
 		border-radius: 0;
 		padding: 0.5rem 1rem;
 		box-shadow:
-			4px 4px 0px #000,
+			4px 4px 0 #000,
 			inset 0 0 20px rgba(0, 0, 0, 0.1);
 	}
 
 	.title-bar.early-web .main_title {
 		color: #ffff00;
 		text-shadow:
-			2px 2px 0px #000,
-			-1px -1px 0px #000,
-			1px -1px 0px #000,
-			-1px 1px 0px #000;
+			2px 2px 0 #000,
+			-1px -1px 0 #000,
+			1px -1px 0 #000,
+			-1px 1px 0 #000;
 		font-family: 'Courier New', monospace;
 		font-weight: 900;
 		text-transform: uppercase;
@@ -117,7 +157,7 @@
 	.title-bar.early-web :global(.language-dropdown .dropdown-btn:hover) {
 		background: #ffeb3b;
 		transform: translate(2px, 2px);
-		box-shadow: 2px 2px 0px #000;
+		box-shadow: 2px 2px 0 #000;
 	}
 
 	/* Frutiger Aero Era Styling */

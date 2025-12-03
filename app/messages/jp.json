@@ -12,7 +12,8 @@
 	"early_web": "初期ウェブ",
 	"frutiger_aero": "フルティガー・エアロ",
 	"modern_minimal": "モダン・ミニマル",
-	"liquid_glass": "リキッド・グラス",
+	"glassmorphism": "グラスモルフィスム",
 
-	"open_link": "{website_name}のリンクを開く"
+	"open_link": "{website_name}のリンクを開く",
+	"return_to_homepage": "ホームページに戻る"
 }

@@ -1,7 +1,13 @@
 <script lang="ts">
-import * as THREE from 'three';
-import { FrontSide, Mesh, MeshStandardMaterial } from 'three';
-import { GLTFLoader, OrbitControls, EffectComposer, RenderPass, UnrealBloomPass } from 'three-stdlib';
+	import * as THREE from 'three';
+	import { FrontSide, Mesh, MeshStandardMaterial } from 'three';
+	import {
+		GLTFLoader,
+		OrbitControls,
+		EffectComposer,
+		RenderPass,
+		UnrealBloomPass
+	} from 'three-stdlib';
 	import { goto } from '$app/navigation';
 
 	/**
@@ -24,7 +30,12 @@ import { GLTFLoader, OrbitControls, EffectComposer, RenderPass, UnrealBloomPass 
 		const composer = new EffectComposer(renderer);
 		const renderPass = new RenderPass(scene, camera);
 		composer.addPass(renderPass);
-		const bloomPass = new UnrealBloomPass(new THREE.Vector2(node.clientWidth, node.clientHeight), 0.9, 0.3, 0.85);
+		const bloomPass = new UnrealBloomPass(
+			new THREE.Vector2(node.clientWidth, node.clientHeight),
+			0.9,
+			0.3,
+			0.85
+		);
 		bloomPass.threshold = 0.5;
 		bloomPass.strength = 1.1;
 		bloomPass.radius = 0.5;
@@ -53,20 +64,32 @@ import { GLTFLoader, OrbitControls, EffectComposer, RenderPass, UnrealBloomPass 
 			const context = canvas.getContext('2d')!;
 			canvas.width = 512;
 			canvas.height = 128;
-			
+
 			context.fillStyle = '#111111'; // Dark gray
 			context.font = `bold ${fontSize}px Helvetica Neue`;
 			context.textAlign = 'center';
 			context.textBaseline = 'middle';
 			context.fillText(text, canvas.width / 2, canvas.height / 2);
-			
+
 			return new THREE.CanvasTexture(canvas);
 		}
 
-		function createTextPlane(text: string, position: THREE.Vector3, scene: THREE.Scene, width: number = 1.2, height: number = 0.3, rotation: number = 0, heightOffset: number = 0.01, renderOrder: number = 0): THREE.Mesh {
+		const TEXT_BASE_EMISSIVE = 0;
+		const TEXT_BLOOM_MULTIPLIER = 3;
+
+		function createTextPlane(
+			text: string,
+			position: THREE.Vector3,
+			scene: THREE.Scene,
+			width: number = 1.2,
+			height: number = 0.3,
+			rotation: number = 0,
+			heightOffset: number = 0.01,
+			renderOrder: number = 0
+		): THREE.Mesh {
 			const texture = createTextTexture(text);
 			texture.needsUpdate = true;
-			
+
 			const material = new THREE.MeshStandardMaterial({
 				map: texture,
 				transparent: true,
@@ -77,7 +100,10 @@ import { GLTFLoader, OrbitControls, EffectComposer, RenderPass, UnrealBloomPass 
 				polygonOffsetFactor: renderOrder === 0 ? -1 : 1,
 				polygonOffsetUnits: renderOrder === 0 ? -1 : 1
 			});
-			
+
+			material.toneMapped = false;
+			material.emissiveIntensity = TEXT_BASE_EMISSIVE;
+
 			const geometry = new THREE.PlaneGeometry(width, height);
 			const plane = new THREE.Mesh(geometry, material);
 			plane.rotation.x = -Math.PI / 2;
@@ -85,13 +111,31 @@ import { GLTFLoader, OrbitControls, EffectComposer, RenderPass, UnrealBloomPass 
 			plane.position.y = heightOffset; // Slightly above floor to avoid z-fighting
 			plane.rotateZ(rotation);
 			plane.renderOrder = renderOrder;
-			
+
 			scene.add(plane);
 			return plane;
 		}
 
-		const photographyText = createTextPlane('photography', new THREE.Vector3(-0.5, 0, 0.1), scene, 1.2, 0.3, Math.PI/180*-30, 0.02, 1);
-		const itText = createTextPlane('information technology', new THREE.Vector3(0.3, 0, 0.3), scene, 1.2, 0.3, 0, 0.03, 2);
+		const photographyText = createTextPlane(
+			'photography',
+			new THREE.Vector3(-0.5, 0, 0.1),
+			scene,
+			1.2,
+			0.3,
+			(Math.PI / 180) * -30,
+			0.02,
+			1
+		);
+		const itText = createTextPlane(
+			'information technology',
+			new THREE.Vector3(0.3, 0, 0.3),
+			scene,
+			1.2,
+			0.3,
+			0,
+			0.03,
+			2
+		);
 
 		const CAMERA_HIGHLIGHT_COLOR = new THREE.Color(0xff8800);
 		const COMPUTER_HIGHLIGHT_COLOR = new THREE.Color(0xaa00ff);
@@ -129,8 +173,7 @@ import { GLTFLoader, OrbitControls, EffectComposer, RenderPass, UnrealBloomPass 
 			cameraModel = gltf.scene;
 			cameraModel.position.set(-0.3, 0, 0);
 			cameraModel.scale.set(1.7, 1.7, 1.7);
-			cameraModel.rotation.y = Math.PI/180*-30;
-
+			cameraModel.rotation.y = (Math.PI / 180) * -30;
 
 			cameraModel.traverse((child) => {
 				child.castShadow = true;
@@ -310,16 +353,18 @@ import { GLTFLoader, OrbitControls, EffectComposer, RenderPass, UnrealBloomPass 
 			// Update text glow based on hover state
 			const photographyMaterial = photographyText.material as MeshStandardMaterial;
 			const itMaterial = itText.material as MeshStandardMaterial;
-			
-			const textLerpFactor = 0.12;
-			const photographyTargetGlow = cameraHighlight * 1.5;
-			const itTargetGlow = computerHighlight * 1.5;
+
+			const textLerpFactor = 0.18;
+			const photographyTargetGlow = TEXT_BASE_EMISSIVE + cameraHighlight * TEXT_BLOOM_MULTIPLIER;
+			const itTargetGlow = TEXT_BASE_EMISSIVE + computerHighlight * TEXT_BLOOM_MULTIPLIER;
 
 			photographyMaterial.emissive.copy(CAMERA_HIGHLIGHT_COLOR);
-			photographyMaterial.emissiveIntensity += (photographyTargetGlow - photographyMaterial.emissiveIntensity) * textLerpFactor;
+			photographyMaterial.emissiveIntensity +=
+				(photographyTargetGlow - photographyMaterial.emissiveIntensity) * textLerpFactor;
 
 			itMaterial.emissive.copy(COMPUTER_HIGHLIGHT_COLOR);
-			itMaterial.emissiveIntensity += (itTargetGlow - itMaterial.emissiveIntensity) * textLerpFactor;
+			itMaterial.emissiveIntensity +=
+				(itTargetGlow - itMaterial.emissiveIntensity) * textLerpFactor;
 
 			composer.render();
 		}

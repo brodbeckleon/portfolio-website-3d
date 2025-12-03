@@ -34,7 +34,7 @@
 
 <div
 	class="language-dropdown"
-	class:liquid-glass={era === 'liquid_glass'}
+	class:glassmorphism={era === 'glassmorphism'}
 	class:early-web={era === 'early_web'}
 	class:frutiger-aero={era === 'frutiger_aero'}
 	class:modern-minimal={era === 'modern_minimal'}
@@ -136,34 +136,49 @@
 		transform: rotate(180deg);
 	}
 
-	/* Liquid Glass Styling */
-	.language-dropdown.liquid-glass .dropdown-btn {
-		background: rgba(255, 255, 255, 0.15);
-		backdrop-filter: blur(5px);
-		-webkit-backdrop-filter: blur(5px);
-		border: 1px solid rgba(255, 255, 255, 0.3);
+	/* Glassmorphism Styling */
+	.language-dropdown.glassmorphism .dropdown-btn {
+		width: fit-content;
+		align-content: center;
+		height: 3rem;
+		padding: 0 1rem;
+		background: rgba(255, 255, 255, 0.1);
+		backdrop-filter: blur(10px);
+		-webkit-backdrop-filter: blur(10px);
 		border-radius: 9999px;
-		color: white;
+		border: 1px solid rgba(255, 255, 255, 0.3);
+		box-shadow:
+			0 8px 32px rgba(0, 0, 0, 0.1),
+			inset 0 1px 0 rgba(200, 200, 200, 0.5),
+			inset 0 -1px 0 rgba(200, 200, 200, 0.1),
+			inset 0 0 5px 2px rgba(200, 200, 200, 0.5);
+		overflow: hidden !important;
 	}
 
-	.language-dropdown.liquid-glass .dropdown-btn:hover {
+	.language-dropdown.glassmorphism .dropdown-btn:hover {
 		background: rgba(255, 255, 255, 0.25);
 		transform: scale(1.03);
 	}
 
-	.language-dropdown.liquid-glass .language-dropdown-menu {
-		background: rgba(255, 255, 255, 0.15);
-		backdrop-filter: blur(5px);
-		-webkit-backdrop-filter: blur(5px);
+	.language-dropdown.glassmorphism .language-dropdown-menu {
+		background: rgba(255, 255, 255, 0.1);
+		backdrop-filter: blur(10px);
+		-webkit-backdrop-filter: blur(10px);
+		border-radius: 1.5rem;
 		border: 1px solid rgba(255, 255, 255, 0.3);
-		border-radius: 15px;
+		box-shadow:
+			0 8px 32px rgba(0, 0, 0, 0.1),
+			inset 0 1px 0 rgba(200, 200, 200, 0.5),
+			inset 0 -1px 0 rgba(200, 200, 200, 0.1),
+			inset 0 0 5px 2px rgba(200, 200, 200, 0.5);
+		overflow: hidden !important;
 	}
 
-	.language-dropdown.liquid-glass .dropdown-item {
+	.language-dropdown.glassmorphism .dropdown-item {
 		color: white;
 	}
 
-	.language-dropdown.liquid-glass .dropdown-item:hover {
+	.language-dropdown.glassmorphism .dropdown-item:hover {
 		background: rgba(255, 255, 255, 0.3);
 		color: white;
 		border-radius: 9999px;

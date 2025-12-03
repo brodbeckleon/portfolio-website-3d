@@ -11,7 +11,8 @@
 	"early_web": "Early Web",
 	"frutiger_aero": "Frutiger Aero",
 	"modern_minimal": "Modern Minimal",
-	"liquid_glass": "Liquid Glass",
+	"glassmorphism": "Glassmorphism",
 
-	"open_link": "open {website_name} link"
+	"open_link": "open {website_name} link",
+	"return_to_homepage": "return to the homepage"
 }

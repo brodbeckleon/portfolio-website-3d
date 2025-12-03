@@ -27,7 +27,7 @@
 
 <div
 	class="social-icons"
-	class:liquid-glass={era === 'liquid_glass'}
+	class:glassmorphism={era === 'glassmorphism'}
 	class:early-web={era === 'early_web'}
 	class:frutiger-aero={era === 'frutiger_aero'}
 	class:modern-minimal={era === 'modern_minimal'}
@@ -35,7 +35,7 @@
 	{#each socialLinks as { icon: IconComponent, href, text } (href)}
 		<button
 			class="icon-link"
-			class:liquid-glass={era === 'liquid_glass'}
+			class:glassmorphism={era === 'glassmorphism'}
 			class:early-web={era === 'early_web'}
 			class:frutiger-aero={era === 'frutiger_aero'}
 			class:modern-minimal={era === 'modern_minimal'}
@@ -52,29 +52,43 @@
 		cursor: pointer;
 	}
 
-	/** liquid-glass styling **/
-	.social-icons.liquid-glass {
-		height: 2rem;
+	/** Glassmorphism styling **/
+	.social-icons.glassmorphism {
 		width: fit-content;
 		align-content: center;
-		background: rgba(255, 255, 255, 0.15);
-		backdrop-filter: blur(5px);
-		-webkit-backdrop-filter: blur(5px);
+		height: 3rem;
+		padding: 0 1rem;
+
+		transition:
+			transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+			background 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+		background: rgba(255, 255, 255, 0.1);
+		backdrop-filter: blur(10px);
+		-webkit-backdrop-filter: blur(10px);
 		border-radius: 9999px;
 		border: 1px solid rgba(255, 255, 255, 0.3);
-		padding-top: 0.5rem;
-		padding-bottom: 0.2rem;
-		padding-left: 1rem;
-		padding-right: 1rem;
+		box-shadow:
+			0 8px 32px rgba(0, 0, 0, 0.1),
+			inset 0 1px 0 rgba(200, 200, 200, 0.5),
+			inset 0 -1px 0 rgba(200, 200, 200, 0.1),
+			inset 0 0 5px 2px rgba(200, 200, 200, 0.5);
+		overflow: hidden !important;
 	}
 
-	.icon-link.liquid-glass {
+	.social-icons.glassmorphism:hover {
+		background: rgba(255, 255, 255, 0.25);
+		transform: scale(1.03);
+	}
+
+	.icon-link.glassmorphism {
 		background: none;
 		border: none;
 		color: white;
 	}
 
-	.icon-link.liquid-glass:hover {
+	.icon-link.glassmorphism:hover {
+		transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 		transform: scale(1.03);
 	}
 </style>
