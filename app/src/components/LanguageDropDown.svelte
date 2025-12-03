@@ -2,9 +2,9 @@
 	import { ChevronDown, Earth } from '@lucide/svelte';
 	import { getLocale, setLocale } from '$lib/paraglide/runtime';
 	import type { WebEras } from '$lib/Types.ts';
-    import { scale, fade } from 'svelte/transition';
+	import { fade } from 'svelte/transition';
 
-    interface LanguageDropDownProps {
+	interface LanguageDropDownProps {
 		era: WebEras;
 	}
 
@@ -47,10 +47,7 @@
 	</button>
 
 	{#if showLangDropdown}
-        <div
-                class="language-dropdown-menu"
-                transition:fade={{ duration: 80 }}
-        >
+		<div class="language-dropdown-menu" transition:fade={{ duration: 80 }}>
 			{#each availableLocales as lang (lang)}
 				<button class="dropdown-item" onclick={() => changeLanguage(lang)}>
 					{availableLocaleNames[lang]}
