@@ -1,5 +1,7 @@
 <script lang="ts">
-	import { Github, Instagram, Youtube, Linkedin } from '@lucide/svelte';
+	import { onMount } from 'svelte';
+	import { browser } from '$app/environment';
+	import { Github, Instagram, Youtube, Linkedin, Share2 } from '@lucide/svelte';
 	import { m } from '$lib/paraglide/messages';
 	import type { WebEras } from '$lib/Types.ts';
 
@@ -8,6 +10,9 @@
 	}
 
 	let { era }: SocialsProps = $props();
+
+	let expanded = $state(false);
+	let isMobile = $state(false);
 
 	const socialLinks = [
 		{ icon: Github, href: 'https://www.github.com/brodbeckleon', text: 'GitHub' },
@@ -21,30 +26,93 @@
 	];
 
 	function goExternal(url: string) {
-		window.location.href = url;
+		if (browser) {
+			window.location.href = url;
+		}
 	}
+
+	function checkIfMobile() {
+		if (browser) {
+			isMobile = window.innerWidth <= 768;
+		}
+	}
+
+	function toggleExpanded() {
+		if (isMobile) {
+			expanded = !expanded;
+		}
+	}
+
+	onMount(() => {
+		if (!browser) return;
+
+		checkIfMobile();
+
+		window.addEventListener('resize', checkIfMobile);
+
+		const handleClickOutside = (event: MouseEvent) => {
+			const target = event.target as HTMLElement;
+			const socialContainer = document.querySelector('.social-container');
+			if (socialContainer && !socialContainer.contains(target) && expanded) {
+				expanded = false;
+			}
+		};
+
+		document.addEventListener('click', handleClickOutside);
+
+		return () => {
+			window.removeEventListener('resize', checkIfMobile);
+			document.removeEventListener('click', handleClickOutside);
+		};
+	});
 </script>
 
-<div
-	class="social-icons"
-	class:glassmorphism={era === 'glassmorphism'}
-	class:early-web={era === 'early_web'}
-	class:frutiger-aero={era === 'frutiger_aero'}
-	class:modern-minimal={era === 'modern_minimal'}
->
-	{#each socialLinks as { icon: IconComponent, href, text } (href)}
-		<button
-			class="icon-link"
-			class:glassmorphism={era === 'glassmorphism'}
-			class:early-web={era === 'early_web'}
-			class:frutiger-aero={era === 'frutiger_aero'}
-			class:modern-minimal={era === 'modern_minimal'}
-			onclick={() => goExternal(href)}
-			aria-label={m.open_link({ website_name: text })}
+<div class="social-container">
+	<div class="button-container">
+		{#if isMobile}
+			<button
+				class="share-button"
+				class:glassmorphism={era === 'glassmorphism'}
+				class:early-web={era === 'early_web'}
+				class:frutiger-aero={era === 'frutiger_aero'}
+				class:modern-minimal={era === 'modern_minimal'}
+				onclick={toggleExpanded}
+				aria-label={m.toggle_socials()}
+				aria-expanded={expanded}
+			>
+				<Share2 strokeWidth={1} />
+			</button>
+		{/if}
+
+		<!-- Social icons that slide up on mobile -->
+		<div
+			class="social-icons-wrapper"
+			class:expanded={expanded || !isMobile}
+			class:vertical={isMobile && expanded}
 		>
-			<IconComponent strokeWidth={1} />
-		</button>
-	{/each}
+			<div
+				class="social-icons"
+				class:glassmorphism={era === 'glassmorphism'}
+				class:early-web={era === 'early_web'}
+				class:frutiger-aero={era === 'frutiger_aero'}
+				class:modern-minimal={era === 'modern_minimal'}
+			>
+				{#each socialLinks as { icon: IconComponent, href, text } (href)}
+					<button
+						class="icon-link"
+						class:glassmorphism={era === 'glassmorphism'}
+						class:early-web={era === 'early_web'}
+						class:frutiger-aero={era === 'frutiger_aero'}
+						class:modern-minimal={era === 'modern_minimal'}
+						onclick={() => goExternal(href)}
+						aria-label={m.open_link({ website_name: text })}
+					>
+						<IconComponent strokeWidth={1} />
+					</button>
+				{/each}
+			</div>
+		</div>
+	</div>
 </div>
 
 <style lang="css">

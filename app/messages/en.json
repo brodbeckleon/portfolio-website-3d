@@ -18,5 +18,6 @@
 	"glassmorphism": "Glassmorphism",
 
 	"open_link": "open {website_name} link",
-	"return_to_homepage": "return to the homepage"
+	"return_to_homepage": "return to the homepage",
+	"toggle_socials": "toggle socials"
 }
