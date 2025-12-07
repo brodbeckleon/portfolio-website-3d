@@ -41,24 +41,18 @@
 			<LanguageDropDown {era} />
 		</div>
 	{:else}
-		<div class="main-title_mobile">
-			<h1
-				class="main_title"
-				class:glassmorphism-container={era === 'glassmorphism'}
-				class:glassmorphism-font={era === 'glassmorphism'}
-				aria-label={m.return_to_homepage()}
-				onclick={() => returnToHomepage()}
-			>
-				{m.leon_shinichi()}
-			</h1>
-			<div class="mobile-footer">
-                <div class="mobile-socials">
-                    <Socials {era} {isMobile} />
-                </div>
-                <div class="mobile-lang">
-                    <LanguageDropDown {era} />
-                </div>
-			</div>
+		<h1
+			class="main_title"
+			class:glassmorphism-container={era === 'glassmorphism'}
+			class:glassmorphism-font={era === 'glassmorphism'}
+			aria-label={m.return_to_homepage()}
+			onclick={() => returnToHomepage()}
+		>
+			{m.leon_shinichi()}
+		</h1>
+		<div class="mobile-footer">
+			<Socials {era} {isMobile} />
+			<LanguageDropDown {era} />
 		</div>
 	{/if}
 </div>
@@ -99,39 +93,16 @@
 	}
 
 	/** mobile **/
-    @media (max-width: 768px) {
-        .title-bar {
-            position: fixed;
-            top: 0;
-            flex-direction: column;
-            align-items: flex-start;
-            padding: 1rem;
-            box-sizing: border-box;
-            height: auto;
-            justify-content: flex-start;
-        }
-
-        /* Re-center the title on mobile without absolute positioning */
-        .main_title.mobile {
-            position: static;
-            left: auto;
-            transform: none;
-            text-align: center;
-            width: 100%;
-            padding: 0.5rem 0;
-            margin: 0;
-        }
-
-        /* Fixed bottom bar for socials & language */
-        .mobile-footer {
-            position: fixed;
-            bottom: 1rem;
-            left: 1rem;
-            right: 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            z-index: 1000;
-        }
-    }
+	@media (max-width: 768px) {
+		.mobile-footer {
+			position: fixed;
+			bottom: 1rem;
+			left: 1rem;
+			right: 1rem;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			z-index: 1000;
+		}
+	}
 </style>
