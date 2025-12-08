@@ -1,6 +1,6 @@
 <script lang="ts">
 	import * as THREE from 'three';
-	import { FrontSide, Mesh, MeshStandardMaterial } from 'three';
+	import { FrontSide, Mesh, MeshStandardMaterial, Object3D } from 'three';
 	import {
 		GLTFLoader,
 		OrbitControls,
@@ -110,6 +110,27 @@
 			scene.add(helper2);
 		}
 
+		// --- Hover Spotlight ---
+		const hoverSpotLight = new THREE.SpotLight(0xffe0a0, 1, 10, Math.PI / 8, 0.15, 0);
+		hoverSpotLight.position.set(0, 2, 0);
+		hoverSpotLight.castShadow = true; // Enable shadows
+		hoverSpotLight.shadow.mapSize.width = 1024; // Higher resolution shadows
+		hoverSpotLight.shadow.mapSize.height = 1024;
+		hoverSpotLight.shadow.bias = -0.001; // Reduce shadow acne
+		hoverSpotLight.shadow.radius = 2; // Softer shadow edges but still defined
+		hoverSpotLight.penumbra = 0.1;
+		hoverSpotLight.angle = Math.PI / 12; // Harsh narrow beam
+		hoverSpotLight.decay = 0.9;
+		hoverSpotLight.shadow.camera.near = 0.5;
+		hoverSpotLight.shadow.camera.far = 5;
+		hoverSpotLight.shadow.camera.fov = 50;
+		scene.add(hoverSpotLight);
+
+		const hoverLightTarget = new THREE.Object3D();
+		hoverLightTarget.position.set(0, 0, 0);
+		scene.add(hoverLightTarget);
+		hoverSpotLight.target = hoverLightTarget;
+
 		// --- Text Labels ---
 		function stripHtml(html: string): string {
 			const tmp = document.createElement('div');
@@ -158,9 +179,6 @@
 			return texture;
 		}
 
-		const TEXT_BASE_EMISSIVE = 0;
-		const TEXT_BLOOM_MULTIPLIER = 3;
-
 		function createTextPlane(
 			text: string,
 			position: THREE.Vector3,
@@ -204,7 +222,7 @@
 		}
 
 		// Photography text
-		const photographyText = createTextPlane(
+		createTextPlane(
 			m.photography(),
 			new THREE.Vector3(-0.45, 0, 0),
 			scene,
@@ -220,7 +238,7 @@
 		);
 
 		// IT text
-		const itText = createTextPlane(
+		createTextPlane(
 			m.information_technology(),
 			new THREE.Vector3(0.2, 0, -0.15),
 			scene,
@@ -260,34 +278,6 @@
 			14
 		);
 
-		const CAMERA_HIGHLIGHT_COLOR = new THREE.Color(0xff8800);
-		const COMPUTER_HIGHLIGHT_COLOR = new THREE.Color(0xaa00ff);
-		const cameraHighlightMeshes: Mesh[] = [];
-		const computerHighlightMeshes: Mesh[] = [];
-
-		const storeOriginalMaterialProps = (material: MeshStandardMaterial) => {
-			if (!material.userData.__originalEmissive) {
-				material.userData.__originalEmissive = material.emissive.clone();
-				material.userData.__originalEmissiveIntensity = material.emissiveIntensity ?? 0;
-			}
-		};
-
-		const updateMeshesHighlight = (meshes: Mesh[], color: THREE.Color, strength: number) => {
-			const tempColor = new THREE.Color();
-			for (const mesh of meshes) {
-				const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-				for (const material of materials) {
-					if (!(material instanceof MeshStandardMaterial)) continue;
-					storeOriginalMaterialProps(material);
-					const originalColor = material.userData.__originalEmissive as THREE.Color;
-					const originalIntensity = material.userData.__originalEmissiveIntensity ?? 0;
-					tempColor.copy(originalColor).lerp(color, strength);
-					material.emissive.copy(tempColor);
-					material.emissiveIntensity = THREE.MathUtils.lerp(originalIntensity, 1.8, strength);
-				}
-			}
-		};
-
 		const loader = new GLTFLoader();
 		let cameraModel: THREE.Object3D;
 		let macintoshModel: THREE.Object3D;
@@ -302,16 +292,13 @@
 
 			cameraModel.traverse((child) => {
 				child.castShadow = true;
-
 				if (child instanceof Mesh) {
-					cameraHighlightMeshes.push(child);
 					const materials = Array.isArray(child.material) ? child.material : [child.material];
 					for (const material of materials) {
 						if (!(material instanceof MeshStandardMaterial)) continue;
 						material.transparent = false;
 						material.depthWrite = true;
 						material.side = FrontSide;
-						storeOriginalMaterialProps(material);
 						material.needsUpdate = true;
 					}
 				}
@@ -325,14 +312,6 @@
 			macintoshModel.position.set(0.3, 0, -0.5);
 			macintoshModel.traverse((obj) => {
 				obj.castShadow = true;
-				if (obj instanceof Mesh) {
-					computerHighlightMeshes.push(obj);
-					const materials = Array.isArray(obj.material) ? obj.material : [obj.material];
-					for (const material of materials) {
-						if (!(material instanceof MeshStandardMaterial)) continue;
-						storeOriginalMaterialProps(material);
-					}
-				}
 			});
 			scene.add(macintoshModel);
 		});
@@ -394,10 +373,12 @@
 		renderer.domElement.addEventListener('pointerup', handlePointerUp);
 		renderer.domElement.addEventListener('pointerleave', handlePointerUp);
 
-		// --- Hover Detection ---
+		// --- Interaction Setup ---
 		const raycaster = new THREE.Raycaster();
 		const mouse = new THREE.Vector2();
-		let hoveredObject: THREE.Object3D | null = null;
+		let flickerTime = 0;
+		let flickerTimer = 0; // Tracks elapsed time for flicker duration
+		let activeModel: THREE.Object3D | null = null;
 
 		function onMouseMove(event: MouseEvent) {
 			const rect = renderer.domElement.getBoundingClientRect();
@@ -405,94 +386,134 @@
 			mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 		}
 
-		function onClick() {
-			if (suppressNextClick || !hoveredObject || !cameraModel || !macintoshModel) return;
-			suppressNextClick = false;
+		function isModelInCenter(model: THREE.Object3D | undefined, threshold = 0.4): boolean {
+			if (!model) return false;
 
-			let current: THREE.Object3D | null = hoveredObject;
-			while (current) {
-				if (current === macintoshModel) {
-					goto('/it');
-					return;
-				}
-				if (current === cameraModel) {
-					goto('/photography');
-					return;
-				}
-				current = current.parent;
+			const worldPosition = new THREE.Vector3();
+			model.getWorldPosition(worldPosition);
+			worldPosition.project(camera);
+
+			return Math.abs(worldPosition.x) < threshold && Math.abs(worldPosition.y) < threshold;
+		}
+
+		function updateSpotlight(deltaTime: number) {
+			if (!activeModel) {
+				hoverSpotLight.intensity = 0;
+				return;
+			}
+
+			const worldPos = new THREE.Vector3();
+			activeModel.getWorldPosition(worldPos);
+
+			// Adjust height based on which model is active
+			let heightOffset = 0.8; // Default for camera
+			if (activeModel === macintoshModel) {
+				heightOffset = 1.8; // Higher for the bigger computer model
+			}
+
+			// Position spotlight above the model
+			hoverSpotLight.position.copy(worldPos).add(new THREE.Vector3(0, heightOffset, 0));
+			hoverLightTarget.position.copy(worldPos);
+
+			// Update flicker timer
+			flickerTimer += deltaTime;
+
+			// Flicker animation (only for first 2 seconds)
+			if (flickerTimer < 1.5) {
+				flickerTime += 0.1;
+				const flicker = 0.7 * (Math.sin(flickerTime * 7) + Math.sin(flickerTime * 15 + 3));
+				hoverSpotLight.intensity = 2.5 + flicker;
+			} else {
+				// Steady light after 2 seconds
+				hoverSpotLight.intensity = 2.8;
 			}
 		}
 
-		window.addEventListener('mousemove', onMouseMove);
+		function onClick(event: MouseEvent) {
+			if (suppressNextClick || !cameraModel || !macintoshModel) {
+				suppressNextClick = false;
+				return;
+			}
+
+			const rect = renderer.domElement.getBoundingClientRect();
+			const clickMouse = new THREE.Vector2();
+			clickMouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+			clickMouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+			raycaster.setFromCamera(clickMouse, camera);
+			const intersects = raycaster.intersectObjects([cameraModel, macintoshModel], true);
+
+			if (intersects.length > 0) {
+				let current: THREE.Object3D | null = intersects[0].object;
+				while (current) {
+					if (current === macintoshModel) {
+						goto('/it');
+						return;
+					}
+					if (current === cameraModel) {
+						goto('/photography');
+						return;
+					}
+					current = current.parent;
+				}
+			}
+		}
+
+		// Only add mousemove listener on desktop
+		if (!isMobile) {
+			window.addEventListener('mousemove', onMouseMove);
+		}
 		window.addEventListener('click', onClick);
 
-		// --- Highlight Animation States ---
-		let cameraTargetHighlight = 0;
-		let computerTargetHighlight = 0;
-		let cameraHighlight = 0;
-		let computerHighlight = 0;
-		let animationFrameId: number;
-
 		// --- Animation Loop ---
-		function animate() {
+		let animationFrameId: number;
+		let lastTime = 0;
+
+		function animate(time: number) {
 			animationFrameId = requestAnimationFrame(animate);
 			controls.update();
 
-			if (cameraModel && macintoshModel) {
-				raycaster.setFromCamera(mouse, camera);
-				const intersects = raycaster.intersectObjects([cameraModel, macintoshModel], true);
+			const deltaTime = (time - lastTime) / 1000; // Convert to seconds
+			lastTime = time;
 
-				if (intersects.length > 0) {
-					hoveredObject = intersects[0].object;
+			flickerTime += deltaTime * 5; // Adjust flicker speed based on time
 
-					let current: THREE.Object3D | null = hoveredObject;
-					while (current && current !== cameraModel && current !== macintoshModel) {
-						current = current.parent;
+			// Reset active model
+			activeModel = null;
+
+			if (!isMobile) {
+				// Desktop: Check hover
+				if (cameraModel && macintoshModel) {
+					raycaster.setFromCamera(mouse, camera);
+					const intersects = raycaster.intersectObjects([cameraModel, macintoshModel], true);
+
+					if (intersects.length > 0) {
+						let current: Object3D = intersects[0].object;
+						while (current && current !== cameraModel && current !== macintoshModel) {
+							if (current.parent instanceof THREE.Object3D) {
+								current = current.parent;
+							}
+						}
+						if (current === cameraModel || current === macintoshModel) {
+							activeModel = current;
+						}
 					}
-
-					if (current === cameraModel) {
-						cameraTargetHighlight = 1;
-						computerTargetHighlight = 0;
-					} else if (current === macintoshModel) {
-						cameraTargetHighlight = 0;
-						computerTargetHighlight = 1;
-					} else {
-						hoveredObject = null;
-						cameraTargetHighlight = 0;
-						computerTargetHighlight = 0;
-					}
-				} else {
-					hoveredObject = null;
-					cameraTargetHighlight = 0;
-					computerTargetHighlight = 0;
+				}
+			} else {
+				// Mobile: Check center position
+				if (isModelInCenter(cameraModel)) {
+					activeModel = cameraModel;
+				} else if (isModelInCenter(macintoshModel)) {
+					activeModel = macintoshModel;
 				}
 			}
 
-			cameraHighlight += (cameraTargetHighlight - cameraHighlight) * 0.08;
-			computerHighlight += (computerTargetHighlight - computerHighlight) * 0.08;
-
-			updateMeshesHighlight(cameraHighlightMeshes, CAMERA_HIGHLIGHT_COLOR, cameraHighlight);
-			updateMeshesHighlight(computerHighlightMeshes, COMPUTER_HIGHLIGHT_COLOR, computerHighlight);
-
-			const photographyMaterial = photographyText.material as MeshStandardMaterial;
-			const itMaterial = itText.material as MeshStandardMaterial;
-
-			const textLerpFactor = 0.18;
-			const photographyTargetGlow = TEXT_BASE_EMISSIVE + cameraHighlight * TEXT_BLOOM_MULTIPLIER;
-			const itTargetGlow = TEXT_BASE_EMISSIVE + computerHighlight * TEXT_BLOOM_MULTIPLIER;
-
-			photographyMaterial.emissive.copy(CAMERA_HIGHLIGHT_COLOR);
-			photographyMaterial.emissiveIntensity +=
-				(photographyTargetGlow - photographyMaterial.emissiveIntensity) * textLerpFactor;
-
-			itMaterial.emissive.copy(COMPUTER_HIGHLIGHT_COLOR);
-			itMaterial.emissiveIntensity +=
-				(itTargetGlow - itMaterial.emissiveIntensity) * textLerpFactor;
-
+			updateSpotlight(deltaTime);
 			composer.render();
 		}
 
-		animate();
+		lastTime = performance.now();
+		animate(lastTime);
 
 		// --- Resize ---
 		const handleResize = () => {
@@ -508,22 +529,32 @@
 		return {
 			destroy() {
 				cancelAnimationFrame(animationFrameId);
-				window.removeEventListener('mousemove', onMouseMove);
+
+				if (!isMobile) {
+					window.removeEventListener('mousemove', onMouseMove);
+				}
 				window.removeEventListener('click', onClick);
 				window.removeEventListener('resize', handleResize);
+
 				renderer.domElement.removeEventListener('pointerdown', handlePointerDown);
 				renderer.domElement.removeEventListener('pointermove', handlePointerMove);
 				renderer.domElement.removeEventListener('pointerup', handlePointerUp);
 				renderer.domElement.removeEventListener('pointerleave', handlePointerUp);
+
 				renderer.dispose();
 				controls.dispose();
+
 				scene.traverse((object) => {
 					if (object instanceof THREE.Mesh) {
 						object.geometry.dispose();
-						object.material.dispose();
+						(object.material as THREE.Material).dispose();
 					}
 				});
-				if (lightTarget) scene.remove(lightTarget); // Cleanup light target
+
+				// Clean up lights
+				scene.remove(hoverSpotLight);
+				scene.remove(hoverLightTarget);
+				scene.remove(lightTarget);
 			}
 		};
 	};

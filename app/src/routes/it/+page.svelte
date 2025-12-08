@@ -9,4 +9,7 @@
 <div class="it-page">
 	<TitleBar era={web_era} />
 	<ThreeStateToggle bind:web_era />
+
+	<h3>My Journey</h3>
+	<p>My IT-Journey started after I became 18.</p>
 </div>
