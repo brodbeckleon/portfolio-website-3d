@@ -83,17 +83,16 @@
 	}
 
 	.main_title {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        height: 48px;
-        width: fit-content;
-        padding: 0 24px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		height: 48px;
+		width: fit-content;
+		padding: 0 24px;
 		position: absolute;
 		left: 50%;
 		transform: translateX(-50%);
 		cursor: pointer;
-
 	}
 
 	/** mobile **/
@@ -111,10 +110,10 @@
 		}
 
 		.mobile-header-title {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 48px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			height: 48px;
 			margin: 0;
 			text-align: center;
 		}

@@ -58,30 +58,30 @@
 <div class="socials-container">
 	{#if isMobile}
 		<div class="mobile-socials">
-            {#if showSocialDropdown}
-                <div
-                        class="mobile-social-dropdown-menu"
-                        class:glassmorphism-container={era === 'glassmorphism'}
-                >
-                    {#each socialLinks as { icon: IconComponent, href, text } (href)}
-                        <button
-                                class="mobile-dropdown-item"
-                                class:glassmorphism={era === 'glassmorphism'}
-                                onclick={() => {
+			{#if showSocialDropdown}
+				<div
+					class="mobile-social-dropdown-menu"
+					class:glassmorphism-container={era === 'glassmorphism'}
+				>
+					{#each socialLinks as { icon: IconComponent, href, text } (href)}
+						<button
+							class="mobile-dropdown-item"
+							class:glassmorphism={era === 'glassmorphism'}
+							onclick={() => {
 								goExternal(href);
 								showSocialDropdown = false;
 							}}
-                                aria-label={m.open_link({ website_name: text })}
-                        >
-                            <IconComponent strokeWidth={1} class="dropdown-icon" />
-                        </button>
-                    {/each}
-                </div>
-            {/if}
+							aria-label={m.open_link({ website_name: text })}
+						>
+							<IconComponent strokeWidth={1} class="dropdown-icon" />
+						</button>
+					{/each}
+				</div>
+			{/if}
 
 			<button
 				class="mobile-share-button"
-                class:glassmorphism-container={era === 'glassmorphism'}
+				class:glassmorphism-container={era === 'glassmorphism'}
 				onclick={toggleDropdown}
 				aria-label={m.toggle_socials()}
 				aria-expanded={showSocialDropdown}
@@ -91,10 +91,7 @@
 		</div>
 	{:else}
 		<!-- Desktop view -->
-		<div
-			class="social-icons"
-            class:glassmorphism-container={era === 'glassmorphism'}
-		>
+		<div class="social-icons" class:glassmorphism-container={era === 'glassmorphism'}>
 			{#each socialLinks as { icon: IconComponent, href, text } (href)}
 				<button
 					class="icon-link"
@@ -114,64 +111,63 @@
 		cursor: pointer;
 		background: none;
 		border: none;
-        color: white;
-        transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+		color: white;
+		transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 	}
 
-    .icon-link:hover {
-        transform: scale(1.1);
-    }
+	.icon-link:hover {
+		transform: scale(1.1);
+	}
 
-    .social-icons {
-        height: 48px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0 24px;
-    }
+	.social-icons {
+		height: 48px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0 24px;
+	}
 
 	/** mobile **/
-    @media (max-width: 768px) {
-        .socials-container {
-            position: relative;
-            height: 48px;
-        }
+	@media (max-width: 768px) {
+		.socials-container {
+			position: relative;
+			height: 48px;
+		}
 
-        .mobile-socials {
-            position: relative;
-            height: 100%;
-            display: flex;
-            justify-content: flex-end;
-        }
+		.mobile-socials {
+			position: relative;
+			height: 100%;
+			display: flex;
+			justify-content: flex-end;
+		}
 
-        .mobile-social-dropdown-menu {
-            position: absolute;
-            width: 48px;
-            bottom: 54px;
-            left: 0;
-            z-index: 10;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 12px 0;
-            gap: 6px;
+		.mobile-social-dropdown-menu {
+			position: absolute;
+			width: 48px;
+			bottom: 54px;
+			left: 0;
+			z-index: 10;
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+			align-items: center;
+			padding: 12px 0;
+			gap: 6px;
+		}
 
-        }
+		.mobile-dropdown-item {
+			background: none;
+			border: none;
+			color: white;
+		}
 
-        .mobile-dropdown-item {
-            background: none;
-            border: none;
-            color: white;
-        }
-
-        .mobile-share-button {
-            width: 48px;
-            height: 48px;
-            color: white;
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-        }
-    }
+		.mobile-share-button {
+			width: 48px;
+			height: 48px;
+			color: white;
+			position: absolute;
+			bottom: 0;
+			left: 50%;
+		}
+	}
 </style>
