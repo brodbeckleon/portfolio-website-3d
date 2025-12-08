@@ -35,7 +35,7 @@
 			{m.leon_shinichi()}
 		</h1>
 		<div class="title-bar_right">
-			<LanguageDropDown {era} />
+			<LanguageDropDown {era} {isMobile} />
 		</div>
 	{:else}
 		<div class="mobile-header" class:glassmorphism-container={era === 'glassmorphism'}>
@@ -50,7 +50,7 @@
 		</div>
 		<div class="mobile-footer">
 			<Socials {era} {isMobile} />
-			<LanguageDropDown {era} />
+			<LanguageDropDown {era} {isMobile} />
 		</div>
 	{/if}
 </div>
