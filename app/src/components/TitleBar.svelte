@@ -17,13 +17,7 @@
 	}
 </script>
 
-<div
-	class="title-bar"
-	class:glassmorphism={era === 'glassmorphism'}
-	class:early-web={era === 'early_web'}
-	class:frutiger-aero={era === 'frutiger_aero'}
-	class:modern-minimal={era === 'modern_minimal'}
->
+<div class="title-bar">
 	{#if !isMobile}
 		<div class="title-bar_left">
 			<Socials {era} {isMobile} />
@@ -32,6 +26,9 @@
 			class="main_title"
 			class:glassmorphism-container={era === 'glassmorphism'}
 			class:glassmorphism-font={era === 'glassmorphism'}
+			class:earlyweb-container={era === 'early_web'}
+			class:earlyweb--aqua={era === 'early_web'}
+			class:earlyweb-font={era === 'early_web'}
 			aria-label={m.return_to_homepage()}
 			onclick={() => returnToHomepage()}
 		>
@@ -41,15 +38,16 @@
 			<LanguageDropDown {era} />
 		</div>
 	{:else}
-		<h1
-			class="main_title"
-			class:glassmorphism-container={era === 'glassmorphism'}
-			class:glassmorphism-font={era === 'glassmorphism'}
-			aria-label={m.return_to_homepage()}
-			onclick={() => returnToHomepage()}
-		>
-			{m.leon_shinichi()}
-		</h1>
+		<div class="mobile-header" class:glassmorphism-container={era === 'glassmorphism'}>
+			<h1
+				class="mobile-header-title"
+				class:glassmorphism-font={era === 'glassmorphism'}
+				aria-label={m.return_to_homepage()}
+				onclick={() => returnToHomepage()}
+			>
+				{m.leon_shinichi()}
+			</h1>
+		</div>
 		<div class="mobile-footer">
 			<Socials {era} {isMobile} />
 			<LanguageDropDown {era} />
@@ -62,7 +60,7 @@
 		display: flex;
 		align-items: center;
 		position: fixed;
-		margin: 3rem auto;
+		margin: 2rem auto;
 		z-index: 1000;
 		width: 100%;
 		color: white;
@@ -94,6 +92,23 @@
 
 	/** mobile **/
 	@media (max-width: 768px) {
+		.title-bar {
+			position: fixed;
+			display: block;
+			margin: 0;
+		}
+
+		.mobile-header {
+			width: auto;
+			height: fit-content;
+			margin: 1rem 1rem;
+		}
+
+		.mobile-header-title {
+			margin: 0;
+			text-align: center;
+		}
+
 		.mobile-footer {
 			position: fixed;
 			bottom: 1rem;
