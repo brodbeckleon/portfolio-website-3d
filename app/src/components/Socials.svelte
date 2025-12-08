@@ -1,13 +1,19 @@
 <script lang="ts">
-	import { Github, Instagram, Youtube, Linkedin } from '@lucide/svelte';
+	import { onMount } from 'svelte';
+	import { browser } from '$app/environment';
+	import { Github, Instagram, Youtube, Linkedin, Share2 } from '@lucide/svelte';
 	import { m } from '$lib/paraglide/messages';
 	import type { WebEras } from '$lib/Types.ts';
+	import { fade } from 'svelte/transition';
 
 	interface SocialsProps {
 		era: WebEras;
+		isMobile: boolean;
 	}
 
-	let { era }: SocialsProps = $props();
+	let { era, isMobile }: SocialsProps = $props();
+
+	let showSocialDropdown = $state(false);
 
 	const socialLinks = [
 		{ icon: Github, href: 'https://www.github.com/brodbeckleon', text: 'GitHub' },
@@ -21,74 +27,147 @@
 	];
 
 	function goExternal(url: string) {
-		window.location.href = url;
+		if (browser) {
+			window.location.href = url;
+		}
 	}
+
+	function toggleDropdown() {
+		if (isMobile) {
+			showSocialDropdown = !showSocialDropdown;
+		}
+	}
+
+	onMount(() => {
+		if (!browser) return;
+
+		const handleClickOutside = (event: MouseEvent) => {
+			const target = event.target as HTMLElement;
+			const socialContainer = document.querySelector('.socials-container');
+			if (socialContainer && !socialContainer.contains(target) && showSocialDropdown) {
+				showSocialDropdown = false;
+			}
+		};
+
+		document.addEventListener('click', handleClickOutside);
+
+		return () => document.removeEventListener('click', handleClickOutside);
+	});
 </script>
 
-<div
-	class="social-icons"
-	class:glassmorphism={era === 'glassmorphism'}
-	class:early-web={era === 'early_web'}
-	class:frutiger-aero={era === 'frutiger_aero'}
-	class:modern-minimal={era === 'modern_minimal'}
->
-	{#each socialLinks as { icon: IconComponent, href, text } (href)}
-		<button
-			class="icon-link"
-			class:glassmorphism={era === 'glassmorphism'}
-			class:early-web={era === 'early_web'}
-			class:frutiger-aero={era === 'frutiger_aero'}
-			class:modern-minimal={era === 'modern_minimal'}
-			onclick={() => goExternal(href)}
-			aria-label={m.open_link({ website_name: text })}
-		>
-			<IconComponent strokeWidth={1} />
-		</button>
-	{/each}
+<div class="socials-container">
+	{#if isMobile}
+		<div class="mobile-socials">
+			{#if showSocialDropdown}
+				<div
+					class="mobile-social-dropdown-menu"
+					class:glassmorphism-container={era === 'glassmorphism'}
+				>
+					{#each socialLinks as { icon: IconComponent, href, text } (href)}
+						<button
+							class="mobile-dropdown-item"
+							class:glassmorphism={era === 'glassmorphism'}
+							onclick={() => {
+								goExternal(href);
+								showSocialDropdown = false;
+							}}
+							aria-label={m.open_link({ website_name: text })}
+						>
+							<IconComponent strokeWidth={1} class="dropdown-icon" />
+						</button>
+					{/each}
+				</div>
+			{/if}
+
+			<button
+				class="mobile-share-button"
+				class:glassmorphism-container={era === 'glassmorphism'}
+				onclick={toggleDropdown}
+				aria-label={m.toggle_socials()}
+				aria-expanded={showSocialDropdown}
+			>
+				<Share2 strokeWidth={1} />
+			</button>
+		</div>
+	{:else}
+		<!-- Desktop view -->
+		<div class="social-icons" class:glassmorphism-container={era === 'glassmorphism'}>
+			{#each socialLinks as { icon: IconComponent, href, text } (href)}
+				<button
+					class="icon-link"
+					onclick={() => goExternal(href)}
+					aria-label={m.open_link({ website_name: text })}
+				>
+					<IconComponent strokeWidth={1} />
+				</button>
+			{/each}
+		</div>
+	{/if}
 </div>
 
 <style lang="css">
+	/* Base styles */
 	.icon-link {
 		cursor: pointer;
-	}
-
-	/** Glassmorphism styling **/
-	.social-icons.glassmorphism {
-		width: fit-content;
-		align-content: center;
-		height: 3rem;
-		padding: 0 1rem;
-
-		transition:
-			transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
-			background 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-
-		background: rgba(255, 255, 255, 0.1);
-		backdrop-filter: blur(10px);
-		-webkit-backdrop-filter: blur(10px);
-		border-radius: 9999px;
-		border: 1px solid rgba(255, 255, 255, 0.3);
-		box-shadow:
-			0 8px 32px rgba(0, 0, 0, 0.1),
-			inset 0 1px 0 rgba(200, 200, 200, 0.5),
-			inset 0 -1px 0 rgba(200, 200, 200, 0.1),
-			inset 0 0 5px 2px rgba(200, 200, 200, 0.5);
-		overflow: hidden !important;
-	}
-
-	.social-icons.glassmorphism:hover {
-		background: rgba(255, 255, 255, 0.25);
-		transform: scale(1.03);
-	}
-
-	.icon-link.glassmorphism {
 		background: none;
 		border: none;
 		color: white;
+		transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 	}
 
-	.icon-link.glassmorphism:hover {
-		transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-		transform: scale(1.03);
+	.icon-link:hover {
+		transform: scale(1.1);
+	}
+
+	.social-icons {
+		height: 48px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0 24px;
+	}
+
+	/** mobile **/
+	@media (max-width: 768px) {
+		.socials-container {
+			position: relative;
+			height: 48px;
+		}
+
+		.mobile-socials {
+			position: relative;
+			height: 100%;
+			display: flex;
+			justify-content: flex-end;
+		}
+
+		.mobile-social-dropdown-menu {
+			position: absolute;
+			width: 48px;
+			bottom: 54px;
+			left: 0;
+			z-index: 10;
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+			align-items: center;
+			padding: 12px 0;
+			gap: 6px;
+		}
+
+		.mobile-dropdown-item {
+			background: none;
+			border: none;
+			color: white;
+		}
+
+		.mobile-share-button {
+			width: 48px;
+			height: 48px;
+			color: white;
+			position: absolute;
+			bottom: 0;
+			left: 50%;
+		}
 	}
 </style>
