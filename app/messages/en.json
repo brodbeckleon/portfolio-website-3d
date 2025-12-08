@@ -8,7 +8,7 @@
 	"information_technology": "information technology",
 
 	"welcome_message_1": "Hello, I'm <strong>{name}</strong>.",
-	"welcome_message_2": "A full stack developer and visual creator based in <strong>{place}</strong>.",
+	"welcome_message_2": "A full stack developer and visual creator\nbased in <strong>{place}</strong>.",
 	"welcome_message_3": "I execute IT and creative projects.",
 	"welcome_message_4": "Let's grab a coffee <strong>& get to work</strong>❗",
 

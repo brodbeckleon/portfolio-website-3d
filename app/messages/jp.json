@@ -8,7 +8,7 @@
 	"information_technology": "情報科学",
 
 	"welcome_message_1": "こんにちは、僕は<strong>{name}</strong>です。",
-	"welcome_message_2": "<strong>{place}</strong> のフルスタック開発者およびビジュアルアーティスト。",
+	"welcome_message_2": "<strong>{place}</strong> の\nフルスタック開発者およびビジュアルアーティスト。",
 	"welcome_message_3": "ITおよびクリエイティブプロジェクトを実行します。",
 	"welcome_message_4": "コーヒーを飲んで、<strong>さあ、仕事に取り掛かろう</strong>❗",
 
