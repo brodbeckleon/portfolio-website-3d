@@ -4,86 +4,93 @@
    =========================== */
 
 :root {
-    --mm-bg: #ffffff;
-    --mm-border: rgba(15, 23, 42, 0.06);
-    --mm-text: #0f172a;
-    --mm-muted: #64748b;
-    --mm-focus: rgba(59, 130, 246, 0.35);
-    --mm-shadow: 0 6px 18px rgba(12, 20, 30, 0.04);
-    --mm-radius: 10px;
+	--mm-bg: #ffffff;
+	--mm-border: rgba(15, 23, 42, 0.06);
+	--mm-text: #0f172a;
+	--mm-muted: #64748b;
+	--mm-focus: rgba(59, 130, 246, 0.35);
+	--mm-shadow: 0 6px 18px rgba(12, 20, 30, 0.04);
+	--mm-radius: 10px;
 }
 
 /* ---------------------------
    Container
    --------------------------- */
 .modern-minimal-container {
-    position: relative;
-    background: var(--mm-bg);
-    border-radius: 12px;
-    border: 1px solid var(--mm-border);
-    box-shadow: var(--mm-shadow);
-    padding: 1rem;
-    overflow: hidden !important;
+	position: relative;
+	background: var(--mm-bg);
+	border-radius: 12px;
+	border: 1px solid var(--mm-border);
+	box-shadow: var(--mm-shadow);
+	padding: 1rem;
+	overflow: hidden !important;
 }
 
 .modern-minimal-container::before,
 .modern-minimal-container::after {
-    content: '';
-    position: absolute;
-    left: 0.75rem;
-    right: 0.75rem;
-    height: 1px;
-    pointer-events: none;
+	content: '';
+	position: absolute;
+	left: 0.75rem;
+	right: 0.75rem;
+	height: 1px;
+	pointer-events: none;
 }
 
 .modern-minimal-container::before {
-    top: 0.5rem;
-    background: linear-gradient(90deg, transparent, rgba(0,0,0,0.04), transparent);
+	top: 0.5rem;
+	background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.04), transparent);
 }
 
 .modern-minimal-container::after {
-    bottom: 0.5rem;
-    background: linear-gradient(90deg, transparent, rgba(0,0,0,0.03), transparent);
+	bottom: 0.5rem;
+	background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.03), transparent);
 }
 
 /* ---------------------------
    Typography
    --------------------------- */
 .modern-minimal-font {
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    font-weight: 400;
-    color: var(--mm-text);
-    line-height: 1.45;
-    letter-spacing: 0.2px;
+	font-family:
+		system-ui,
+		-apple-system,
+		'Segoe UI',
+		Roboto,
+		'Helvetica Neue',
+		Arial,
+		sans-serif;
+	font-weight: 400;
+	color: var(--mm-text);
+	line-height: 1.45;
+	letter-spacing: 0.2px;
 }
 
 /* ---------------------------
    Buttons
    --------------------------- */
 .modern-minimal-button {
-    padding: 0.55rem 1.1rem;
-    border-radius: var(--mm-radius);
-    border: 1px solid var(--mm-border);
-    background: #ffffff;
-    color: var(--mm-text);
-    font-size: 0.95rem;
-    cursor: pointer;
-    transition: all 0.18s ease;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+	padding: 0.55rem 1.1rem;
+	border-radius: var(--mm-radius);
+	border: 1px solid var(--mm-border);
+	background: #ffffff;
+	color: var(--mm-text);
+	font-size: 0.95rem;
+	cursor: pointer;
+	transition: all 0.18s ease;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .modern-minimal-button:hover {
-    background: #f8fafc;
+	background: #f8fafc;
 }
 
 .modern-minimal-button:active {
-    background: #f1f5f9;
-    transform: translateY(1px);
+	background: #f1f5f9;
+	transform: translateY(1px);
 }
 
 .modern-minimal-button:focus-visible {
-    outline: 3px solid var(--mm-focus);
-    outline-offset: 2px;
+	outline: 3px solid var(--mm-focus);
+	outline-offset: 2px;
 }
 
 /* ---------------------------
@@ -91,159 +98,162 @@
    --------------------------- */
 .modern-minimal-input,
 .modern-minimal-textarea {
-    width: 100%;
-    padding: 0.55rem 0.75rem;
-    border-radius: var(--mm-radius);
-    border: 1px solid var(--mm-border);
-    background: #ffffff;
-    color: var(--mm-text);
-    font-size: 0.96rem;
-    transition: all 0.18s ease;
+	width: 100%;
+	padding: 0.55rem 0.75rem;
+	border-radius: var(--mm-radius);
+	border: 1px solid var(--mm-border);
+	background: #ffffff;
+	color: var(--mm-text);
+	font-size: 0.96rem;
+	transition: all 0.18s ease;
 }
 
 .modern-minimal-input:focus,
 .modern-minimal-textarea:focus {
-    border-color: rgba(15, 23, 42, 0.22);
-    box-shadow: 0 0 0 3px var(--mm-focus);
-    outline: none;
+	border-color: rgba(15, 23, 42, 0.22);
+	box-shadow: 0 0 0 3px var(--mm-focus);
+	outline: none;
 }
 
 .modern-minimal-input::placeholder,
 .modern-minimal-textarea::placeholder {
-    color: var(--mm-muted);
+	color: var(--mm-muted);
 }
 
 /* ---------------------------
    MODERN MINIMAL — SELECT
    --------------------------- */
 .modern-minimal-select {
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
+	appearance: none;
+	-webkit-appearance: none;
+	-moz-appearance: none;
 
-    background: #ffffff;
-    border: 1px solid rgba(0,0,0,0.12);
-    border-radius: 8px;
-    padding: 0.45rem 2rem 0.45rem 0.75rem;
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    font-size: 14px;
-    line-height: 1.4;
-    color: #0f172a;
-    cursor: pointer;
+	background: #ffffff;
+	border: 1px solid rgba(0, 0, 0, 0.12);
+	border-radius: 8px;
+	padding: 0.45rem 2rem 0.45rem 0.75rem;
+	font-family:
+		system-ui,
+		-apple-system,
+		'Segoe UI',
+		Roboto,
+		sans-serif;
+	font-size: 14px;
+	line-height: 1.4;
+	color: #0f172a;
+	cursor: pointer;
 
-    box-shadow:
-            0 1px 2px rgba(0,0,0,0.04),
-            inset 0 1px 1px rgba(255,255,255,0.7);
-    position: relative;
+	box-shadow:
+		0 1px 2px rgba(0, 0, 0, 0.04),
+		inset 0 1px 1px rgba(255, 255, 255, 0.7);
+	position: relative;
 
-    transition:
-            border-color 0.15s ease,
-            box-shadow 0.15s ease,
-            background 0.15s ease;
+	transition:
+		border-color 0.15s ease,
+		box-shadow 0.15s ease,
+		background 0.15s ease;
 }
 
 /* hover */
 .modern-minimal-select:hover {
-    border-color: rgba(0,0,0,0.18);
+	border-color: rgba(0, 0, 0, 0.18);
 }
 
 /* focus */
 .modern-minimal-select:focus {
-    outline: none;
-    border-color: rgba(37, 99, 235, 0.7);
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.10);
+	outline: none;
+	border-color: rgba(37, 99, 235, 0.7);
+	box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 /* ▼ minimal arrow */
 .modern-minimal-select {
-    background-image:
-            linear-gradient(to bottom, rgba(0,0,0,0.35), rgba(0,0,0,0.45));
-    background-repeat: no-repeat;
-    background-size: 8px 8px;
-    background-position: right 0.75rem center;
+	background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.45));
+	background-repeat: no-repeat;
+	background-size: 8px 8px;
+	background-position: right 0.75rem center;
 }
-
 
 /* ---------------------------
    Scrollbar
    --------------------------- */
 
 .modern-minimal-scroll {
-    scrollbar-width: thin;
-    scrollbar-color: rgba(0,0,0,0.25) transparent;
+	scrollbar-width: thin;
+	scrollbar-color: rgba(0, 0, 0, 0.25) transparent;
 }
 
 .modern-minimal-scroll::-webkit-scrollbar {
-    width: 6px;
+	width: 6px;
 }
 
 .modern-minimal-scroll::-webkit-scrollbar-track {
-    background: transparent;
+	background: transparent;
 }
 
 .modern-minimal-scroll::-webkit-scrollbar-thumb {
-    background: rgba(15, 23, 42, 0.25);
-    border-radius: 10px;
+	background: rgba(15, 23, 42, 0.25);
+	border-radius: 10px;
 }
 
 .modern-minimal-scroll::-webkit-scrollbar-thumb:hover {
-    background: rgba(15, 23, 42, 0.35);
+	background: rgba(15, 23, 42, 0.35);
 }
 
 /* ---------------------------
    Toggle / Checkbox
    --------------------------- */
 .modern-minimal-checkbox {
-    accent-color: #334155; /* subtle slate */
-    width: 18px;
-    height: 18px;
+	accent-color: #334155; /* subtle slate */
+	width: 18px;
+	height: 18px;
 }
 
 .modern-minimal-toggle {
-    appearance: none;
-    width: 38px;
-    height: 20px;
-    border-radius: 20px;
-    background: rgba(15,23,42,0.18);
-    position: relative;
-    cursor: pointer;
-    transition: background 0.2s ease;
+	appearance: none;
+	width: 38px;
+	height: 20px;
+	border-radius: 20px;
+	background: rgba(15, 23, 42, 0.18);
+	position: relative;
+	cursor: pointer;
+	transition: background 0.2s ease;
 }
 
 .modern-minimal-toggle::after {
-    content: '';
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    width: 16px;
-    height: 16px;
-    background: #ffffff;
-    border-radius: 50%;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-    transition: transform 0.2s ease;
+	content: '';
+	position: absolute;
+	top: 2px;
+	left: 2px;
+	width: 16px;
+	height: 16px;
+	background: #ffffff;
+	border-radius: 50%;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+	transition: transform 0.2s ease;
 }
 
 .modern-minimal-toggle:checked {
-    background: #0f172a;
+	background: #0f172a;
 }
 
 .modern-minimal-toggle:checked::after {
-    transform: translateX(18px);
+	transform: translateX(18px);
 }
 
 /* ---------------------------
    Accessibility helpers
    --------------------------- */
 .container-accessible {
-    padding: 1rem;
-    min-width: 0;
-    display: block;
+	padding: 1rem;
+	min-width: 0;
+	display: block;
 }
 
 /* reduced motion */
 @media (prefers-reduced-motion: reduce) {
-    * {
-        transition: none !important;
-        animation: none !important;
-    }
+	* {
+		transition: none !important;
+		animation: none !important;
+	}
 }
