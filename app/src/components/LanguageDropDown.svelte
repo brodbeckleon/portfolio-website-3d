@@ -47,7 +47,7 @@
 		onclick={toggleDropdown}
 		bind:clientWidth={buttonWidth}
 	>
-		{#if era === 'glassmorphism' || era === 'modern_minimal' || isMobile}
+		{#if era !== 'frutiger_aero'}
 			<Earth strokeWidth={1} />
 		{:else if era === 'frutiger_aero'}
 			<img src={frutigerAeroEarthIconPath} alt="Earth" class="frutiger-aero-icon" />
