@@ -5,7 +5,7 @@
 	import { browser } from '$app/environment';
 	import { onMount } from 'svelte';
 
-	let web_era: WebEras = $derived('frutiger_aero');
+	let web_era: WebEras = $derived('early_web');
 
 	let isMobile: boolean = $derived(false);
 
@@ -25,7 +25,7 @@
 	});
 </script>
 
-<div class="it-page-content">
+<div class="it-page" class:earlyweb-background={web_era === 'early_web'}>
 	<TitleBar era={web_era} {isMobile} />
 	<div class="it-page-content">
 		<ThreeStateToggle bind:web_era />
@@ -40,8 +40,10 @@
 </div>
 
 <style>
-	.it-page-content {
-		transition: all 0.3s ease;
+	.it-page {
+		width: 100vw;
+		height: 100vh;
+		padding-top: 1vh;
 	}
 	.it-page-content {
 		margin: 1rem;

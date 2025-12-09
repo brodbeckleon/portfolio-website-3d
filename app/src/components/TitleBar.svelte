@@ -102,6 +102,7 @@
 		left: 50%;
 		transform: translateX(-50%);
 		cursor: pointer;
+		font-size: 1.5rem;
 	}
 
 	/** mobile **/

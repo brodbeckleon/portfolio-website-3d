@@ -67,6 +67,7 @@
 					{#each socialLinks as { icon: IconComponent, href, text } (href)}
 						<button
 							class="mobile-dropdown-item"
+							class:earlyweb-dropdown-item={era === 'early_web'}
 							onclick={() => {
 								goExternal(href);
 								showSocialDropdown = false;
