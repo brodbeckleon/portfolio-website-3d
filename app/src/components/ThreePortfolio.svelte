@@ -52,7 +52,7 @@
 		composer.addPass(bloomPass);
 
 		// --- Floor ---
-		const floorGeo = new THREE.PlaneGeometry(10, 10);
+		const floorGeo = new THREE.CircleGeometry(6);
 		const floorMat = new THREE.MeshStandardMaterial({
 			color: 0x2a1e15, // Rich dark brown
 			roughness: 0.9,
@@ -231,7 +231,7 @@
 			(Math.PI / 180) * 30,
 			0.001,
 			1,
-			'#111111',
+			'#999999',
 			'center',
 			true,
 			80
@@ -247,7 +247,7 @@
 			0,
 			0.002,
 			2,
-			'#111111',
+			'#999999',
 			'center',
 			true,
 			80
@@ -344,8 +344,9 @@
 		controls.enablePan = false;
 		controls.enableZoom = true;
 		let zoomScale = controls.getZoomScale();
+		controls.setScale(zoomScale * 2.5);
+		controls.maxDistance = zoomScale * 2.5;
 		controls.minDistance = zoomScale * 0.5;
-		controls.maxDistance = zoomScale * 2;
 		controls.target.set(0, 0.2, 0);
 		const angle = THREE.MathUtils.degToRad(60);
 		controls.minPolarAngle = angle;
