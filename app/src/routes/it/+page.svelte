@@ -42,10 +42,12 @@
 <style>
 	.it-page {
 		width: 100%;
-		min-height: 96vh;
+		min-height: 100vh;
 		padding: 1vh 0;
 		display: flex;
 		flex-direction: column;
+		margin: 0;
+		flex: 1;
 	}
 	.it-page-content {
 		margin: 1rem;
