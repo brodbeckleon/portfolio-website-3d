@@ -1,3 +1,8 @@
+.earlyweb-background {
+	background: #c0bcb6;
+	transition: none !important;
+}
+
 .earlyweb-dropdown-menu,
 .earlyweb-dropdown-item,
 .earlyweb-container,
@@ -53,7 +58,8 @@
 	background: #e8e6e2;
 }
 
-.earlyweb-button.active {
+.earlyweb-button.active,
+.earlyweb-button:active {
 	border-color: #808080 #ffffff #ffffff #808080;
 	box-shadow:
 		inset -1px -1px 0 #ffffff,
@@ -258,7 +264,7 @@
 .earlyweb-dropdown-item {
 	margin: 0;
 	width: 100%;
-	text-align: left;
+	text-align: center;
 	border: none;
 	border-radius: 0;
 	box-shadow: none;
@@ -292,6 +298,10 @@
 	text-decoration: underline;
 }
 
+.earlyweb-link-text:hover {
+	color: yellow !important;
+}
+
 .earlyweb-link-text:active {
 	color: yellow !important;
 	border-style: dotted;
@@ -300,6 +310,5 @@
 }
 
 .earlyweb-icon {
-	color: #404040;
 	cursor: pointer;
 }
