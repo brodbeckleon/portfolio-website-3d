@@ -16,10 +16,12 @@
 <style lang="css">
 	html,
 	body {
-		height: 100%;
+		min-height: 100vh;
 		width: 100%;
 		margin: 0;
 		padding: 0;
 		box-sizing: border-box;
+		overflow-x: hidden;
+		overflow-y: hidden;
 	}
 </style>

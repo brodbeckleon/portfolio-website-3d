@@ -298,6 +298,10 @@
 	text-decoration: underline;
 }
 
+.earlyweb-link-text:hover {
+	color: yellow !important;
+}
+
 .earlyweb-link-text:active {
 	color: yellow !important;
 	border-style: dotted;

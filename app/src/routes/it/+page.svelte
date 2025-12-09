@@ -41,9 +41,11 @@
 
 <style>
 	.it-page {
-		width: 100vw;
-		height: 100vh;
-		padding-top: 1vh;
+		width: 100%;
+		min-height: 96vh;
+		padding: 1vh 0;
+		display: flex;
+		flex-direction: column;
 	}
 	.it-page-content {
 		margin: 1rem;

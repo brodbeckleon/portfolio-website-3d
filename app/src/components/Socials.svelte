@@ -4,7 +4,6 @@
 	import { Github, Instagram, Youtube, Linkedin, Share2 } from '@lucide/svelte';
 	import { m } from '$lib/paraglide/messages';
 	import type { WebEras } from '$lib/Types.ts';
-	import { fade } from 'svelte/transition';
 
 	interface SocialsProps {
 		era: WebEras;
@@ -14,6 +13,7 @@
 	let { era, isMobile }: SocialsProps = $props();
 
 	let showSocialDropdown = $state(false);
+	let buttonWidth = $state(0);
 
 	const socialLinks = [
 		{ icon: Github, href: 'https://www.github.com/brodbeckleon', text: 'GitHub' },
@@ -63,6 +63,7 @@
 					class="mobile-social-dropdown-menu"
 					class:glassmorphism-container={era === 'glassmorphism'}
 					class:earlyweb-button={era === 'early_web'}
+					style="width: {buttonWidth}px"
 				>
 					{#each socialLinks as { icon: IconComponent, href, text } (href)}
 						<button
@@ -89,6 +90,7 @@
 				onclick={toggleDropdown}
 				aria-label={m.toggle_socials()}
 				aria-expanded={showSocialDropdown}
+				bind:clientWidth={buttonWidth}
 			>
 				<Share2 strokeWidth={1} />
 			</button>
