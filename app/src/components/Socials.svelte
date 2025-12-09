@@ -15,14 +15,38 @@
 	let showSocialDropdown = $state(false);
 	let buttonWidth = $state(0);
 
+	const frutigerAeroIcons = {
+		github: '/frutiger-aero-icons/GitHub.png',
+		instagram: '/frutiger-aero-icons/Instagram.png',
+		youtube: '/frutiger-aero-icons/Youtube.png',
+		linkedin: '/frutiger-aero-icons/Linkedin.png',
+		share: '/frutiger-aero-icons/Share.png'
+	};
+
 	const socialLinks = [
-		{ icon: Github, href: 'https://www.github.com/brodbeckleon', text: 'GitHub' },
-		{ icon: Instagram, href: 'https://www.instagram.com/leon.brodbeck/', text: 'Instagram' },
-		{ icon: Youtube, href: 'https://www.youtube.com/@leon.brodbeck', text: 'Youtube' },
+		{
+			icon: Github,
+			href: 'https://www.github.com/brodbeckleon',
+			text: 'GitHub',
+			png: frutigerAeroIcons.github
+		},
+		{
+			icon: Instagram,
+			href: 'https://www.instagram.com/leon.brodbeck/',
+			text: 'Instagram',
+			png: frutigerAeroIcons.instagram
+		},
+		{
+			icon: Youtube,
+			href: 'https://www.youtube.com/@leon.brodbeck',
+			text: 'Youtube',
+			png: frutigerAeroIcons.youtube
+		},
 		{
 			icon: Linkedin,
 			href: 'https://www.linkedin.com/in/léon-shin-ichi-brodbeck-b71786240/',
-			text: 'Linkedin'
+			text: 'Linkedin',
+			png: frutigerAeroIcons.linkedin
 		}
 	];
 
@@ -62,21 +86,32 @@
 				<div
 					class="mobile-social-dropdown-menu"
 					class:glassmorphism-container={era === 'glassmorphism'}
-					class:earlyweb-button={era === 'early_web'}
+					class:earlyweb-dropdown-menu={era === 'early_web'}
+					class:frutiger-aero-dropdown-menu={era === 'frutiger_aero'}
+					class:modern-minimal-dropdown-menu={era === 'modern_minimal'}
 					style="width: {buttonWidth}px"
 				>
-					{#each socialLinks as { icon: IconComponent, href, text } (href)}
+					{#each socialLinks as { icon: IconComponent, href, text, png } (href)}
 						<button
 							class="mobile-dropdown-item"
 							class:earlyweb-dropdown-item={era === 'early_web'}
+							class:frutiger-aero-dropdown-item={era === 'frutiger_aero'}
+							class:modern-minimal-dropdown-item={era === 'modern_minimal'}
 							onclick={() => {
 								goExternal(href);
 								showSocialDropdown = false;
 							}}
 							aria-label={m.open_link({ website_name: text })}
 						>
-							<div class:earlyweb-icon={era === 'early_web'}>
-								<IconComponent strokeWidth={1} />
+							<div
+								class:earlyweb-icon={era === 'early_web'}
+								class:modern-minimal-icon={era === 'modern_minimal'}
+							>
+								{#if era === 'frutiger_aero'}
+									<img src={png} alt={text} class="frutiger-aero-icon" />
+								{:else}
+									<IconComponent strokeWidth={1} />
+								{/if}
 							</div>
 						</button>
 					{/each}
@@ -87,12 +122,18 @@
 				class="mobile-share-button"
 				class:glassmorphism-container={era === 'glassmorphism'}
 				class:earlyweb-button={era === 'early_web'}
+				class:frutiger-aero-share-button={era === 'frutiger_aero'}
+				class:modern-minimal-button={era === 'modern_minimal'}
 				onclick={toggleDropdown}
 				aria-label={m.toggle_socials()}
 				aria-expanded={showSocialDropdown}
 				bind:clientWidth={buttonWidth}
 			>
-				<Share2 strokeWidth={1} />
+				{#if era === 'frutiger_aero'}
+					<img src={frutigerAeroIcons.share} alt="Share" class="frutiger-aero-share-icon" />
+				{:else}
+					<Share2 strokeWidth={1} />
+				{/if}
 			</button>
 		</div>
 	{:else}
@@ -101,17 +142,29 @@
 			class="social-links"
 			class:glassmorphism-container={era === 'glassmorphism'}
 			class:earlyweb-container={era === 'early_web'}
+			class:frutiger-aero-container={era === 'frutiger_aero'}
+			class:modern-minimal-container={era === 'modern_minimal'}
 		>
-			{#each socialLinks as { icon: IconComponent, href, text } (href)}
+			{#each socialLinks as { icon: IconComponent, href, text, png } (href)}
 				<button
 					class="link"
 					class:glassmorphism-link={era === 'glassmorphism'}
 					class:earlyweb-link={era === 'early_web'}
+					class:modern-minimal-link={era === 'modern_minimal'}
 					onclick={() => goExternal(href)}
 					aria-label={m.open_link({ website_name: text })}
 				>
 					{#if era === 'glassmorphism' || era === 'modern_minimal'}
-						<IconComponent strokeWidth={1} />
+						<div
+							class:glassmorphism-icon-link={era === 'glassmorphism'}
+							class:modern-minimal-icon-link={era === 'modern_minimal'}
+						>
+							<IconComponent strokeWidth={1} />
+						</div>
+					{:else if era === 'frutiger_aero'}
+						<div class="frutiger-aero-icon">
+							<img src={png} alt={text} class="frutiger-aero-icon" />
+						</div>
 					{:else}
 						<span class:earlyweb-link-text={era === 'early_web'}>
 							{text}
@@ -128,14 +181,14 @@
 	.link {
 		cursor: pointer;
 		border: none;
+		background: transparent;
 	}
 
 	.social-links {
 		height: 48px;
 		display: flex;
-		align-items: center;
-		justify-content: center;
-		padding: 0 24px;
+		justify-content: space-between;
+		padding: 0 12px;
 	}
 
 	/** mobile **/

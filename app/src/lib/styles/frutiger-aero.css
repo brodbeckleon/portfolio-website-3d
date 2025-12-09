@@ -1,264 +1,339 @@
-/* =========================================================
-   FRUTIGER AERO — CONTAINER (BASE STRUCTURE)
-   ========================================================= */
+:root {
+	--aero-background-gradient: linear-gradient(
+		135deg,
+		rgba(255, 255, 255, 0.12) 0%,
+		rgba(255, 255, 255, 0.06) 25%,
+		rgba(255, 255, 255, 0.02) 50%,
+		rgba(0, 0, 0, 0.08) 75%,
+		rgba(0, 0, 0, 0.15) 100%
+	);
+
+	--aero-border-light: 1px solid rgba(255, 255, 255, 0.25);
+	--aero-border-top: 2px solid rgba(255, 255, 255, 0.35);
+	--aero-border-bottom: 2px solid rgba(0, 0, 0, 0.2);
+
+	--aero-drop-shadow: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.25))
+		drop-shadow(0 8px 24px rgba(0, 0, 0, 0.2)) drop-shadow(0 0 32px rgba(255, 255, 255, 0.08));
+
+	--aero-button-gradient: linear-gradient(
+		to bottom,
+		rgba(255, 255, 255, 0.15) 0%,
+		rgba(255, 255, 255, 0.08) 50%,
+		rgba(0, 0, 0, 0.1) 100%
+	);
+
+	--aero-hover-gradient: linear-gradient(
+		to bottom,
+		rgba(255, 255, 255, 0.1) 0%,
+		rgba(0, 0, 0, 0.1) 50%,
+		rgba(0, 0, 0, 0.2) 100%
+	);
+
+	--aero-active-gradient: linear-gradient(
+		to bottom,
+		rgba(0, 0, 0, 0.2) 0%,
+		rgba(0, 0, 0, 0.3) 50%,
+		rgba(0, 0, 0, 0.4) 100%
+	);
+
+	--aero-inner-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), inset 0 -1px 0 rgba(0, 0, 0, 0.15);
+
+	--aero-active-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.frutiger-aero-background {
+	background-image: url('/background-images/windows_vista_50.jpg');
+	background-size: cover;
+	background-position: center;
+	background-repeat: no-repeat;
+}
+
+.frutiger-aero-3way-toggle,
+.frutiger-aero-container,
+.frutiger-aero-button,
+.frutiger-aero-font {
+	font-family: 'Lucida Grande', 'Lucida Sans Unicode', 'Segoe UI', system-ui, sans-serif;
+	font-weight: 700;
+	text-shadow: 0 2px 0.5em rgba(0, 0, 0, 0.5);
+	color: white;
+}
 
 .frutiger-aero-container {
 	position: relative;
-	border-radius: 9999px;
-
-	/* Classic Aero-style glossy border */
-	border: 1px solid rgba(255, 255, 255, 0.28);
-
-	/* Depth + inner glow */
+	background: var(--aero-background-gradient);
+	border: var(--aero-border-light);
+	border-top: var(--aero-border-top);
+	border-bottom: var(--aero-border-bottom);
+	filter: var(--aero-drop-shadow);
+	backdrop-filter: blur(12px) saturate(180%);
+	-webkit-backdrop-filter: blur(12px) saturate(180%);
+	border-radius: 8px;
 	box-shadow:
-		0 10px 30px rgba(0, 0, 0, 0.06),
-		inset 0 1px 0 rgba(255, 255, 255, 0.25),
-		inset 0 -1px 0 rgba(0, 0, 0, 0.04);
-
-	/* Soft blur behind */
-	backdrop-filter: blur(8px);
-	-webkit-backdrop-filter: blur(8px);
-
-	padding: 0.75rem 1rem;
-	overflow: hidden !important;
+		var(--aero-inner-shadow),
+		0 0 0 1px rgba(255, 255, 255, 0.1);
+	overflow: hidden;
 }
 
-/* Top glossy highlight */
 .frutiger-aero-container::before {
-	content: '';
-	position: absolute;
-	top: 0.25rem;
-	left: 0;
-	right: 0;
-	height: 1px;
-
-	background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.9), transparent);
-}
-
-/* Side highlight */
-.frutiger-aero-container::after {
 	content: '';
 	position: absolute;
 	top: 0;
 	left: 0;
-	width: 1px;
-	height: 100%;
-
+	right: 0;
+	height: 50%;
 	background: linear-gradient(
-		180deg,
-		rgba(255, 255, 255, 0.8),
-		transparent,
-		rgba(255, 255, 255, 0.28)
+		to bottom,
+		rgba(255, 255, 255, 0.25) 0%,
+		rgba(255, 255, 255, 0.15) 50%,
+		rgba(255, 255, 255, 0.05) 80%,
+		transparent 100%
 	);
+	pointer-events: none;
+	border-radius: 8px 8px 0 0;
+	z-index: 1;
 }
 
-/* =========================================================
-   FRUTIGER AERO — COLOR THEMES
-   ========================================================= */
-
-/* SKY — blue glossy */
-.frutiger-aero--sky {
-	background: linear-gradient(180deg, rgba(130, 200, 255, 0.35), rgba(80, 160, 240, 0.25));
-	border-color: rgba(255, 255, 255, 0.45);
-}
-
-/* LIME — green glossy */
-.frutiger-aero--lime {
-	background: linear-gradient(180deg, rgba(170, 255, 170, 0.35), rgba(120, 215, 120, 0.22));
-	border-color: rgba(255, 255, 255, 0.45);
-}
-
-/* SUNSET — orange glossy */
-.frutiger-aero--sunset {
-	background: linear-gradient(180deg, rgba(255, 170, 120, 0.35), rgba(245, 100, 70, 0.22));
-	border-color: rgba(255, 255, 255, 0.5);
-}
-
-/* =========================================================
-   FRUTIGER AERO — FONT
-   ========================================================= */
-
-.frutiger-aero-font {
-	font-family: 'Frutiger', 'Inter', 'Helvetica Neue', 'Segoe UI', system-ui, sans-serif;
-	color: #0b1220;
-}
-
-/* =========================================================
-   FRUTIGER AERO — BUTTONS
-   ========================================================= */
-
-.frutiger-aero-button {
-	font-family: 'Frutiger', 'Inter', sans-serif;
-	font-size: 14px;
-	font-weight: 500;
-	padding: 6px 14px;
-
-	border-radius: 9999px;
-	border: 1px solid rgba(255, 255, 255, 0.45);
-
-	background: linear-gradient(180deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.1));
-
-	box-shadow:
-		0 4px 12px rgba(0, 0, 0, 0.1),
-		inset 0 1px 2px rgba(255, 255, 255, 0.5);
-
-	backdrop-filter: blur(6px);
-
-	transition: all 0.12s ease-out;
-	cursor: pointer;
-	color: #0b1220;
-
+.frutiger-aero-button,
+.frutiger-aero-dropdown-menu-button {
 	position: relative;
+	z-index: 2;
+	background: var(--aero-button-gradient);
+	border: var(--aero-border-light);
+	border-top: var(--aero-border-top);
+	border-bottom: var(--aero-border-bottom);
+	border-radius: 8px;
+	color: rgba(255, 255, 255, 0.95) !important;
+	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+	box-shadow: var(--aero-inner-shadow);
+	transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+	cursor: pointer;
+	padding: 8px 16px;
+}
+
+.frutiger-aero-button:hover,
+.frutiger-aero-dropdown-menu-button:hover {
+	background: var(--aero-hover-gradient);
+	box-shadow:
+		var(--aero-inner-shadow),
+		0 0 8px rgba(255, 255, 255, 0.1);
+}
+
+.frutiger-aero-button.active,
+.frutiger-aero-dropdown-menu-button.active {
+	background: var(--aero-active-gradient);
+	box-shadow: var(--aero-active-shadow);
+	border-top: 1px solid rgba(255, 255, 255, 0.1);
+	border-bottom: 1px solid rgba(0, 0, 0, 0.3);
+	transform: translateY(1px);
+	color: rgba(255, 255, 255, 1) !important;
+	text-shadow:
+		0 1px 3px rgba(0, 0, 0, 0.5),
+		0 0 4px rgba(255, 255, 255, 0.2);
+	animation: aero-glow 4s infinite ease-in-out;
+}
+
+.frutiger-aero-dropdown-menu {
+	position: absolute;
+	z-index: 1000;
+	background: var(--aero-background-gradient);
+	border: var(--aero-border-light);
+	border-top: var(--aero-border-top);
+	border-bottom: var(--aero-border-bottom);
+	filter: var(--aero-drop-shadow);
+	backdrop-filter: blur(12px) saturate(180%);
+	-webkit-backdrop-filter: blur(12px) saturate(180%);
+	border-radius: 8px;
+	box-shadow:
+		var(--aero-inner-shadow),
+		0 0 0 1px rgba(255, 255, 255, 0.1);
 	overflow: hidden;
+	margin-top: 4px;
 }
 
-.frutiger-aero-button:hover {
-	background: linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.2));
+.frutiger-aero-dropdown-menu::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 50%;
+	background: linear-gradient(
+		to bottom,
+		rgba(255, 255, 255, 0.25) 0%,
+		rgba(255, 255, 255, 0.15) 50%,
+		rgba(255, 255, 255, 0.05) 80%,
+		transparent 100%
+	);
+	pointer-events: none;
+	border-radius: 8px 8px 0 0;
+	z-index: 1;
 }
 
-.frutiger-aero-button:active {
-	box-shadow:
-		0 2px 6px rgba(0, 0, 0, 0.15),
-		inset 0 2px 4px rgba(0, 0, 0, 0.2);
-	transform: scale(0.97);
-}
-
-/* =========================================================
-   FRUTIGER AERO — TEXT INPUTS
-   ========================================================= */
-
-.frutiger-aero-input {
-	font-family: 'Frutiger', 'Inter', sans-serif;
-	font-size: 14px;
-
-	padding: 6px 10px;
-
-	border-radius: 20px;
-	border: 1px solid rgba(255, 255, 255, 0.4);
-
-	background: linear-gradient(180deg, rgba(255, 255, 255, 0.65), rgba(255, 255, 255, 0.35));
-
-	backdrop-filter: blur(4px);
-
-	box-shadow:
-		0 4px 12px rgba(0, 0, 0, 0.08),
-		inset 0 1px 2px rgba(255, 255, 255, 0.5);
-
-	width: 220px;
-	color: #0b1220;
-
-	transition: box-shadow 0.15s ease-out;
-}
-
-.frutiger-aero-input:focus {
-	outline: none;
-	box-shadow:
-		0 0 0 2px rgba(100, 150, 255, 0.45),
-		0 4px 12px rgba(0, 0, 0, 0.1),
-		inset 0 1px 2px rgba(255, 255, 255, 0.6);
-}
-
-/* =========================================================
-   FRUTIGER AERO — DROPDOWNS
-   ========================================================= */
-
-.frutiger-aero-select {
-	font-family: 'Frutiger', 'Inter', sans-serif;
-	font-size: 14px;
-	appearance: none;
-
-	padding: 6px 32px 6px 10px;
-	width: 220px;
-
-	border-radius: 20px;
-	border: 1px solid rgba(255, 255, 255, 0.4);
-
-	background: linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.3));
-
-	box-shadow:
-		0 4px 12px rgba(0, 0, 0, 0.08),
-		inset 0 1px 2px rgba(255, 255, 255, 0.5);
-
-	backdrop-filter: blur(5px);
-
-	cursor: pointer;
-	color: #0b1220;
-
-	background-image: url('data:image/svg+xml;utf8,\
-<svg width="16" height="16" xmlns="http://www.w3.org/2000/svg">\
-<path d="M4 6 L8 10 L12 6" stroke="rgba(0,0,0,0.55)" stroke-width="2" fill="none" stroke-linecap="round"/>\
-</svg>');
-	background-repeat: no-repeat;
-	background-position: right 10px center;
-	background-size: 16px;
-}
-
-/* =========================================================
-   FRUTIGER AERO — CHECKBOX
-   ========================================================= */
-
-.frutiger-aero-checkbox {
-	appearance: none;
-	width: 18px;
-	height: 18px;
-
-	border-radius: 4px;
-	border: 1px solid rgba(255, 255, 255, 0.5);
-
-	background: linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.35));
-
-	box-shadow:
-		0 2px 6px rgba(0, 0, 0, 0.15),
-		inset 0 1px 2px rgba(255, 255, 255, 0.6);
-
-	cursor: pointer;
-	transition: all 0.15s ease-out;
-}
-
-.frutiger-aero-checkbox:checked {
-	background: linear-gradient(180deg, rgba(120, 220, 120, 0.75), rgba(80, 180, 80, 0.55));
-	box-shadow:
-		0 2px 6px rgba(0, 0, 0, 0.2),
-		inset 0 1px 2px rgba(255, 255, 255, 0.7);
-}
-
-.frutiger-aero-checkbox:checked::after {
-	content: '✔';
-	color: rgba(0, 0, 0, 0.65);
-	font-size: 14px;
-	font-weight: bold;
-
+.frutiger-aero-button-menu-item,
+.frutiger-aero-dropdown-item {
 	position: relative;
-	left: 2px;
-	top: -1px;
+	z-index: 2;
+	background: var(--aero-button-gradient);
+	color: rgba(255, 255, 255, 0.95) !important;
+	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+	border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+	padding: 10px 16px;
+	cursor: pointer;
+	transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* =========================================================
-   FRUTIGER AERO — SCROLLBARS
-   ========================================================= */
-
-.frutiger-aero-scroll {
-	scrollbar-width: thin;
-	scrollbar-color: rgba(120, 200, 255, 0.75) rgba(240, 240, 255, 0.4);
+.frutiger-aero-button-menu-item:last-child,
+.frutiger-aero-dropdown-item:last-child {
+	border-bottom: none;
+	border-radius: 0 0 8px 8px;
 }
 
-.frutiger-aero-scroll::-webkit-scrollbar {
-	width: 12px;
+.frutiger-aero-button-menu-item:first-child,
+.frutiger-aero-dropdown-item:first-child {
+	border-radius: 8px 8px 0 0;
 }
 
-.frutiger-aero-scroll::-webkit-scrollbar-track {
-	background: rgba(255, 255, 255, 0.35);
-	backdrop-filter: blur(6px);
-	border-radius: 20px;
+.frutiger-aero-button-menu-item:hover,
+.frutiger-aero-dropdown-item:hover {
+	background: var(--aero-hover-gradient);
+	box-shadow:
+		inset 0 1px 0 rgba(255, 255, 255, 0.2),
+		inset 0 -1px 0 rgba(0, 0, 0, 0.25),
+		0 0 8px rgba(255, 255, 255, 0.1);
+	transform: scale(1) !important;
 }
 
-.frutiger-aero-scroll::-webkit-scrollbar-thumb {
-	background: linear-gradient(180deg, rgba(120, 200, 255, 0.8), rgba(80, 160, 240, 0.65));
-	border-radius: 20px;
-	border: 2px solid rgba(255, 255, 255, 0.5);
-	box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.6);
+.frutiger-aero-button-menu-item.active,
+.frutiger-aero-dropdown-item.active {
+	background: var(--aero-active-gradient);
+	box-shadow: var(--aero-active-shadow);
+	color: rgba(255, 255, 255, 1) !important;
+	text-shadow:
+		0 1px 3px rgba(0, 0, 0, 0.5),
+		0 0 4px rgba(255, 255, 255, 0.2);
 }
 
-.frutiger-aero-scroll::-webkit-scrollbar-thumb:hover {
-	background: linear-gradient(180deg, rgba(150, 220, 255, 0.9), rgba(110, 180, 255, 0.75));
+/* Three-way toggle styles (using the same patterns) */
+.frutiger-aero-3way-toggle {
+	position: relative;
+	background: var(--aero-background-gradient);
+	border: var(--aero-border-light);
+	border-top: var(--aero-border-top);
+	border-bottom: var(--aero-border-bottom);
+	filter: var(--aero-drop-shadow);
+	backdrop-filter: blur(12px) saturate(180%);
+	-webkit-backdrop-filter: blur(12px) saturate(180%);
+	border-radius: 8px;
+	overflow: hidden;
+	box-shadow:
+		var(--aero-inner-shadow),
+		0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.frutiger-aero-3way-toggle::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 50%;
+	background: linear-gradient(
+		to bottom,
+		rgba(255, 255, 255, 0.25) 0%,
+		rgba(255, 255, 255, 0.15) 50%,
+		rgba(255, 255, 255, 0.05) 80%,
+		transparent 100%
+	);
+	pointer-events: none;
+	border-radius: 8px 8px 0 0;
+	z-index: 1;
+}
+
+.frutiger-aero-3way-toggle-button {
+	color: rgba(255, 255, 255, 0.95) !important;
+	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+	background: var(--aero-button-gradient);
+	border-radius: 0;
+	border-right: 1px solid rgba(255, 255, 255, 0.15);
+	border-left: 1px solid rgba(0, 0, 0, 0.1);
+	position: relative;
+	z-index: 2;
+	transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+	box-shadow: var(--aero-inner-shadow);
+}
+
+.frutiger-aero-3way-toggle-button:last-child {
+	border-right: none;
+}
+
+.frutiger-aero-3way-toggle-button:hover {
+	background: var(--aero-hover-gradient);
+	box-shadow:
+		inset 0 1px 0 rgba(255, 255, 255, 0.2),
+		inset 0 -1px 0 rgba(0, 0, 0, 0.25),
+		0 0 8px rgba(255, 255, 255, 0.1);
+}
+
+.frutiger-aero-3way-toggle-button.active {
+	background: var(--aero-active-gradient);
+	box-shadow: var(--aero-active-shadow);
+	border-top: 1px solid rgba(255, 255, 255, 0.1);
+	border-bottom: 1px solid rgba(0, 0, 0, 0.3);
+	transform: translateY(1px);
+	color: rgba(255, 255, 255, 1) !important;
+	text-shadow:
+		0 1px 3px rgba(0, 0, 0, 0.5),
+		0 0 4px rgba(255, 255, 255, 0.2);
+}
+
+.frutiger-aero-3way-toggle:hover {
+	filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3)) drop-shadow(0 8px 24px rgba(0, 0, 0, 0.25))
+		drop-shadow(0 0 36px rgba(255, 255, 255, 0.12));
+}
+
+/* Optional subtle pulse for active state */
+@keyframes aero-glow {
+	0% {
+		box-shadow:
+			var(--aero-active-shadow),
+			0 0 8px rgba(255, 255, 255, 0.05);
+	}
+	50% {
+		box-shadow:
+			var(--aero-active-shadow),
+			0 0 12px rgba(255, 255, 255, 0.1);
+	}
+	100% {
+		box-shadow:
+			var(--aero-active-shadow),
+			0 0 8px rgba(255, 255, 255, 0.05);
+	}
+}
+
+/* Apply the glow animation to all active elements */
+.frutiger-aero-3way-toggle-button.active,
+.frutiger-aero-button.active,
+.frutiger-aero-dropdown-menu-button.active {
+	animation: aero-glow 4s infinite ease-in-out;
+}
+
+.frutiger-aero-share-button {
+	width: 48px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	background: transparent;
+	border: none;
+}
+
+.frutiger-aero-icon {
+	height: 36px;
+	filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+	cursor: pointer;
+	background: transparent;
+}
+
+.frutiger-aero-share-icon {
+	width: 48px;
 }

@@ -30,6 +30,8 @@
 			class="main_title"
 			class:glassmorphism-container={era === 'glassmorphism'}
 			class:earlyweb-container={era === 'early_web'}
+			class:frutiger-aero-container={era === 'frutiger_aero'}
+			class:modern-minimal-container={era === 'modern_minimal'}
 			aria-label={m.return_to_homepage()}
 			onclick={() => returnToHomepage()}
 		>
@@ -42,17 +44,16 @@
 		<div
 			class="mobile-header"
 			class:glassmorphism-container={era === 'glassmorphism'}
-			class:modern-minimal-container={era === 'modern_minimal'}
-			class:frutiger-aero-container={era === 'frutiger_aero'}
-			class:frutiger-aero--sunset={era === 'frutiger_aero'}
 			class:earlyweb-container={era === 'early_web'}
+			class:frutiger-aero-container={era === 'frutiger_aero'}
+			class:modern-minimal-container={era === 'modern_minimal'}
 		>
 			<h1
 				class="mobile-header-title"
 				class:glassmorphism-font={era === 'glassmorphism'}
-				class:modern-minimal-font={era === 'modern_minimal'}
-				class:frutiger-aero-font={era === 'frutiger_aero'}
 				class:earlyweb-font={era === 'early_web'}
+				class:frutiger-aero-font={era === 'frutiger_aero'}
+				class:modern-minimal-font={era === 'modern_minimal'}
 				aria-label={m.return_to_homepage()}
 				onclick={() => returnToHomepage()}
 			>

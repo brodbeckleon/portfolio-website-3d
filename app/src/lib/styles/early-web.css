@@ -253,7 +253,6 @@
 	box-shadow:
 		inset 1px 1px 0 #ffffff,
 		inset -1px -1px 0 #808080;
-	padding: 1rem 0;
 	overflow: hidden;
 	image-rendering: pixelated;
 	-webkit-font-smoothing: none;
