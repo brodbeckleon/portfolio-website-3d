@@ -29,7 +29,7 @@
 		<h1
 			class="main_title"
 			class:glassmorphism-container={era === 'glassmorphism'}
-            class:earlyweb-container={era === 'early_web'}
+			class:earlyweb-container={era === 'early_web'}
 			aria-label={m.return_to_homepage()}
 			onclick={() => returnToHomepage()}
 		>

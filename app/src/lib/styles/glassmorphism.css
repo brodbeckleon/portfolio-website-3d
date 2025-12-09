@@ -1,3 +1,14 @@
+.glassmorphism-dropdown-menu,
+.glassmorphism-dropdown-item,
+.glassmorphism-container,
+.glassmorphism-font {
+	font-family:
+		Helvetica Neue,
+		sans-serif;
+	color: white;
+}
+
+.glassmorphism-dropdown-menu,
 .glassmorphism-container {
 	position: relative;
 	border-radius: 9999px;
@@ -38,8 +49,22 @@
 	);
 }
 
-.glassmorphism-font {
-	font-family:
-		Helvetica Neue,
-		sans-serif;
+.glassmorphism-dropdown-menu {
+	border-radius: 24px;
+}
+.glassmorphism-dropdown-item.active {
+	transform: scale(1.1);
+}
+.dropdown-item:hover {
+	transform: scale(1.1);
+}
+
+.glassmorphism-link {
+	background: none;
+	color: white;
+	transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.icon-link:hover {
+	transform: scale(1.1);
 }
