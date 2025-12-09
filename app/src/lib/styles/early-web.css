@@ -1,8 +1,20 @@
-/* ---------------------------
-   EARLY WEB — NOW WINDOWS 2000 THEME
-   --------------------------- */
+.earlyweb-dropdown-menu,
+.earlyweb-dropdown-item,
+.earlyweb-container,
+.earlyweb-button,
+.earlyweb-link,
+.earlyweb-font {
+	font-family: 'Tahoma', 'Verdana', sans-serif;
+	font-size: 12px;
+	line-height: 1.1;
+	-webkit-font-smoothing: none;
+	text-rendering: geometricPrecision;
+	color: black !important;
+}
 
 /* Base container becomes full Win2000 chrome */
+.earlyweb-button,
+.earlyweb-dropdown-menu,
 .earlyweb-container {
 	position: relative;
 	border-radius: 0;
@@ -16,42 +28,13 @@
 
 	padding: 0;
 	overflow: hidden !important;
-	font-size: 12px;
-	font-family: 'Tahoma', 'Verdana', sans-serif;
-
 	image-rendering: pixelated;
-	-webkit-font-smoothing: none;
-	text-rendering: geometricPrecision;
-}
-
-/* Title bar */
-.earlyweb-title {
-	background: linear-gradient(180deg, #0a246a 0%, #3a6ea5 100%);
-	color: #fff;
-	padding: 3px 6px;
-	font-size: 12px;
-	user-select: none;
-	border-bottom: 2px solid #404040;
-	box-shadow:
-		inset 1px 1px 0 #ffffff,
-		inset -1px -1px 0 #000000;
-}
-
-/* Inner content area */
-.earlyweb-content {
-	padding: 0.75rem;
-	background: #d4d0c8;
-	border-top: 1px solid #ffffff;
 }
 
 /* ---------------------------
    BUTTONS — Windows 2000
    --------------------------- */
-.earlyweb-btn {
-	font-family: 'Tahoma', 'Verdana', sans-serif;
-	font-size: 12px;
-	padding: 2px 12px;
-	margin: 4px;
+.earlyweb-button {
 	background: #d4d0c8;
 	color: #000;
 
@@ -62,15 +45,15 @@
 		inset -1px -1px 0 #000000,
 		inset 1px 1px 0 #ffffff;
 
-	cursor: default;
+	cursor: pointer;
 	image-rendering: pixelated;
 }
 
-.earlyweb-btn:hover {
+.earlyweb-button:hover {
 	background: #e8e6e2;
 }
 
-.earlyweb-btn:active {
+.earlyweb-button.active {
 	border-color: #808080 #ffffff #ffffff #808080;
 	box-shadow:
 		inset -1px -1px 0 #ffffff,
@@ -79,7 +62,7 @@
 }
 
 /* Disabled */
-.earlyweb-btn:disabled {
+.earlyweb-button:disabled {
 	color: #808080;
 	border-color: #ffffff #808080 #808080 #ffffff;
 	opacity: 0.6;
@@ -102,15 +85,6 @@
 /* Beige folder view */
 .earlyweb--beige {
 	background: linear-gradient(180deg, #f3f0e6, #e5dfd4);
-}
-
-/* Uniform font */
-.earlyweb-font {
-	font-family: 'Tahoma', 'Verdana', sans-serif;
-	font-size: 12px;
-	line-height: 1.1;
-	-webkit-font-smoothing: none;
-	text-rendering: geometricPrecision;
 }
 
 /* ---------------------------------------------------------
@@ -240,7 +214,6 @@
 	background: #ffffff;
 	color: #000;
 	appearance: none;
-	width: 180px;
 	cursor: default;
 
 	border: 2px solid;
@@ -264,4 +237,69 @@
 .earlyweb-select:disabled {
 	background-color: #f0f0f0;
 	color: #808080;
+}
+
+/* Win2000 Dropdown Container */
+.earlyweb-dropdown-menu {
+	border-radius: 0;
+	background: #ffffff;
+	border: 2px solid #404040;
+	box-shadow:
+		inset 1px 1px 0 #ffffff,
+		inset -1px -1px 0 #808080;
+	padding: 1rem 0;
+	overflow: hidden;
+	image-rendering: pixelated;
+	-webkit-font-smoothing: none;
+	text-rendering: geometricPrecision;
+}
+
+/* Win2000 Dropdown Items */
+.earlyweb-dropdown-item {
+	margin: 0;
+	width: 100%;
+	text-align: left;
+	border: none;
+	border-radius: 0;
+	box-shadow: none;
+	cursor: default;
+	image-rendering: pixelated;
+	-webkit-font-smoothing: none;
+}
+
+.earlyweb-dropdown-item:hover {
+	background: #0a246a !important;
+	color: #ffffff !important;
+	transform: scale(1);
+}
+
+.earlyweb-dropdown-item.active {
+	font-weight: 700;
+	color: #000;
+}
+
+.earlyweb-link {
+	background: none;
+	box-sizing: border-box !important;
+}
+
+.earlyweb-link:hover {
+	font-weight: 400 !important; /* Keep regular weight */
+	transform: none !important;
+}
+.earlyweb-link-text {
+	color: blue !important;
+	text-decoration: underline;
+}
+
+.earlyweb-link-text:active {
+	color: yellow !important;
+	border-style: dotted;
+	border-width: 1px !important;
+	border-color: blue;
+}
+
+.earlyweb-icon {
+	color: #404040;
+	cursor: pointer;
 }

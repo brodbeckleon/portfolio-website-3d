@@ -62,18 +62,20 @@
 				<div
 					class="mobile-social-dropdown-menu"
 					class:glassmorphism-container={era === 'glassmorphism'}
+					class:earlyweb-button={era === 'early_web'}
 				>
 					{#each socialLinks as { icon: IconComponent, href, text } (href)}
 						<button
 							class="mobile-dropdown-item"
-							class:glassmorphism={era === 'glassmorphism'}
 							onclick={() => {
 								goExternal(href);
 								showSocialDropdown = false;
 							}}
 							aria-label={m.open_link({ website_name: text })}
 						>
-							<IconComponent strokeWidth={1} class="dropdown-icon" />
+							<div class:earlyweb-icon={era === 'early_web'}>
+								<IconComponent strokeWidth={1} />
+							</div>
 						</button>
 					{/each}
 				</div>
@@ -82,6 +84,7 @@
 			<button
 				class="mobile-share-button"
 				class:glassmorphism-container={era === 'glassmorphism'}
+				class:earlyweb-button={era === 'early_web'}
 				onclick={toggleDropdown}
 				aria-label={m.toggle_socials()}
 				aria-expanded={showSocialDropdown}
@@ -91,14 +94,26 @@
 		</div>
 	{:else}
 		<!-- Desktop view -->
-		<div class="social-icons" class:glassmorphism-container={era === 'glassmorphism'}>
+		<div
+			class="social-links"
+			class:glassmorphism-container={era === 'glassmorphism'}
+			class:earlyweb-container={era === 'early_web'}
+		>
 			{#each socialLinks as { icon: IconComponent, href, text } (href)}
 				<button
-					class="icon-link"
+					class="link"
+					class:glassmorphism-link={era === 'glassmorphism'}
+					class:earlyweb-link={era === 'early_web'}
 					onclick={() => goExternal(href)}
 					aria-label={m.open_link({ website_name: text })}
 				>
-					<IconComponent strokeWidth={1} />
+					{#if era === 'glassmorphism' || era === 'modern_minimal'}
+						<IconComponent strokeWidth={1} />
+					{:else}
+						<span class:earlyweb-link-text={era === 'early_web'}>
+							{text}
+						</span>
+					{/if}
 				</button>
 			{/each}
 		</div>
@@ -107,19 +122,12 @@
 
 <style lang="css">
 	/* Base styles */
-	.icon-link {
+	.link {
 		cursor: pointer;
-		background: none;
 		border: none;
-		color: white;
-		transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 	}
 
-	.icon-link:hover {
-		transform: scale(1.1);
-	}
-
-	.social-icons {
+	.social-links {
 		height: 48px;
 		display: flex;
 		align-items: center;

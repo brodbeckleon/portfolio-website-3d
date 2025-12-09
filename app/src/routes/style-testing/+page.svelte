@@ -109,7 +109,7 @@
 	>
 		<h3>Windows 2000 UI Elements</h3>
 
-		<button class="earlyweb-btn">Early Web Button</button>
+		<button class="earlyweb-button">Early Web Button</button>
 
 		<!-- Text Input -->
 		<label>Text Input:</label>
