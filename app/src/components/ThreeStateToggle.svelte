@@ -9,11 +9,15 @@
 	}
 </script>
 
-<div class="toggle" class:earlyweb-container={web_era === 'early_web'}>
+<div class="toggle"
+	 class:earlyweb-container={web_era === 'early_web'}
+	 class:modern-minimal-3way-toggle={web_era === 'modern_minimal'}
+>
 	{#each toggleable_eras as era}
 		<button
 			class:earlyweb-button={web_era === 'early_web'}
-			class={web_era === era ? 'active' : ''}
+			class:modern-minimal-button={web_era === 'modern_minimal'}
+			class={web_era === era ? 'active' : 'inactive'}
 			onclick={() => selectEra(era)}
 		>
 			{web_era_labels[era]}

@@ -1,3 +1,4 @@
+.glassmorphism-button,
 .glassmorphism-dropdown-menu,
 .glassmorphism-dropdown-item,
 .glassmorphism-container,
@@ -8,6 +9,7 @@
 	color: white;
 }
 
+.glassmorphism-button,
 .glassmorphism-dropdown-menu,
 .glassmorphism-container {
 	position: relative;
@@ -49,6 +51,10 @@
 	);
 }
 
+.glassmorphism-button {
+
+}
+
 .glassmorphism-dropdown-menu {
 	border-radius: 24px;
 }
@@ -65,6 +71,6 @@
 	transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.icon-link:hover {
+.glassmorphism-icon-link:hover {
 	transform: scale(1.1);
 }

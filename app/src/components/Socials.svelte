@@ -62,20 +62,25 @@
 				<div
 					class="mobile-social-dropdown-menu"
 					class:glassmorphism-container={era === 'glassmorphism'}
-					class:earlyweb-button={era === 'early_web'}
+					class:earlyweb-dropdown-menu={era === 'early_web'}
+					class:modern-minimal-dropdown-menu={era === 'modern_minimal'}
 					style="width: {buttonWidth}px"
 				>
 					{#each socialLinks as { icon: IconComponent, href, text } (href)}
 						<button
 							class="mobile-dropdown-item"
 							class:earlyweb-dropdown-item={era === 'early_web'}
+							class:modern-minimal-dropdown-item={era === 'modern_minimal'}
 							onclick={() => {
 								goExternal(href);
 								showSocialDropdown = false;
 							}}
 							aria-label={m.open_link({ website_name: text })}
 						>
-							<div class:earlyweb-icon={era === 'early_web'}>
+							<div
+								class:earlyweb-icon={era === 'early_web'}
+								class:modern-minimal-icon={era === 'modern_minimal'}
+							>
 								<IconComponent strokeWidth={1} />
 							</div>
 						</button>
@@ -87,6 +92,7 @@
 				class="mobile-share-button"
 				class:glassmorphism-container={era === 'glassmorphism'}
 				class:earlyweb-button={era === 'early_web'}
+				class:modern-minimal-button={era === 'modern_minimal'}
 				onclick={toggleDropdown}
 				aria-label={m.toggle_socials()}
 				aria-expanded={showSocialDropdown}
@@ -101,17 +107,24 @@
 			class="social-links"
 			class:glassmorphism-container={era === 'glassmorphism'}
 			class:earlyweb-container={era === 'early_web'}
+			class:modern-minimal-container={era === 'modern_minimal'}
 		>
 			{#each socialLinks as { icon: IconComponent, href, text } (href)}
 				<button
 					class="link"
 					class:glassmorphism-link={era === 'glassmorphism'}
 					class:earlyweb-link={era === 'early_web'}
+					class:modern-minimal-link={era === 'modern_minimal'}
 					onclick={() => goExternal(href)}
 					aria-label={m.open_link({ website_name: text })}
 				>
 					{#if era === 'glassmorphism' || era === 'modern_minimal'}
-						<IconComponent strokeWidth={1} />
+						<div
+								class:glassmorphism-icon-link={era === 'glassmorphism'}
+								class:modern-minimal-icon-link={era === 'modern_minimal'}
+						>
+							<IconComponent strokeWidth={1} />
+						</div>
 					{:else}
 						<span class:earlyweb-link-text={era === 'early_web'}>
 							{text}

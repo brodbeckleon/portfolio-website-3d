@@ -38,9 +38,9 @@
 <div class="language-dropdown">
 	<button
 		class="dropdown-btn"
-		class:glassmorphism-container={era === 'glassmorphism'}
-		class:glassmorphism-font={era === 'glassmorphism'}
+		class:glassmorphism-button={era === 'glassmorphism'}
 		class:earlyweb-button={era === 'early_web'}
+		class:modern-minimal-dropdown-button={era === 'modern_minimal'}
 		onclick={toggleDropdown}
 		bind:clientWidth={buttonWidth}
 	>
@@ -64,8 +64,9 @@
 			class="language-dropdown-menu"
 			style="width: {buttonWidth}px"
 			class:glassmorphism-dropdown-menu={era === 'glassmorphism'}
-			class:earlyweb-button={era === 'early_web'}
+			class:earlyweb-dropdown-menu={era === 'early_web'}
 			class:frutiger-aero-container={era === 'frutiger_aero'}
+			class:modern-minimal-dropdown-menu={era === 'modern_minimal'}
 			transition:fade={{ duration: 80 }}
 		>
 			{#each availableLocales as lang (lang)}
@@ -73,6 +74,7 @@
 					class="dropdown-item {current === lang ? 'active' : ''}"
 					class:glassmorphism-dropdown-item={era === 'glassmorphism'}
 					class:earlyweb-dropdown-item={era === 'early_web'}
+					class:modern-minimal-dropdown-item={era === 'modern_minimal'}
 					onclick={() => changeLanguage(lang)}
 				>
 					{availableLocaleNames[lang]}
