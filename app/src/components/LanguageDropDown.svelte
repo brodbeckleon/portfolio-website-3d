@@ -40,10 +40,13 @@
 		class="dropdown-btn"
 		class:glassmorphism-container={era === 'glassmorphism'}
 		class:glassmorphism-font={era === 'glassmorphism'}
-		onclick={toggleDropdown}
+        class:earlyweb-button={era === 'early_web'}
+        onclick={toggleDropdown}
 		bind:clientWidth={buttonWidth}
 	>
-		<Earth strokeWidth={1} />
+        {#if era === 'glassmorphism' || era === 'modern_minimal'}
+		    <Earth strokeWidth={1} />
+        {/if}
 		{#if !isMobile}
 			<span class="lang-label">{availableLocaleNames[current]}</span>
 		{/if}
@@ -60,12 +63,16 @@
 		<div
 			class="language-dropdown-menu"
 			style="width: {buttonWidth}px"
-			class:glassmorphism-container={era === 'glassmorphism'}
+			class:glassmorphism-dropdown-menu={era === 'glassmorphism'}
+            class:earlyweb-button={era === 'early_web'}
+            class:frutiger-aero-container={era === 'frutiger_aero'}
 			transition:fade={{ duration: 80 }}
 		>
 			{#each availableLocales as lang (lang)}
 				<button
 					class="dropdown-item {current === lang ? 'active' : ''}"
+                    class:glassmorphism-dropdown-item={era === 'glassmorphism'}
+                    class:earlyweb-dropdown-item={era === 'early_web'}
 					onclick={() => changeLanguage(lang)}
 				>
 					{availableLocaleNames[lang]}
@@ -85,7 +92,6 @@
 		flex-direction: row;
 		align-items: center;
 		gap: 8px;
-		color: white;
 		cursor: pointer;
 	}
 
@@ -98,7 +104,7 @@
 		flex-direction: column;
 		justify-content: center;
 		align-items: center;
-		border-radius: 24px;
+        z-index: 2;
 	}
 
 	.dropdown-item {
@@ -107,17 +113,11 @@
 		border: none;
 		background: none;
 		cursor: pointer;
-		color: white;
 		transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 	}
 
 	.dropdown-item.active {
 		font-weight: 700;
-		transform: scale(1.1);
-	}
-
-	.dropdown-item:hover {
-		transform: scale(1.1);
 	}
 
 	.chevron {

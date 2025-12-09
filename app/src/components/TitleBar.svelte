@@ -17,7 +17,11 @@
 	}
 </script>
 
-<div class="title-bar">
+<div
+	class="title-bar"
+	style:z-index={era === 'glassmorphism' ? 1000 : 'auto'}
+	style:position={era === 'glassmorphism' ? 'fixed' : 'relative'}
+>
 	{#if !isMobile}
 		<div class="title-bar_left">
 			<Socials {era} {isMobile} />
@@ -25,10 +29,7 @@
 		<h1
 			class="main_title"
 			class:glassmorphism-container={era === 'glassmorphism'}
-			class:glassmorphism-font={era === 'glassmorphism'}
-			class:earlyweb-container={era === 'early_web'}
-			class:earlyweb--aqua={era === 'early_web'}
-			class:earlyweb-font={era === 'early_web'}
+            class:earlyweb-container={era === 'early_web'}
 			aria-label={m.return_to_homepage()}
 			onclick={() => returnToHomepage()}
 		>
@@ -38,17 +39,27 @@
 			<LanguageDropDown {era} {isMobile} />
 		</div>
 	{:else}
-		<div class="mobile-header" class:glassmorphism-container={era === 'glassmorphism'}>
+		<div
+			class="mobile-header"
+			class:glassmorphism-container={era === 'glassmorphism'}
+			class:modern-minimal-container={era === 'modern_minimal'}
+			class:frutiger-aero-container={era === 'frutiger_aero'}
+			class:frutiger-aero--sunset={era === 'frutiger_aero'}
+			class:earlyweb-container={era === 'early_web'}
+		>
 			<h1
 				class="mobile-header-title"
 				class:glassmorphism-font={era === 'glassmorphism'}
+				class:modern-minimal-font={era === 'modern_minimal'}
+				class:frutiger-aero-font={era === 'frutiger_aero'}
+				class:earlyweb-font={era === 'early_web'}
 				aria-label={m.return_to_homepage()}
 				onclick={() => returnToHomepage()}
 			>
 				{m.leon_shinichi()}
 			</h1>
 		</div>
-		<div class="mobile-footer">
+		<div class="mobile-footer" style:z-index="1000">
 			<Socials {era} {isMobile} />
 			<LanguageDropDown {era} {isMobile} />
 		</div>
@@ -59,9 +70,7 @@
 	.title-bar {
 		display: flex;
 		align-items: center;
-		position: fixed;
-		margin: 2rem auto;
-		z-index: 1000;
+		margin: 2rem 0;
 		width: 100%;
 		color: white;
 	}
