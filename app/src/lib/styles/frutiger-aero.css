@@ -110,6 +110,10 @@
 	padding: 8px 16px;
 }
 
+.frutiger-aero-dropdown-menu-button {
+	backdrop-filter: blur(12px) saturate(180%);
+}
+
 .frutiger-aero-button:hover,
 .frutiger-aero-dropdown-menu-button:hover {
 	background: var(--aero-hover-gradient);
