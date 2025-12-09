@@ -30,6 +30,7 @@
 			class="main_title"
 			class:glassmorphism-container={era === 'glassmorphism'}
 			class:earlyweb-container={era === 'early_web'}
+			class:frutiger-aero-container={era === 'frutiger_aero'}
 			class:modern-minimal-container={era === 'modern_minimal'}
 			aria-label={m.return_to_homepage()}
 			onclick={() => returnToHomepage()}
@@ -44,6 +45,7 @@
 			class="mobile-header"
 			class:glassmorphism-container={era === 'glassmorphism'}
 			class:earlyweb-container={era === 'early_web'}
+			class:frutiger-aero-container={era === 'frutiger_aero'}
 			class:modern-minimal-container={era === 'modern_minimal'}
 		>
 			<h1

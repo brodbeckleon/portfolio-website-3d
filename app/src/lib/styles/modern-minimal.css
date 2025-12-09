@@ -4,22 +4,22 @@
 
 /* ----- Light Mode (default) ----- */
 :root,
-:root[data-theme="light"] {
-	--mm-bg: #F1F3E0;
-	--mm-bg-2: #D2DCB6;
-	--mm-accent: #A1BC98;
-	--mm-text: #4A4F3E; /* more readable than 778873 */
+:root[data-theme='light'] {
+	--mm-bg: #f1f3e0;
+	--mm-bg-2: #d2dcb6;
+	--mm-accent: #a1bc98;
+	--mm-text: #4a4f3e; /* more readable than 778873 */
 	--mm-muted: color-mix(in srgb, var(--mm-text), transparent 40%);
 	--mm-focus: rgba(0, 0, 0, 0.25);
 	--mm-radius: 10px;
 }
 
 /* ----- Dark Mode ----- */
-:root[data-theme="dark"] {
-	--mm-bg: #1B3C53;
-	--mm-bg-2: #234C6A;
+:root[data-theme='dark'] {
+	--mm-bg: #1b3c53;
+	--mm-bg-2: #234c6a;
 	--mm-accent: #456882;
-	--mm-text: #E3E3E3;
+	--mm-text: #e3e3e3;
 	--mm-muted: color-mix(in srgb, var(--mm-text), transparent 55%);
 	--mm-focus: rgba(255, 255, 255, 0.22);
 	--mm-radius: 10px;
@@ -27,11 +27,11 @@
 
 /* ----- Automatic dark mode fallback when user did NOT force theme ----- */
 @media (prefers-color-scheme: dark) {
-	:root:not([data-theme="light"]) {
-		--mm-bg: #1B3C53;
-		--mm-bg-2: #234C6A;
+	:root:not([data-theme='light']) {
+		--mm-bg: #1b3c53;
+		--mm-bg-2: #234c6a;
 		--mm-accent: #456882;
-		--mm-text: #E3E3E3;
+		--mm-text: #e3e3e3;
 		--mm-muted: color-mix(in srgb, var(--mm-text), transparent 55%);
 		--mm-focus: rgba(255, 255, 255, 0.22);
 	}
@@ -66,13 +66,13 @@
 .modern-minimal-container,
 .modern-minimal-font {
 	font-family:
-			system-ui,
-			-apple-system,
-			'Segoe UI',
-			Roboto,
-			'Helvetica Neue',
-			Arial,
-			sans-serif;
+		system-ui,
+		-apple-system,
+		'Segoe UI',
+		Roboto,
+		'Helvetica Neue',
+		Arial,
+		sans-serif;
 	font-weight: 400;
 	color: var(--mm-text);
 	line-height: 1.45;
@@ -130,10 +130,8 @@
 .modern-minimal-dropdown-item {
 }
 .modern-minimal-dropdown-item:hover {
-
 }
 .modern-minimal-dropdown-item.active {
-
 }
 
 .modern-minimal-link {
@@ -147,150 +145,6 @@
 }
 .modern-minimal-icon-link:hover {
 	transform: scale(1.1) !important;
-}
-
-	/* ----------------------------------------------------------
-       Inputs / Textareas
-       ---------------------------------------------------------- */
-.modern-minimal-input,
-.modern-minimal-textarea {
-	width: 100%;
-	padding: 0.55rem 0.75rem;
-	border-radius: var(--mm-radius);
-	border: 1px solid var(--mm-accent);
-	background: var(--mm-bg);
-	color: var(--mm-text);
-	font-size: 0.96rem;
-	transition: all 0.18s ease;
-}
-
-.modern-minimal-input:focus,
-.modern-minimal-textarea:focus {
-	border-color: var(--mm-accent);
-	box-shadow: 0 0 0 3px var(--mm-focus);
-	outline: none;
-}
-
-.modern-minimal-input::placeholder,
-.modern-minimal-textarea::placeholder {
-	color: var(--mm-muted);
-}
-
-/* ----------------------------------------------------------
-   Select
-   ---------------------------------------------------------- */
-.modern-minimal-select {
-	appearance: none;
-	background: var(--mm-bg);
-	border: 1px solid var(--mm-accent);
-	border-radius: var(--mm-radius);
-	padding: 0.45rem 2rem 0.45rem 0.75rem;
-	font-family: inherit;
-	font-size: 14px;
-	line-height: 1.4;
-	color: var(--mm-text);
-	cursor: pointer;
-
-	box-shadow:
-			0 1px 2px rgba(0, 0, 0, 0.04),
-			inset 0 1px 1px rgba(255, 255, 255, 0.3);
-
-	transition: border-color 0.15s ease, box-shadow 0.15s ease,
-	background 0.15s ease;
-
-	background-image: linear-gradient(
-			to bottom,
-			color-mix(in srgb, var(--mm-text), transparent 55%),
-			color-mix(in srgb, var(--mm-text), transparent 45%)
-	);
-	background-repeat: no-repeat;
-	background-size: 8px 8px;
-	background-position: right 0.75rem center;
-}
-
-.modern-minimal-select:hover {
-	border-color: color-mix(in srgb, var(--mm-accent), white 35%);
-}
-
-.modern-minimal-select:focus {
-	outline: none;
-	border-color: var(--mm-accent);
-	box-shadow: 0 0 0 3px var(--mm-focus);
-}
-
-/* ----------------------------------------------------------
-   Scrollbar
-   ---------------------------------------------------------- */
-.modern-minimal-scroll {
-	scrollbar-width: thin;
-	scrollbar-color: var(--mm-accent) transparent;
-}
-
-.modern-minimal-scroll::-webkit-scrollbar {
-	width: 6px;
-}
-
-.modern-minimal-scroll::-webkit-scrollbar-track {
-	background: transparent;
-}
-
-.modern-minimal-scroll::-webkit-scrollbar-thumb {
-	background: var(--mm-accent);
-	border-radius: 10px;
-}
-
-.modern-minimal-scroll::-webkit-scrollbar-thumb:hover {
-	background: color-mix(in srgb, var(--mm-accent), black 20%);
-}
-
-/* ----------------------------------------------------------
-   Toggle / Checkbox
-   ---------------------------------------------------------- */
-.modern-minimal-checkbox {
-	accent-color: var(--mm-accent);
-	width: 18px;
-	height: 18px;
-}
-
-.modern-minimal-toggle {
-	appearance: none;
-	width: 38px;
-	height: 20px;
-	border-radius: 20px;
-	background: color-mix(in srgb, var(--mm-accent), transparent 60%);
-	position: relative;
-	cursor: pointer;
-	transition: background 0.2s ease;
-}
-
-.modern-minimal-toggle::after {
-	content: '';
-	position: absolute;
-	top: 2px;
-	left: 2px;
-	width: 16px;
-	height: 16px;
-	background: var(--mm-bg);
-	border-radius: 50%;
-	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-	transition: transform 0.2s ease;
-}
-
-.modern-minimal-toggle:checked {
-	background: var(--mm-accent);
-}
-
-.modern-minimal-toggle:checked::after {
-	transform: translateX(18px);
-}
-
-/* ----------------------------------------------------------
-   Accessibility helpers
-   ---------------------------------------------------------- */
-.container-accessible {
-	padding: 1rem;
-	min-width: 0;
-	display: block;
 }
 
 /* Reduced motion */
