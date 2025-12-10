@@ -10,6 +10,7 @@
 	} from 'three-stdlib';
 	import { goto } from '$app/navigation';
 	import { m } from '$lib/paraglide/messages';
+	import { onMount } from 'svelte';
 
 	interface ThreePortfolioProps {
 		isMobile: boolean;
@@ -17,20 +18,79 @@
 
 	let { isMobile }: ThreePortfolioProps = $props();
 
-	const isHelperNeeded: boolean = false; //for testing purposes. shows where the desklamp is
+	const isHelperNeeded: boolean = false;
+	let isLoading = $state(true);
+	let loadedModels = $state(0);
+	const totalModels = 4;
+
+	let prefersDarkMode = $state(true);
+
+	onMount(() => {
+		const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+		prefersDarkMode = prefersDark;
+
+		const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+		const handleChange = (e: MediaQueryListEvent) => {
+			prefersDarkMode = e.matches;
+		};
+		mediaQuery.addEventListener('change', handleChange);
+
+		return () => mediaQuery.removeEventListener('change', handleChange);
+	});
+
+	const theme = {
+		dark: {
+			background: 0x0d0d0d,
+			floorColor: 0x2a1e15,
+			ambientColor: 0x3d342a,
+			directionalLightColor: 0xffd5a5,
+			spotLightColor: 0xffe0a0,
+			pointLightColor: 0xffe0a0,
+			textColor: '#FFFFFF',
+			subTextColor: '#999999',
+			bloomStrength: 0.7,
+			bloomThreshold: 0.7,
+			ambientIntensity: 0.4,
+			directionalIntensity: 2.8,
+			deskLampShadowIntensity: 2
+		},
+		light: {
+			background: 0xf0f0f0,
+			floorColor: 0xe0d5c8,
+			ambientColor: 0xffffff,
+			directionalLightColor: 0xfff5e6,
+			spotLightColor: 0xfff0d0,
+			pointLightColor: 0xfff0d0,
+			textColor: '#010101',
+			subTextColor: '#444444',
+			bloomStrength: 0.2,
+			bloomThreshold: 0.9,
+			ambientIntensity: 0.7,
+			directionalIntensity: 3.2,
+			deskLampShadowIntensity: 1.5
+		}
+	};
+
+	const SCALE_FACTOR = 1.5;
 
 	/**
 	 * Svelte Action for initializing the Three.js scene.
-	 * This encapsulates all the logic that needs to interact directly with the DOM node.
 	 */
 	const threeSceneAction = (node: HTMLDivElement) => {
+		const currentTheme = prefersDarkMode ? theme.dark : theme.light;
+
 		const scene = new THREE.Scene();
-		scene.background = new THREE.Color(0x0d0d0d);
+		scene.background = new THREE.Color(currentTheme.background);
 
 		const camera = new THREE.PerspectiveCamera(40, node.clientWidth / node.clientHeight, 0.1, 100);
-		camera.position.set(0.5, 0, 1);
+		camera.position.set(0.75, 0.3, 1.8);
 
-		const renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true });
+		const renderer = new THREE.WebGLRenderer({
+			antialias: true,
+			logarithmicDepthBuffer: true,
+			alpha: true
+		});
+		renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 		renderer.setSize(node.clientWidth, node.clientHeight);
 		renderer.shadowMap.enabled = true;
 		renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -39,22 +99,19 @@
 		const composer = new EffectComposer(renderer);
 		const renderPass = new RenderPass(scene, camera);
 		composer.addPass(renderPass);
+
 		const bloomPass = new UnrealBloomPass(
 			new THREE.Vector2(node.clientWidth, node.clientHeight),
-			0.9,
+			currentTheme.bloomStrength,
 			0.3,
-			0.85
+			currentTheme.bloomThreshold
 		);
-
-		bloomPass.strength = 0.7;
-		bloomPass.radius = 0.3;
-		bloomPass.threshold = 0.7;
 		composer.addPass(bloomPass);
 
-		// --- Floor ---
-		const floorGeo = new THREE.CircleGeometry(6);
+		// --- Floor (scaled up) ---
+		const floorGeo = new THREE.CircleGeometry(8 * SCALE_FACTOR, 64);
 		const floorMat = new THREE.MeshStandardMaterial({
-			color: 0x2a1e15, // Rich dark brown
+			color: currentTheme.floorColor,
 			roughness: 0.9,
 			metalness: 0.1
 		});
@@ -64,65 +121,80 @@
 		scene.add(floor);
 
 		// --- Lights ---
-		const ambient = new THREE.AmbientLight(0x3d342a, 0.4);
+		const ambient = new THREE.AmbientLight(
+			currentTheme.ambientColor,
+			currentTheme.ambientIntensity
+		);
 		scene.add(ambient);
 
-		const directionalLight = new THREE.DirectionalLight(0xffd5a5, 2.8);
-		directionalLight.position.set(0, 1.8, 0.5);
+		const directionalLight = new THREE.DirectionalLight(
+			currentTheme.directionalLightColor,
+			currentTheme.directionalIntensity
+		);
+		directionalLight.position.set(0, 2.5 * SCALE_FACTOR, 0.75 * SCALE_FACTOR);
 		directionalLight.castShadow = true;
-		directionalLight.shadow.mapSize.width = 1024;
-		directionalLight.shadow.mapSize.height = 1024;
+		directionalLight.shadow.mapSize.width = 2048;
+		directionalLight.shadow.mapSize.height = 2048;
 		directionalLight.shadow.camera.near = 0.2;
-		directionalLight.shadow.camera.left = -1.5;
-		directionalLight.shadow.camera.right = 1.5;
-		directionalLight.shadow.camera.top = 1.5;
-		directionalLight.shadow.camera.bottom = -1.5;
-		directionalLight.shadow.camera.far = 5;
+		directionalLight.shadow.camera.left = -2.5 * SCALE_FACTOR;
+		directionalLight.shadow.camera.right = 2.5 * SCALE_FACTOR;
+		directionalLight.shadow.camera.top = 2.5 * SCALE_FACTOR;
+		directionalLight.shadow.camera.bottom = -2.5 * SCALE_FACTOR;
+		directionalLight.shadow.camera.far = 8 * SCALE_FACTOR;
 		scene.add(directionalLight);
 
 		const lightTarget = new THREE.Object3D();
-		lightTarget.position.set(0.2, 0.3, -0.6);
+		lightTarget.position.set(0.3 * SCALE_FACTOR, 0.5 * SCALE_FACTOR, -1 * SCALE_FACTOR);
 		scene.add(lightTarget);
 		directionalLight.target = lightTarget;
 
-		const deskLampSpotLight = new THREE.SpotLight(0xffe0a0, 1, 0, Math.PI / 3, 0.9, 1); //color, itensity, distance, angle, pneumbra, decay
-		deskLampSpotLight.position.set(-0.48, 0.55, -0.37);
+		const deskLampSpotLight = new THREE.SpotLight(
+			currentTheme.spotLightColor,
+			1,
+			0,
+			Math.PI / 3,
+			0.9,
+			1
+		);
+		deskLampSpotLight.position.set(-0.72, 0.9, -0.6);
 		deskLampSpotLight.castShadow = true;
-		deskLampSpotLight.shadow.mapSize.width = 512;
-		deskLampSpotLight.shadow.mapSize.height = 512;
-		deskLampSpotLight.shadow.intensity = 2;
+		deskLampSpotLight.shadow.mapSize.width = 1024;
+		deskLampSpotLight.shadow.mapSize.height = 1024;
+		deskLampSpotLight.shadow.intensity = currentTheme.deskLampShadowIntensity;
 		scene.add(deskLampSpotLight);
 
-		const deskLampPointLight = new THREE.PointLight(0xffe0a0, 0.3, 4);
-		deskLampPointLight.position.set(
-			deskLampSpotLight.position.x,
-			deskLampSpotLight.position.y,
-			deskLampSpotLight.position.z
-		);
+		const deskLampPointLight = new THREE.PointLight(currentTheme.pointLightColor, 0.3, 6);
+		deskLampPointLight.position.copy(deskLampSpotLight.position);
 		deskLampPointLight.castShadow = false;
 		scene.add(deskLampPointLight);
 
 		if (isHelperNeeded) {
 			const helper = new THREE.SpotLightHelper(deskLampSpotLight, 0.1);
 			scene.add(helper);
-
 			const helper2 = new THREE.PointLightHelper(deskLampPointLight, 0.1, 0xff0000);
 			scene.add(helper2);
 		}
 
 		// --- Hover Spotlight ---
-		const hoverSpotLight = new THREE.SpotLight(0xffe0a0, 1, 10, Math.PI / 8, 0.15, 0);
-		hoverSpotLight.position.set(0, 2, 0);
-		hoverSpotLight.castShadow = true; // Enable shadows
-		hoverSpotLight.shadow.mapSize.width = 1024; // Higher resolution shadows
-		hoverSpotLight.shadow.mapSize.height = 1024;
-		hoverSpotLight.shadow.bias = -0.001; // Reduce shadow acne
-		hoverSpotLight.shadow.radius = 2; // Softer shadow edges but still defined
+		const hoverSpotLight = new THREE.SpotLight(
+			currentTheme.spotLightColor,
+			1,
+			15,
+			Math.PI / 8,
+			0.15,
+			0
+		);
+		hoverSpotLight.position.set(0, 3 * SCALE_FACTOR, 0);
+		hoverSpotLight.castShadow = true;
+		hoverSpotLight.shadow.mapSize.width = 2048;
+		hoverSpotLight.shadow.mapSize.height = 2048;
+		hoverSpotLight.shadow.bias = -0.001;
+		hoverSpotLight.shadow.radius = 2;
 		hoverSpotLight.penumbra = 0.1;
-		hoverSpotLight.angle = Math.PI / 12; // Harsh narrow beam
+		hoverSpotLight.angle = Math.PI / 12;
 		hoverSpotLight.decay = 0.9;
 		hoverSpotLight.shadow.camera.near = 0.5;
-		hoverSpotLight.shadow.camera.far = 5;
+		hoverSpotLight.shadow.camera.far = 7 * SCALE_FACTOR;
 		hoverSpotLight.shadow.camera.fov = 50;
 		scene.add(hoverSpotLight);
 
@@ -140,17 +212,16 @@
 
 		function createTextTexture(
 			text: string,
-			fontSize: number = 32,
-			fillColor: string = '#111111',
+			fontSize: number = 40,
+			fillColor: string,
 			textAlignment: CanvasTextAlign = 'center',
 			isBold: boolean = false
 		): THREE.CanvasTexture {
 			const cleanText = stripHtml(text);
-
 			const lines = cleanText.split('\n');
 			const lineHeight = fontSize * 1.5;
-			const canvasWidth = 1024;
-			const canvasHeight = Math.max(256, lines.length * lineHeight + 40);
+			const canvasWidth = 2048;
+			const canvasHeight = Math.max(512, lines.length * lineHeight + 80);
 
 			const canvas = document.createElement('canvas');
 			const context = canvas.getContext('2d')!;
@@ -158,15 +229,13 @@
 			canvas.height = canvasHeight;
 
 			context.clearRect(0, 0, canvasWidth, canvasHeight);
-
 			context.fillStyle = fillColor;
 			context.font = `${isBold ? 'bold ' : ''}${fontSize}px Helvetica Neue, Arial, sans-serif`;
 			context.textAlign = textAlignment;
 			context.textBaseline = 'middle';
 
 			const startY = canvasHeight / 2 - ((lines.length - 1) * lineHeight) / 2;
-
-			const xPosition = textAlignment === 'right' ? canvasWidth - 40 : canvasWidth / 2;
+			const xPosition = textAlignment === 'right' ? canvasWidth - 80 : canvasWidth / 2;
 
 			lines.forEach((line, index) => {
 				context.fillText(line, xPosition, startY + index * lineHeight);
@@ -183,18 +252,17 @@
 			text: string,
 			position: THREE.Vector3,
 			scene: THREE.Scene,
-			width: number = 1.2,
-			height: number = 0.3,
+			width: number = 1.8 * SCALE_FACTOR,
+			height: number = 0.45 * SCALE_FACTOR,
 			rotation: number = 0,
-			heightOffset: number = 0.01,
+			heightOffset: number = 0.015,
 			renderOrder: number = 0,
-			fillColor: string = '#111111',
+			fillColor: string,
 			textAlignment: CanvasTextAlign = 'center',
 			isBold: boolean = false,
-			fontSize: number = 28
+			fontSize: number = 40
 		): THREE.Mesh {
 			const texture = createTextTexture(text, fontSize, fillColor, textAlignment, isBold);
-
 			const material = new THREE.MeshStandardMaterial({
 				map: texture,
 				transparent: true,
@@ -207,7 +275,6 @@
 
 			const aspectRatio = texture.image.width / texture.image.height;
 			const adjustedWidth = height * aspectRatio;
-
 			const geometry = new THREE.PlaneGeometry(adjustedWidth, height);
 			const plane = new THREE.Mesh(geometry, material);
 
@@ -221,39 +288,43 @@
 			return plane;
 		}
 
+		let photographyTextMesh: THREE.Mesh;
+		let itTextMesh: THREE.Mesh;
+		let welcomeTextMesh: THREE.Mesh;
+
 		// Photography text
-		createTextPlane(
+		photographyTextMesh = createTextPlane(
 			m.photography(),
-			new THREE.Vector3(-0.45, 0, 0),
+			new THREE.Vector3(-0.675, 0, 0),
 			scene,
-			1.2,
-			0.2,
+			1.8 * SCALE_FACTOR,
+			0.3 * SCALE_FACTOR,
 			(Math.PI / 180) * 30,
-			0.001,
+			0.0015,
 			1,
-			'#999999',
+			currentTheme.subTextColor,
 			'center',
 			true,
-			80
+			120
 		);
 
 		// IT text
-		createTextPlane(
+		itTextMesh = createTextPlane(
 			m.information_technology(),
-			new THREE.Vector3(0.2, 0, -0.15),
+			new THREE.Vector3(0.3, 0, -0.225),
 			scene,
-			1.2,
-			0.2,
+			1.8 * SCALE_FACTOR,
+			0.3 * SCALE_FACTOR,
 			0,
-			0.002,
+			0.003,
 			2,
-			'#999999',
+			currentTheme.subTextColor,
 			'center',
 			true,
-			80
+			120
 		);
 
-		// Welcome text - properly formatted
+		// Welcome text
 		const welcomeTextString =
 			m.welcome_message_1({ name: m.leon_shinichi() }) +
 			'\n' +
@@ -263,19 +334,19 @@
 			'\n' +
 			m.welcome_message_4();
 
-		createTextPlane(
+		welcomeTextMesh = createTextPlane(
 			welcomeTextString,
-			new THREE.Vector3(0.08, 0, 0.15),
+			new THREE.Vector3(0.12, 0, 0.225),
 			scene,
-			1.5,
-			0.6,
+			2.25 * SCALE_FACTOR,
+			0.9 * SCALE_FACTOR,
 			(Math.PI / 180) * 25,
-			0.003,
+			0.0045,
 			3,
-			'#FFFFFF',
+			currentTheme.textColor,
 			'center',
 			false,
-			14
+			20
 		);
 
 		const loader = new GLTFLoader();
@@ -284,10 +355,19 @@
 		let deskLampModel: THREE.Object3D;
 		let coffeeMugModel: THREE.Object3D;
 
+		function onModelLoad() {
+			loadedModels += 1;
+			if (loadedModels === totalModels) {
+				setTimeout(() => {
+					isLoading = false;
+				}, 500);
+			}
+		}
+
 		loader.load('/models/camera.glb', (gltf) => {
 			cameraModel = gltf.scene;
-			cameraModel.position.set(-0.5, 0, -0.2);
-			cameraModel.scale.set(1.7, 1.7, 1.7);
+			cameraModel.position.set(-0.75, 0, -0.3);
+			cameraModel.scale.set(2.55, 2.55, 2.55);
 			cameraModel.rotation.y = (Math.PI / 180) * 40;
 
 			cameraModel.traverse((child) => {
@@ -305,36 +385,42 @@
 			});
 
 			scene.add(cameraModel);
+			onModelLoad();
 		});
 
 		loader.load('/models/computer.glb', (gltf) => {
 			macintoshModel = gltf.scene;
-			macintoshModel.position.set(0.3, 0, -0.5);
+			macintoshModel.position.set(0.45, 0, -0.75);
+			macintoshModel.scale.set(1.8, 1.8, 1.8);
 			macintoshModel.traverse((obj) => {
 				obj.castShadow = true;
 			});
 			scene.add(macintoshModel);
+			onModelLoad();
 		});
 
 		loader.load('/models/desk_lamp.glb', (gltf) => {
 			deskLampModel = gltf.scene;
-			deskLampModel.position.set(-0.7, 0, -0.5);
-			deskLampModel.scale.set(0.55, 0.55, 0.55);
+			deskLampModel.position.set(-1.05, 0, -0.75);
+			deskLampModel.scale.set(0.825, 0.825, 0.825);
 			deskLampModel.rotation.y = (Math.PI / 180) * 60;
 			deskLampModel.traverse((obj) => {
 				obj.castShadow = true;
 			});
 			scene.add(deskLampModel);
+			onModelLoad();
 		});
 
 		loader.load('/models/coffee_cup.glb', (gltf) => {
 			coffeeMugModel = gltf.scene;
-			coffeeMugModel.position.set(0.6, 0, -0.25);
+			coffeeMugModel.position.set(0.9, 0, -0.375);
+			coffeeMugModel.scale.set(1.8, 1.8, 1.8);
 			coffeeMugModel.rotation.y = (Math.PI / 180) * 150;
 			coffeeMugModel.traverse((obj) => {
 				obj.castShadow = true;
 			});
 			scene.add(coffeeMugModel);
+			onModelLoad();
 		});
 
 		// --- Controls ---
@@ -344,20 +430,23 @@
 		controls.enablePan = false;
 		controls.enableZoom = true;
 		let zoomScale = controls.getZoomScale();
-		controls.setScale(zoomScale * 2.5);
-		controls.maxDistance = zoomScale * 2.5;
-		controls.minDistance = zoomScale * 0.5;
-		controls.target.set(0, 0.2, 0);
+		controls.setScale(zoomScale * 3.75);
+		controls.maxDistance = zoomScale * 3.75;
+		controls.minDistance = zoomScale * 0.75;
+		controls.target.set(0, 0.3, 0);
 		const angle = THREE.MathUtils.degToRad(60);
 		controls.minPolarAngle = angle;
 		controls.maxPolarAngle = angle;
+
 		const dragThresholdSq = 25;
 		let pointerDownPos: { x: number; y: number } | null = null;
 		let suppressNextClick = false;
+
 		const handlePointerDown = (event: PointerEvent) => {
 			pointerDownPos = { x: event.clientX, y: event.clientY };
 			suppressNextClick = false;
 		};
+
 		const handlePointerMove = (event: PointerEvent) => {
 			if (!pointerDownPos) return;
 			const dx = event.clientX - pointerDownPos.x;
@@ -366,9 +455,11 @@
 				suppressNextClick = true;
 			}
 		};
+
 		const handlePointerUp = () => {
 			pointerDownPos = null;
 		};
+
 		renderer.domElement.addEventListener('pointerdown', handlePointerDown);
 		renderer.domElement.addEventListener('pointermove', handlePointerMove);
 		renderer.domElement.addEventListener('pointerup', handlePointerUp);
@@ -378,7 +469,7 @@
 		const raycaster = new THREE.Raycaster();
 		const mouse = new THREE.Vector2();
 		let flickerTime = 0;
-		let flickerTimer = 0; // Tracks elapsed time for flicker duration
+		let flickerTimer = 0;
 		let activeModel: THREE.Object3D | null = null;
 
 		function onMouseMove(event: MouseEvent) {
@@ -389,11 +480,9 @@
 
 		function isModelInCenter(model: THREE.Object3D | undefined, threshold = 0.4): boolean {
 			if (!model) return false;
-
 			const worldPosition = new THREE.Vector3();
 			model.getWorldPosition(worldPosition);
 			worldPosition.project(camera);
-
 			return Math.abs(worldPosition.x) < threshold && Math.abs(worldPosition.y) < threshold;
 		}
 
@@ -406,26 +495,21 @@
 			const worldPos = new THREE.Vector3();
 			activeModel.getWorldPosition(worldPos);
 
-			// Adjust height based on which model is active
-			let heightOffset = 0.8; // Default for camera
+			let heightOffset = 1.2;
 			if (activeModel === macintoshModel) {
-				heightOffset = 1.8; // Higher for the bigger computer model
+				heightOffset = 2.7;
 			}
 
-			// Position spotlight above the model
 			hoverSpotLight.position.copy(worldPos).add(new THREE.Vector3(0, heightOffset, 0));
 			hoverLightTarget.position.copy(worldPos);
 
-			// Update flicker timer
 			flickerTimer += deltaTime;
 
-			// Flicker animation (only for first 2 seconds)
 			if (flickerTimer < 1.5) {
 				flickerTime += 0.1;
 				const flicker = 0.7 * (Math.sin(flickerTime * 7) + Math.sin(flickerTime * 15 + 3));
 				hoverSpotLight.intensity = 2.5 + flicker;
 			} else {
-				// Steady light after 2 seconds
 				hoverSpotLight.intensity = 2.8;
 			}
 		}
@@ -460,7 +544,6 @@
 			}
 		}
 
-		// Only add mousemove listener on desktop
 		if (!isMobile) {
 			window.addEventListener('mousemove', onMouseMove);
 		}
@@ -474,16 +557,13 @@
 			animationFrameId = requestAnimationFrame(animate);
 			controls.update();
 
-			const deltaTime = (time - lastTime) / 1000; // Convert to seconds
+			const deltaTime = (time - lastTime) / 1000;
 			lastTime = time;
+			flickerTime += deltaTime * 5;
 
-			flickerTime += deltaTime * 5; // Adjust flicker speed based on time
-
-			// Reset active model
 			activeModel = null;
 
 			if (!isMobile) {
-				// Desktop: Check hover
 				if (cameraModel && macintoshModel) {
 					raycaster.setFromCamera(mouse, camera);
 					const intersects = raycaster.intersectObjects([cameraModel, macintoshModel], true);
@@ -501,7 +581,6 @@
 					}
 				}
 			} else {
-				// Mobile: Check center position
 				if (isModelInCenter(cameraModel)) {
 					activeModel = cameraModel;
 				} else if (isModelInCenter(macintoshModel)) {
@@ -516,7 +595,7 @@
 		lastTime = performance.now();
 		animate(lastTime);
 
-		// --- Resize ---
+		// --- Resize Handler ---
 		const handleResize = () => {
 			camera.aspect = node.clientWidth / node.clientHeight;
 			camera.updateProjectionMatrix();
@@ -525,6 +604,93 @@
 			bloomPass.setSize(node.clientWidth, node.clientHeight);
 		};
 		window.addEventListener('resize', handleResize);
+
+		// --- Helper function to update text mesh ---
+		function updateTextMesh(
+			mesh: THREE.Mesh,
+			text: string,
+			fillColor: string,
+			fontSize: number,
+			textAlignment: CanvasTextAlign = 'center',
+			isBold: boolean = false
+		) {
+			const material = mesh.material as MeshStandardMaterial;
+			// Dispose old texture
+			if (material.map) {
+				material.map.dispose();
+			}
+			// Create new texture with updated color
+			const newTexture = createTextTexture(text, fontSize, fillColor, textAlignment, isBold);
+			material.map = newTexture;
+			material.needsUpdate = true;
+		}
+
+		// --- Theme Update Function ---
+		function updateTheme() {
+			const newTheme = prefersDarkMode ? theme.dark : theme.light;
+
+			// Update scene background
+			scene.background = new THREE.Color(newTheme.background);
+
+			// Update floor material
+			(floor.material as MeshStandardMaterial).color.set(newTheme.floorColor);
+
+			// Update lights
+			ambient.color.set(newTheme.ambientColor);
+			ambient.intensity = newTheme.ambientIntensity;
+
+			directionalLight.color.set(newTheme.directionalLightColor);
+			directionalLight.intensity = newTheme.directionalIntensity;
+
+			deskLampSpotLight.color.set(newTheme.spotLightColor);
+			deskLampSpotLight.shadow.intensity = newTheme.deskLampShadowIntensity;
+
+			deskLampPointLight.color.set(newTheme.pointLightColor);
+
+			hoverSpotLight.color.set(newTheme.spotLightColor);
+
+			// Update bloom pass
+			bloomPass.strength = newTheme.bloomStrength;
+			bloomPass.threshold = newTheme.bloomThreshold;
+
+			// Update text meshes
+			if (photographyTextMesh) {
+				updateTextMesh(
+					photographyTextMesh,
+					m.photography(),
+					newTheme.subTextColor,
+					120,
+					'center',
+					true
+				);
+			}
+			if (itTextMesh) {
+				updateTextMesh(
+					itTextMesh,
+					m.information_technology(),
+					newTheme.subTextColor,
+					120,
+					'center',
+					true
+				);
+			}
+			if (welcomeTextMesh) {
+				const welcomeTextString =
+					m.welcome_message_1({ name: m.leon_shinichi() }) +
+					'\n' +
+					m.welcome_message_2({ place: m.zurich_switzerland() }) +
+					'\n' +
+					m.welcome_message_3() +
+					'\n' +
+					m.welcome_message_4();
+				updateTextMesh(welcomeTextMesh, welcomeTextString, newTheme.textColor, 20, 'center', false);
+			}
+		}
+
+		// Watch for theme changes
+		$effect(() => {
+			updateTheme();
+		});
 
 		// --- Cleanup ---
 		return {
@@ -552,7 +718,6 @@
 					}
 				});
 
-				// Clean up lights
 				scene.remove(hoverSpotLight);
 				scene.remove(hoverLightTarget);
 				scene.remove(lightTarget);
@@ -561,4 +726,81 @@
 	};
 </script>
 
-<div use:threeSceneAction class="scene" style="width:100%; height:100vh;"></div>
+<div class="scene-container">
+	<!-- Loading Screen -->
+	{#if isLoading}
+		<div class="loading-screen">
+			<div class="loading-content">
+				<div class="loading-spinner"></div>
+				<div class="loading-text glassmorphism-font">
+					{m.loading_scene()}... {Math.round((loadedModels / totalModels) * 100)}%
+				</div>
+			</div>
+		</div>
+	{/if}
+
+	<!-- Scene Container -->
+	<div use:threeSceneAction class="scene" style="width:100%; height:100vh;"></div>
+</div>
+
+<style>
+	.scene-container {
+		position: relative;
+		width: 100%;
+		height: 100vh;
+		overflow: hidden;
+	}
+
+	.loading-screen {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background: #0d0d0d;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		z-index: 1000;
+		transition: opacity 0.5s ease-out;
+	}
+
+	.loading-content {
+		text-align: center;
+		color: white;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 20px;
+	}
+
+	.loading-spinner {
+		width: 60px;
+		height: 60px;
+		border: 4px solid rgba(255, 213, 165, 0.1);
+		border-left-color: #ffd5a5;
+		border-radius: 50%;
+		animation: spin 1s linear infinite;
+	}
+
+	.loading-text {
+		font-size: 1.2rem;
+		font-weight: 500;
+		color: #ffd5a5;
+	}
+
+	.scene {
+		position: relative;
+		width: 100%;
+		height: 100%;
+	}
+
+	@keyframes spin {
+		0% {
+			transform: rotate(0deg);
+		}
+		100% {
+			transform: rotate(360deg);
+		}
+	}
+</style>

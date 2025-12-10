@@ -1,3 +1,20 @@
+:root,
+:root[data-theme='light'] {
+	--gm-text: #222222;
+}
+
+/* ----- Dark Mode ----- */
+:root[data-theme='dark'] {
+	--gm-text: white;
+}
+
+/* ----- Automatic dark mode fallback when user did NOT force theme ----- */
+@media (prefers-color-scheme: dark) {
+	:root:not([data-theme='light']) {
+		--gm-text: white;
+	}
+}
+
 .glassmorphism-button,
 .glassmorphism-dropdown-menu,
 .glassmorphism-dropdown-item,
@@ -6,7 +23,7 @@
 	font-family:
 		Helvetica Neue,
 		sans-serif;
-	color: white;
+	color: var(--gm-text);
 }
 
 .glassmorphism-button,
@@ -66,7 +83,7 @@
 
 .glassmorphism-link {
 	background: none;
-	color: white;
+	color: var(--gm-text);
 	transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
