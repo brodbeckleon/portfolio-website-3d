@@ -399,7 +399,7 @@
 			onModelLoad();
 		});
 
-		loader.load('/models/desk_lamp.glb', (gltf) => {
+		loader.load('/models/optimized-desk_lamp.glb', (gltf) => {
 			deskLampModel = gltf.scene;
 			deskLampModel.position.set(-1.05, 0, -0.75);
 			deskLampModel.scale.set(0.825, 0.825, 0.825);
