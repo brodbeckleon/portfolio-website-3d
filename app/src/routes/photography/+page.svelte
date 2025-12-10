@@ -3,13 +3,13 @@
 	import { m } from '$lib/paraglide/messages';
 	import { browser } from '$app/environment';
 	import { onMount } from 'svelte';
-	import type { WebEras } from '$lib/Types.ts';
+	import type { WebEras, Image } from '$lib/Types.ts';
 	import SlideShow from '../../components/photography/SlideShow.svelte';
 
 	const web_era: WebEras = 'modern_minimal';
 	let isMobile: boolean = $derived(false);
 
-	const images = [
+	const images: Image[] = [
 		{
 			name: m.alt_daikoku_toyota_chaser(),
 			path: 'photography-page-images/Daikoku-Toyota-Chaser.jpg'
