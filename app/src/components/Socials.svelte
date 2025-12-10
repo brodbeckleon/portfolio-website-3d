@@ -110,7 +110,7 @@
 								{#if era === 'frutiger_aero'}
 									<img src={png} alt={text} class="frutiger-aero-icon" />
 								{:else}
-									<IconComponent strokeWidth={1} />
+									<IconComponent strokeWidth={era === 'modern_minimal' ? 1.5 : 1} />
 								{/if}
 							</div>
 						</button>
@@ -132,7 +132,7 @@
 				{#if era === 'frutiger_aero'}
 					<img src={frutigerAeroIcons.share} alt="Share" class="frutiger-aero-share-icon" />
 				{:else}
-					<Share2 strokeWidth={1} />
+					<Share2 strokeWidth={era === 'modern_minimal' ? 1.5 : 1} />
 				{/if}
 			</button>
 		</div>
@@ -159,7 +159,7 @@
 							class:glassmorphism-icon-link={era === 'glassmorphism'}
 							class:modern-minimal-icon-link={era === 'modern_minimal'}
 						>
-							<IconComponent strokeWidth={1} />
+							<IconComponent strokeWidth={era === 'modern_minimal' ? 1.5 : 1} />
 						</div>
 					{:else if era === 'frutiger_aero'}
 						<div class="frutiger-aero-icon">

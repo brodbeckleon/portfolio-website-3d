@@ -85,9 +85,9 @@
 .modern-minimal-dropdown-button,
 .modern-minimal-button {
 	border-radius: var(--mm-radius);
-	border: 1px solid var(--mm-accent);
-	background: var(--mm-bg);
-	color: var(--mm-text);
+	border: none;
+	background: var(--mm-bg-2);
+	color: var(--mm-text) !important;
 	font-size: 0.95rem;
 	cursor: pointer;
 	transition: all 0.18s ease;
@@ -120,11 +120,13 @@
 	gap: 0.5rem;
 }
 
-.modern-minimal-dropdown-button {
+.modern-minimal-dropdown-button:hover {
 	background: var(--mm-accent);
 }
+
 .modern-minimal-dropdown-menu {
 	background: var(--mm-bg-2) !important;
+	border: 1px solid var(--mm-accent);
 }
 
 .modern-minimal-dropdown-item {

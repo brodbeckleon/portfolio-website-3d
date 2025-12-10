@@ -1,5 +1,5 @@
 {
-	"$schema": "https://inlang.com/schema/inlang-message-format",
+	"$schema": "https://inlang.com/schema/inlang_message_format",
 
 	"leon_shinichi": "Léon Shin'ichi",
 	"zurich_switzerland": "Zurich, Switzerland",
@@ -19,5 +19,9 @@
 
 	"open_link": "open {website_name} link",
 	"return_to_homepage": "return to the homepage",
-	"toggle_socials": "toggle socials"
+	"toggle_socials": "toggle socials",
+
+	"alt_daikoku_toyota_chaser": "Toyota Chaser at Daikoku PA",
+	"alt_tokyo_tower_mori_art_museum": "Tokyo Tower shot from Mori Art Museum",
+	"alt_ueteliberg_kindergarten": "School class playing on a snowy hill"
 }

@@ -1,5 +1,5 @@
 {
-	"$schema": "https://inlang.com/schema/inlang-message-format",
+	"$schema": "https://inlang.com/schema/inlang_message_format",
 
 	"leon_shinichi": "Léon Shin'ichi",
 	"zurich_switzerland": "Zürich, Schweiz",
@@ -8,8 +8,8 @@
 	"information_technology": "Informatik",
 
 	"welcome_message_1": "Hallo, ich bin <strong>{name}</strong>.",
-	"welcome_message_2": "Ein Full-Stack-Entwickler und visueller Künstler\nin <strong>{place}</strong>.",
-	"welcome_message_3": "Ich setze IT- und Kreativprojekte um.",
+	"welcome_message_2": "Ein Full_Stack_Entwickler und visueller Künstler\nin <strong>{place}</strong>.",
+	"welcome_message_3": "Ich setze IT_ und Kreativprojekte um.",
 	"welcome_message_4": "Lass uns einen Kaffee trinken <strong>& loslegen</strong>❗",
 
 	"early_web": "Early Web",
@@ -19,5 +19,9 @@
 
 	"open_link": "{website_name} Link öffnen",
 	"return_to_homepage": "Zur Homepage zurückkehren",
-	"toggle_socials": "Soziale Medien ein- und ausblenden"
+	"toggle_socials": "Soziale Medien ein_ und ausblenden",
+
+	"alt_daikoku_toyota_chaser": "Toyota Chaser am Daikoku PA",
+	"alt_tokyo_tower_mori_art_museum": "Tokyo Tower vom Mori Art Museum aus aufgenommen",
+	"alt_ueteliberg_kindergarten": "Schulklasse, die auf einem verschneiten Hügel spielt"
 }

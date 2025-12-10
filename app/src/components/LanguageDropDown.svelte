@@ -48,7 +48,7 @@
 		bind:clientWidth={buttonWidth}
 	>
 		{#if era !== 'frutiger_aero'}
-			<Earth strokeWidth={1} />
+			<Earth strokeWidth={era === 'modern_minimal' ? 1.5 : 1} />
 		{:else if era === 'frutiger_aero'}
 			<img src={frutigerAeroEarthIconPath} alt="Earth" class="frutiger-aero-icon" />
 		{/if}
@@ -57,9 +57,9 @@
 		{/if}
 		<div class={showLangDropdown ? 'chevron rotated' : 'chevron'}>
 			{#if !isMobile}
-				<ChevronDown strokeWidth={1} />
+				<ChevronDown strokeWidth={era === 'modern_minimal' ? 1.5 : 1} />
 			{:else}
-				<ChevronUp strokeWidth={1} />
+				<ChevronUp strokeWidth={era === 'modern_minimal' ? 1.5 : 1} />
 			{/if}
 		</div>
 	</button>

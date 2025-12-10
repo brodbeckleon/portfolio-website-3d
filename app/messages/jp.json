@@ -1,5 +1,5 @@
 {
-	"$schema": "https://inlang.com/schema/inlang-message-format",
+	"$schema": "https://inlang.com/schema/inlang_message_format",
 
 	"leon_shinichi": "レオン・伸一",
 	"zurich_switzerland": "チューリッヒ、スイス",
@@ -19,5 +19,9 @@
 
 	"open_link": "{website_name}のリンクを開く",
 	"return_to_homepage": "ホームページに戻る",
-	"toggle_socials": "ソーシャルをトグルする"
+	"toggle_socials": "ソーシャルをトグルする",
+
+	"alt_daikoku_toyota_chaser": "大黒PAのトヨタチェイサー",
+	"alt_tokyo_tower_mori_art_museum": "森美術館から撮影した東京タワー",
+	"alt_ueteliberg_kindergarten": "雪の丘で遊ぶ学校のクラス"
 }
