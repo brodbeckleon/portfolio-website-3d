@@ -1,5 +1,5 @@
 <script lang="ts">
-	import ThreeStateToggle from '../../components/ThreeStateToggle.svelte';
+	import ThreeStateToggle from '../../components/it/ThreeStateToggle.svelte';
 	import TitleBar from '../../components/TitleBar.svelte';
 	import type { WebEras } from '$lib/Types.ts';
 	import { browser } from '$app/environment';
