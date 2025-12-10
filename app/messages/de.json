@@ -8,8 +8,8 @@
 	"information_technology": "Informatik",
 
 	"welcome_message_1": "Hallo, ich bin <strong>{name}</strong>.",
-	"welcome_message_2": "Ein Full_Stack_Entwickler und visueller Künstler\nin <strong>{place}</strong>.",
-	"welcome_message_3": "Ich setze IT_ und Kreativprojekte um.",
+	"welcome_message_2": "Ein Full-Stack-Entwickler und visueller Künstler\nin <strong>{place}</strong>.",
+	"welcome_message_3": "Ich setze IT- und Kreativprojekte um.",
 	"welcome_message_4": "Lass uns einen Kaffee trinken <strong>& loslegen</strong>❗",
 
 	"early_web": "Early Web",
@@ -17,6 +17,7 @@
 	"modern_minimal": "Modern Minimal",
 	"glassmorphism": "Glassmorphism",
 
+	"loading_scene": "Szene wird geladen",
 	"open_link": "{website_name} Link öffnen",
 	"return_to_homepage": "Zur Homepage zurückkehren",
 	"toggle_socials": "Soziale Medien ein_ und ausblenden",
