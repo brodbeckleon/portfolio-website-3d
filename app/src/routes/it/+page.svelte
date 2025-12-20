@@ -4,6 +4,7 @@
 	import type { WebEras } from '$lib/Types.ts';
 	import { browser } from '$app/environment';
 	import { onMount } from 'svelte';
+	import Snake from '../../components/games/snake/Snake.svelte';
 
 	let web_era: WebEras = $derived('modern_minimal');
 
@@ -56,6 +57,21 @@
 				venenatis lacus, et ultricies diam ligula vel turpis. Mauris nisl augue, pretium vitae
 				ligula vitae, tincidunt convallis nulla.
 			</p>
+		</div>
+		<div
+			class:glassmorphism-container={web_era === 'glassmorphism'}
+			class:earlyweb-container={web_era === 'early_web'}
+			class:frutiger-aero-container={web_era === 'frutiger_aero'}
+			class:modern-minimal-container={web_era === 'modern_minimal'}
+			style="padding: 1rem"
+		>
+			{#if web_era === 'early_web'}
+				<Snake />
+			{:else if web_era === 'frutiger_aero'}
+				harmonia
+			{:else if web_era === 'modern_minimal'}
+				wordle
+			{/if}
 		</div>
 	</div>
 </div>
