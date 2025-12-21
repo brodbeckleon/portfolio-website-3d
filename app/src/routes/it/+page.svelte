@@ -66,7 +66,7 @@
 			style="padding: 1rem"
 		>
 			{#if web_era === 'early_web'}
-				<Snake />
+				<Snake {isMobile} />
 			{:else if web_era === 'frutiger_aero'}
 				harmonia
 			{:else if web_era === 'modern_minimal'}
