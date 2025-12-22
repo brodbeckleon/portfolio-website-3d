@@ -24,5 +24,18 @@
 
 	"alt_daikoku_toyota_chaser": "Toyota Chaser am Daikoku PA",
 	"alt_tokyo_tower_mori_art_museum": "Tokyo Tower vom Mori Art Museum aus aufgenommen",
-	"alt_ueteliberg_kindergarten": "Schulklasse, die auf einem verschneiten Hügel spielt"
+	"alt_ueteliberg_kindergarten": "Schulklasse, die auf einem verschneiten Hügel spielt",
+
+	"snake": "Snake",
+	"choose_difficulty": "Schwierigkeit wählen",
+	"easy": "Einfach",
+	"medium": "Mittel",
+	"hard": "Schwer",
+	"paused": "Pausiert",
+	"resume": "Fortsetzen",
+	"you_lost": "Verloren!",
+	"you_won": "Gewonnen!",
+	"ask_try_again": "Nochmal versuchen?",
+	"try_again": "Nochmal",
+	"score": "Punktzahl"
 }
