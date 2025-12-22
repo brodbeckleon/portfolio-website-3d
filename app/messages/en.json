@@ -24,5 +24,18 @@
 
 	"alt_daikoku_toyota_chaser": "Toyota Chaser at Daikoku PA",
 	"alt_tokyo_tower_mori_art_museum": "Tokyo Tower shot from Mori Art Museum",
-	"alt_ueteliberg_kindergarten": "School class playing on a snowy hill"
+	"alt_ueteliberg_kindergarten": "School class playing on a snowy hill",
+
+	"snake": "Snake",
+	"choose_difficulty": "choose difficulty",
+	"easy": "Easy",
+	"medium": "Medium",
+	"hard": "Hard",
+	"paused": "Paused",
+	"resume": "Resume",
+	"you_lost": "You lost!",
+	"you_won": "You won!",
+	"ask_try_again": "Do you want to try again?",
+	"try_again": "Try again",
+	"score": "Score"
 }

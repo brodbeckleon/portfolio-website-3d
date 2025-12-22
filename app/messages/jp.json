@@ -24,5 +24,18 @@
 
 	"alt_daikoku_toyota_chaser": "大黒PAのトヨタチェイサー",
 	"alt_tokyo_tower_mori_art_museum": "森美術館から撮影した東京タワー",
-	"alt_ueteliberg_kindergarten": "雪の丘で遊ぶ学校のクラス"
+	"alt_ueteliberg_kindergarten": "雪の丘で遊ぶ学校のクラス",
+
+	"snake": "スネーク",
+	"choose_difficulty": "難易度を選択",
+	"easy": "かんたん",
+	"medium": "ふつう",
+	"hard": "むずかしい",
+	"paused": "ポーズ",
+	"resume": "つづける",
+	"you_lost": "ゲームオーバー！",
+	"you_won": "クリア！",
+	"ask_try_again": "もういちど ちょうせん しますか？",
+	"try_again": "リトライ",
+	"score": "スコア"
 }

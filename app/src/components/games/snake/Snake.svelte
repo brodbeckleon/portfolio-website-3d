@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Play, Pause } from '@lucide/svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	interface SnakeProps {
 		isMobile: boolean;
@@ -97,14 +98,12 @@
 
 		if (newHead.x < 0 || newHead.x >= mapWidth || newHead.y < 0 || newHead.y >= mapWidth) {
 			gameState = 'lost';
-			console.log('Out of bounds!');
 			return;
 		}
 
 		for (let i = 1; i < snake.body.length; i++) {
 			if (snake.body[i].x === newHead.x && snake.body[i].y === newHead.y) {
 				gameState = 'lost';
-				console.log('Collision with self!');
 				return;
 			}
 		}
@@ -208,15 +207,13 @@
 </script>
 
 <div style="text-align: center;">
-	<h2>Snake</h2>
+	<h2>{m.snake()}</h2>
 
-	<!-- Always show the grid -->
 	<div style="position: relative; display: inline-block; margin: 20px 0;">
-		<!-- Grid with opacity based on game state -->
 		<div style="opacity: {gameState === 'playing' ? 1 : 0.3};">
-			{#each snakeMap as row, x}
+			{#each snakeMap as row}
 				<div style="white-space: nowrap;">
-					{#each row as cell, y}
+					{#each row as cell}
 						<div
 							style="display: inline-block; width: 20px; height: 20px; border: 1px solid #ccc; background-color: {cell.isOccupied
 								? '#333'
@@ -229,40 +226,39 @@
 			{/each}
 		</div>
 
-		<!-- Overlay menus -->
 		{#if gameState !== 'playing'}
 			<div
 				style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; background-color: rgba(255, 255, 255, 0.7);"
 			>
 				{#if gameState === 'start'}
 					<div class="earlyweb-container" style="padding: 20px;">
-						<h4>choose difficulty</h4>
+						<h4>{m.choose_difficulty()}</h4>
 						<div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px;">
 							<button
 								class="earlyweb-button"
 								style="padding: 5px"
-								onclick={() => setGameDifficulty(100)}>Easy</button
+								onclick={() => setGameDifficulty(100)}>{m.easy()}</button
 							>
 							<button
 								class="earlyweb-button"
 								style="padding: 5px"
-								onclick={() => setGameDifficulty(200)}>Medium</button
+								onclick={() => setGameDifficulty(200)}>{m.medium()}</button
 							>
 							<button
 								class="earlyweb-button"
 								style="padding: 5px"
-								onclick={() => setGameDifficulty(300)}>Hard</button
+								onclick={() => setGameDifficulty(300)}>{m.hard()}</button
 							>
 						</div>
 					</div>
 				{:else if gameState === 'lost'}
 					<div class="earlyweb-container" style="padding: 20px; text-align: center;">
-						<h4>you lost!</h4>
-						<h5>do you want to try again?</h5>
+						<h4>{m.you_lost()}</h4>
+						<h5>{m.ask_try_again()}</h5>
 						<button
 							class="earlyweb-button"
 							onclick={() => setGameState('start')}
-							style="margin-top: 15px; padding: 5px;">try again</button
+							style="margin-top: 15px; padding: 5px;">{m.try_again()}</button
 						>
 					</div>
 				{:else if gameState === 'paused'}
@@ -271,17 +267,17 @@
 						<button
 							class="earlyweb-button"
 							onclick={() => setGameState('playing')}
-							style="margin-top: 15px; padding: 5px;">resume</button
+							style="margin-top: 15px; padding: 5px;">{m.resume()}</button
 						>
 					</div>
 				{:else if gameState === 'won'}
 					<div class="earlyweb-container" style="padding: 20px; text-align: center;">
-						<h4>you won!</h4>
-						<h5>do you want to try again?</h5>
+						<h4>{m.you_won()}</h4>
+						<h5>{m.ask_try_again()}</h5>
 						<button
 							class="earlyweb-button"
 							onclick={() => setGameState('playing')}
-							style="margin-top: 15px; padding: 5px;">try again</button
+							style="margin-top: 15px; padding: 5px;">{m.try_again()}</button
 						>
 					</div>
 				{/if}
@@ -289,7 +285,7 @@
 		{/if}
 	</div>
 
-	<h3>Score: {snake.body.length}</h3>
+	<h3>{m.score()}: {snake.body.length}</h3>
 
 	{#if isMobile}
 		<div style="display: flex; flex-direction: column; align-items: center; margin-top: 20px;">
