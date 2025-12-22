@@ -35,7 +35,7 @@
 	});
 
 	function setGameState(state: GameStates) {
-		if (state === 'playing' && (gameState === 'won' || gameState === 'lost')) {
+		if (state === 'start' && (gameState === 'won' || gameState === 'lost')) {
 			init();
 			spawnFood();
 		}
@@ -207,71 +207,138 @@
 	}
 </script>
 
-<div>
+<div style="text-align: center;">
 	<h2>Snake</h2>
-	{#if gameState === 'playing'}
-		<h3>Score: {snake.body.length}</h3>
 
-		{#each snakeMap as row, x}
-			{#each row as cell, y}
-				<div
-					style="display: inline-block; width: 20px; height: 20px; border: 1px solid #ccc; background-color: {cell.isOccupied
-						? '#333'
-						: cell.isFood
-							? '#f00'
-							: '#fff'}"
-				></div>
+	<!-- Always show the grid -->
+	<div style="position: relative; display: inline-block; margin: 20px 0;">
+		<!-- Grid with opacity based on game state -->
+		<div style="opacity: {gameState === 'playing' ? 1 : 0.3};">
+			{#each snakeMap as row, x}
+				<div style="white-space: nowrap;">
+					{#each row as cell, y}
+						<div
+							style="display: inline-block; width: 20px; height: 20px; border: 1px solid #ccc; background-color: {cell.isOccupied
+								? '#333'
+								: cell.isFood
+									? '#f00'
+									: '#fff'}"
+						></div>
+					{/each}
+				</div>
 			{/each}
-			<br />
-		{/each}
-	{:else if gameState === 'start'}
-		<h4>choose difficulty</h4>
-		<button onclick={() => setGameDifficulty(100)}>Easy</button>
-		<button onclick={() => setGameDifficulty(200)}>Medium</button>
-		<button onclick={() => setGameDifficulty(300)}>Hard</button>
-	{:else if gameState === 'lost'}
-		<h4>you lost!</h4>
-		<h5>do you want to try again?</h5>
-		<button onclick={() => setGameState('playing')}>try again</button>
-	{:else if gameState === 'paused'}
-		<h4>paused</h4>
-		<button onclick={() => setGameState('playing')}>resume</button>
-	{:else if gameState === 'won'}
-		<h4>you won!</h4>
-		<h5>do you want to try again?</h5>
-		<button onclick={() => setGameState('playing')}>try again</button>
-	{/if}
+		</div>
 
-	{#if isMobile && (gameState === 'playing' || gameState === 'paused')}
-		<!-- {#if isMobile} -->
-		<div
-			style="margin-top: 20px; display: flex; flex-direction: column; align-content: center; justify-content: center;"
-		>
-			<button class="earlyweb-button" style="width: 48px; height: 48px;" onclick={moveUp}
-				><ArrowUp /></button
+		<!-- Overlay menus -->
+		{#if gameState !== 'playing'}
+			<div
+				style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; background-color: rgba(255, 255, 255, 0.7);"
 			>
-			<div>
-				<button class="earlyweb-button" style="width: 48px; height: 48px;" onclick={moveLeft}
-					><ArrowLeft /></button
+				{#if gameState === 'start'}
+					<div class="earlyweb-container" style="padding: 20px;">
+						<h4>choose difficulty</h4>
+						<div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px;">
+							<button
+								class="earlyweb-button"
+								style="padding: 5px"
+								onclick={() => setGameDifficulty(100)}>Easy</button
+							>
+							<button
+								class="earlyweb-button"
+								style="padding: 5px"
+								onclick={() => setGameDifficulty(200)}>Medium</button
+							>
+							<button
+								class="earlyweb-button"
+								style="padding: 5px"
+								onclick={() => setGameDifficulty(300)}>Hard</button
+							>
+						</div>
+					</div>
+				{:else if gameState === 'lost'}
+					<div class="earlyweb-container" style="padding: 20px; text-align: center;">
+						<h4>you lost!</h4>
+						<h5>do you want to try again?</h5>
+						<button
+							class="earlyweb-button"
+							onclick={() => setGameState('start')}
+							style="margin-top: 15px; padding: 5px;">try again</button
+						>
+					</div>
+				{:else if gameState === 'paused'}
+					<div class="earlyweb-container" style="padding: 20px;  text-align: center;">
+						<h4>paused</h4>
+						<button
+							class="earlyweb-button"
+							onclick={() => setGameState('playing')}
+							style="margin-top: 15px; padding: 5px;">resume</button
+						>
+					</div>
+				{:else if gameState === 'won'}
+					<div class="earlyweb-container" style="padding: 20px; text-align: center;">
+						<h4>you won!</h4>
+						<h5>do you want to try again?</h5>
+						<button
+							class="earlyweb-button"
+							onclick={() => setGameState('playing')}
+							style="margin-top: 15px; padding: 5px;">try again</button
+						>
+					</div>
+				{/if}
+			</div>
+		{/if}
+	</div>
+
+	<h3>Score: {snake.body.length}</h3>
+
+	{#if isMobile}
+		<div style="display: flex; flex-direction: column; align-items: center; margin-top: 20px;">
+			<button
+				class="earlyweb-button"
+				style="width: 48px; height: 48px;"
+				onclick={moveUp}
+				disabled={gameState !== 'playing'}
+			>
+				<ArrowUp />
+			</button>
+			<div style="display: flex; gap: 10px; margin: 5px 0;">
+				<button
+					class="earlyweb-button"
+					style="width: 48px; height: 48px;"
+					onclick={moveLeft}
+					disabled={gameState !== 'playing'}
 				>
+					<ArrowLeft />
+				</button>
 				<button
 					class="earlyweb-button"
 					style="width: 48px; height: 48px;"
 					onclick={() => pauseOrUnpauseGame()}
+					disabled={gameState !== 'playing'}
 				>
-					{#if gameState === 'paused'}
-						<Play />
-					{:else if gameState === 'playing'}
+					{#if gameState === 'playing'}
 						<Pause />
+					{:else}
+						<Play />
 					{/if}
 				</button>
-				<button class="earlyweb-button" style="width: 48px; height: 48px;" onclick={moveRight}>
+				<button
+					class="earlyweb-button"
+					style="width: 48px; height: 48px;"
+					onclick={moveRight}
+					disabled={gameState !== 'playing'}
+				>
 					<ArrowRight />
 				</button>
 			</div>
-			<button class="earlyweb-button" style="width: 48px; height: 48px;" onclick={moveDown}
-				><ArrowDown /></button
+			<button
+				class="earlyweb-button"
+				style="width: 48px; height: 48px;"
+				onclick={moveDown}
+				disabled={gameState !== 'playing'}
 			>
+				<ArrowDown />
+			</button>
 		</div>
 	{/if}
 </div>
