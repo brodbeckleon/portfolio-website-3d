@@ -26,8 +26,10 @@
 		isFood: boolean;
 		isOccupied: boolean;
 	};
-	let gameDifficulty: GameDifficulties = $state(200);
+	let gameDifficulty: number = $state(0);
 	let gameState: GameStates = $state('start');
+	let highScore: number = $state(1);
+	let nextDirections: Position[] = [];
 
 	const snakeMap: MapCell[][] = $state([]);
 	let snake: Snake = $state({
@@ -86,6 +88,13 @@
 	}
 
 	function moveSnake(): void {
+		if (nextDirections.length > 0) {
+			const nextDir = nextDirections.shift();
+			if (nextDir) {
+				snake.direction = nextDir;
+			}
+		}
+
 		if (snake.direction.x === 0 && snake.direction.y === 0) {
 			return;
 		}
@@ -140,8 +149,18 @@
 	function setDirection(dx: number, dy: number) {
 		const currentDir = snake.direction;
 		if (currentDir.x !== -dx || currentDir.y !== -dy) {
-			snake.direction = { x: dx, y: dy };
+			nextDirections.push({ x: dx, y: dy });
 		}
+	}
+
+	function updateHighScore() {
+		if (snake.body.length > highScore) {
+			highScore = snake.body.length;
+		}
+	}
+
+	function checkWinCondition() {
+		if (snake.body.length === mapWidth ** 2) gameState = 'won';
 	}
 
 	function handleKeyDown(event: KeyboardEvent): void {
@@ -171,23 +190,32 @@
 				moveRight();
 				break;
 			case ' ':
-			case 'escape':
+			case 'Escape':
 				pauseOrUnpauseGame();
 				break;
 		}
 	}
+
+	$effect(() => {
+		if (gameState === 'playing' && gameDifficulty > 0) {
+			const interval = setInterval(() => {
+				moveSnake();
+				updateHighScore();
+				checkWinCondition();
+			}, gameDifficulty);
+
+			return () => {
+				clearInterval(interval);
+			};
+		}
+	});
 
 	onMount(() => {
 		window.addEventListener('keydown', handleKeyDown);
 		init();
 		spawnFood();
 
-		const interval = setInterval(() => {
-			if (gameState === 'playing') moveSnake();
-		}, gameDifficulty);
-
 		return () => {
-			clearInterval(interval);
 			window.removeEventListener('keydown', handleKeyDown);
 		};
 	});
@@ -209,20 +237,35 @@
 <div style="text-align: center;">
 	<h2>{m.snake()}</h2>
 
-	<div style="position: relative; display: inline-block; margin: 20px 0;">
-		<div style="opacity: {gameState === 'playing' ? 1 : 0.3};">
-			{#each snakeMap as row}
-				<div style="white-space: nowrap;">
-					{#each row as cell}
-						<div
-							style="display: inline-block; width: 20px; height: 20px; border: 1px solid #ccc; background-color: {cell.isOccupied
-								? '#333'
-								: cell.isFood
-									? '#f00'
-									: '#fff'}"
-						></div>
-					{/each}
-				</div>
+	<div
+		style="position: relative; display: inline-flex; flex-direction: row; justify-content: space-between; width: 100%; max-width: 450px; margin: 0 1rem"
+	>
+		<h3>{m.score()}: {snake.body.length}</h3>
+		<h3>{m.high_score()}: {highScore}</h3>
+	</div>
+
+	<div
+		style="position: relative; display: inline-block; margin: 0 auto; width: 100%; max-width: 450px;"
+	>
+		<div
+			style="
+			display: grid;
+			grid-template-columns: repeat({mapWidth}, 1fr);
+			gap: 1px;
+			opacity: {gameState === 'playing' ? 1 : 0.3};
+			width: 100%;
+			aspect-ratio: 1 / 1;
+			max-width: 450px;
+			margin: 0 auto;
+		"
+		>
+			{#each snakeMap.flat() as cell}
+				<div
+					style="
+					background-color: {cell.isOccupied ? '#333' : cell.isFood ? '#f00' : '#fff'};
+					border: 1px solid #ccc;
+				"
+				></div>
 			{/each}
 		</div>
 
@@ -237,7 +280,7 @@
 							<button
 								class="earlyweb-button"
 								style="padding: 5px"
-								onclick={() => setGameDifficulty(100)}>{m.easy()}</button
+								onclick={() => setGameDifficulty(300)}>{m.easy()}</button
 							>
 							<button
 								class="earlyweb-button"
@@ -247,7 +290,7 @@
 							<button
 								class="earlyweb-button"
 								style="padding: 5px"
-								onclick={() => setGameDifficulty(300)}>{m.hard()}</button
+								onclick={() => setGameDifficulty(100)}>{m.hard()}</button
 							>
 						</div>
 					</div>
@@ -285,13 +328,11 @@
 		{/if}
 	</div>
 
-	<h3>{m.score()}: {snake.body.length}</h3>
-
 	{#if isMobile}
 		<div style="display: flex; flex-direction: column; align-items: center; margin-top: 20px;">
 			<button
 				class="earlyweb-button"
-				style="width: 48px; height: 48px;"
+				style="width: 60px; height: 60px;"
 				onclick={moveUp}
 				disabled={gameState !== 'playing'}
 			>
@@ -300,7 +341,7 @@
 			<div style="display: flex; gap: 10px; margin: 5px 0;">
 				<button
 					class="earlyweb-button"
-					style="width: 48px; height: 48px;"
+					style="width: 60px; height: 60px;"
 					onclick={moveLeft}
 					disabled={gameState !== 'playing'}
 				>
@@ -308,7 +349,7 @@
 				</button>
 				<button
 					class="earlyweb-button"
-					style="width: 48px; height: 48px;"
+					style="width: 60px; height: 60px;"
 					onclick={() => pauseOrUnpauseGame()}
 					disabled={gameState !== 'playing'}
 				>
@@ -320,7 +361,7 @@
 				</button>
 				<button
 					class="earlyweb-button"
-					style="width: 48px; height: 48px;"
+					style="width: 60px; height: 60px;"
 					onclick={moveRight}
 					disabled={gameState !== 'playing'}
 				>
@@ -329,7 +370,7 @@
 			</div>
 			<button
 				class="earlyweb-button"
-				style="width: 48px; height: 48px;"
+				style="width: 60px; height: 60px;"
 				onclick={moveDown}
 				disabled={gameState !== 'playing'}
 			>

@@ -63,7 +63,7 @@
 			class:earlyweb-container={web_era === 'early_web'}
 			class:frutiger-aero-container={web_era === 'frutiger_aero'}
 			class:modern-minimal-container={web_era === 'modern_minimal'}
-			style="padding: 1rem"
+			style="padding: 1rem 0"
 		>
 			{#if web_era === 'early_web'}
 				<Snake {isMobile} />
