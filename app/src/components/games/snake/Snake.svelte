@@ -234,7 +234,7 @@
 	}
 </script>
 
-<div style="text-align: center;">
+<div style="text-align: center; display: flex; flex-direction: column; align-items: center;">
 	<h2>{m.snake()}</h2>
 
 	<div
