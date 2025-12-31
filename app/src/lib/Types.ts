@@ -15,3 +15,5 @@ export type Image = {
 	name: string;
 	path: string;
 };
+
+export type GameStates = 'paused' | 'playing' | 'lost' | 'won' | 'start';

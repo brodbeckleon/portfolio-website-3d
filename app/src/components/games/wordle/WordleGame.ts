@@ -1,3 +1,5 @@
+import { initWordleChecker } from './WordleChecker.ts';
+
 export const germanFilePath = 'game-assets/wordle/wordlist-german.txt';
 
 let words: string[] = [];
@@ -24,6 +26,8 @@ export async function init(): Promise<void> {
 	} catch (error) {
 		console.error('Error loading word list:', error);
 	}
+
+	await initWordleChecker();
 }
 
 export async function getTargetWord(): Promise<string> {

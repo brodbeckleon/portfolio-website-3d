@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Play, Pause } from '@lucide/svelte';
 	import { m } from '$lib/paraglide/messages';
+	import type { GameStates } from '$lib/Types.ts';
 
 	interface SnakeProps {
 		isMobile: boolean;
@@ -12,7 +13,6 @@
 	const mapWidth: number = 15;
 	const startingPosition: number = Math.floor(mapWidth / 2);
 
-	type GameStates = 'paused' | 'playing' | 'lost' | 'won' | 'start';
 	type GameDifficulties = 100 | 200 | 300;
 
 	type Position = { x: number; y: number };
