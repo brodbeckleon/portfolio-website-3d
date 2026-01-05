@@ -97,6 +97,19 @@
 	/*box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);*/
 }
 
+.modern-minimal-secondary-button {
+	border-radius: var(--mm-radius);
+	border: none;
+	background: var(--mm-accent);
+	color: var(--mm-text) !important;
+	font-size: 0.95rem;
+	cursor: pointer;
+	transition: all 0.18s ease;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
 .modern-minimal-button:hover {
 	background: var(--mm-accent) !important;
 }

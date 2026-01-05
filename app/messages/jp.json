@@ -1,6 +1,10 @@
 {
 	"$schema": "https://inlang.com/schema/inlang_message_format",
 
+	"english": "英語",
+	"german": "ドイツ語",
+	"japanese": "日本語",
+
 	"leon_shinichi": "レオン・伸一",
 	"zurich_switzerland": "チューリッヒ、スイス",
 
@@ -27,7 +31,9 @@
 	"alt_ueteliberg_kindergarten": "雪の丘で遊ぶ学校のクラス",
 
 	"snake": "スネーク",
+	"wordle": "ワードル",
 	"choose_difficulty": "難易度を選択",
+	"choose_language": "言語をを選択",
 	"easy": "かんたん",
 	"medium": "ふつう",
 	"hard": "むずかしい",

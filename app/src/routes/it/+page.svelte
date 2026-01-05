@@ -5,6 +5,7 @@
 	import { browser } from '$app/environment';
 	import { onMount } from 'svelte';
 	import Snake from '../../components/games/snake/Snake.svelte';
+	import Wordle from '../../components/games/wordle/Wordle.svelte';
 
 	let web_era: WebEras = $derived('modern_minimal');
 
@@ -70,7 +71,7 @@
 			{:else if web_era === 'frutiger_aero'}
 				harmonia
 			{:else if web_era === 'modern_minimal'}
-				wordle
+				<Wordle />
 			{/if}
 		</div>
 	</div>
