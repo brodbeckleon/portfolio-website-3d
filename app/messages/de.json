@@ -1,6 +1,10 @@
 {
 	"$schema": "https://inlang.com/schema/inlang_message_format",
 
+	"english": "Englisch",
+	"german": "Deutsch",
+	"japanese": "Japanisch",
+
 	"leon_shinichi": "Léon Shin'ichi",
 	"zurich_switzerland": "Zürich, Schweiz",
 
@@ -27,7 +31,9 @@
 	"alt_ueteliberg_kindergarten": "Schulklasse, die auf einem verschneiten Hügel spielt",
 
 	"snake": "Snake",
+	"wordle": "Wordle",
 	"choose_difficulty": "Schwierigkeit wählen",
+	"choose_language": "Sprache auswählen",
 	"easy": "Einfach",
 	"medium": "Mittel",
 	"hard": "Schwer",

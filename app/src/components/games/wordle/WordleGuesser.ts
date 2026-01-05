@@ -1,22 +1,18 @@
 import {
 	checkGuess,
 	getAvailableChars,
-	setWordToFind,
-	getWordToFind,
 	getCorrectChars,
 	getContainedCharsWIncorrectPositions,
 	getGuesses,
 	setGuesses
 } from './WordleChecker.ts';
-import { germanFilePath } from './WordleGame.ts';
+import { filePath } from './WordleGame.ts';
 
-export async function findWord(targetWord?: string) {
+export async function findWord(targetWord: string) {
 	console.log('starting to find word');
 
-	await setWordToFind(targetWord || 'stall');
-
 	try {
-		const response = await fetch(germanFilePath);
+		const response = await fetch(filePath);
 
 		if (!response.ok) {
 			throw new Error(`HTTP error! status: ${response.status}`);
@@ -34,9 +30,9 @@ export async function findWord(targetWord?: string) {
 			console.log('Starting guess: \t\t', i + 1);
 			const wordCandidate = await buildString(words);
 
-			await checkGuess(wordCandidate, await getWordToFind());
+			await checkGuess(wordCandidate, targetWord);
 
-			if (wordCandidate === (await getWordToFind())) {
+			if (wordCandidate === targetWord) {
 				console.log('Wort found');
 				console.log(wordCandidate);
 				break;

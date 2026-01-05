@@ -1,14 +1,21 @@
 import { initWordleChecker } from './WordleChecker.ts';
 
-export const germanFilePath = 'game-assets/wordle/wordlist-german.txt';
+export type WordleLanguage = 'en' | 'de';
+
+const germanFilePath = 'game-assets/wordle/wordlist-german.txt';
+const englishFilePath = 'game-assets/wordle/wordlist-english.txt';
+
+export let filePath: string = englishFilePath;
 
 let words: string[] = [];
 
 let targetWord: string = '';
 
 export async function init(): Promise<void> {
+	words = [];
+	targetWord = '';
 	try {
-		const response = await fetch(germanFilePath);
+		const response = await fetch(filePath);
 
 		if (!response.ok) {
 			throw new Error(`HTTP error! status: ${response.status}`);
@@ -23,6 +30,7 @@ export async function init(): Promise<void> {
 
 		const randomIndex: number = Math.floor(Math.random() * words.length);
 		targetWord = words[randomIndex];
+		console.log(targetWord);
 	} catch (error) {
 		console.error('Error loading word list:', error);
 	}
@@ -36,4 +44,21 @@ export async function getTargetWord(): Promise<string> {
 
 export async function isInWordList(word: string): Promise<boolean> {
 	return words.includes(word);
+}
+
+export async function setLanguage(language: WordleLanguage): Promise<void> {
+	switch (language) {
+		case 'en': {
+			filePath = englishFilePath;
+			break;
+		}
+		case 'de': {
+			filePath = germanFilePath;
+			break;
+		}
+		default: {
+			console.error('Error setting language:', language);
+			break;
+		}
+	}
 }
