@@ -25,6 +25,8 @@
 	"open_link": "open {website_name} link",
 	"return_to_homepage": "return to the homepage",
 	"toggle_socials": "toggle socials",
+	"wip_banner_title": "Work in progress",
+	"wip_banner_body": "This site is being built live; things may change or break.",
 
 	"alt_daikoku_toyota_chaser": "Toyota Chaser at Daikoku PA",
 	"alt_tokyo_tower_mori_art_museum": "Tokyo Tower shot from Mori Art Museum",

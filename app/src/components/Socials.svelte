@@ -85,7 +85,7 @@
 			{#if showSocialDropdown}
 				<div
 					class="mobile-social-dropdown-menu"
-					class:glassmorphism-container={era === 'glassmorphism'}
+					class:glassmorphism-dropdown-menu={era === 'glassmorphism'}
 					class:earlyweb-dropdown-menu={era === 'early_web'}
 					class:frutiger-aero-dropdown-menu={era === 'frutiger_aero'}
 					class:modern-minimal-dropdown-menu={era === 'modern_minimal'}
@@ -228,10 +228,13 @@
 		.mobile-share-button {
 			width: 48px;
 			height: 48px;
-			color: white;
 			position: absolute;
 			bottom: 0;
 			left: 50%;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			padding: 0;
 		}
 	}
 </style>
