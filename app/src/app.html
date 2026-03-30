@@ -5,6 +5,8 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="theme-color" media="(prefers-color-scheme: light)" content="#e0d5c8" />
 		<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#2a1e15" />
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover">
@@ -22,5 +24,17 @@
 		box-sizing: border-box;
 		overflow-x: hidden;
 		overflow-y: auto;
+	}
+
+	@media (prefers-color-scheme: light) {
+		html, body {
+			background-color: #e0d5c8;
+		}
+	}
+
+	@media (prefers-color-scheme: dark) {
+		html, body {
+			background-color: #2a1e15;
+		}
 	}
 </style>
