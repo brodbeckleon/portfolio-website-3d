@@ -37,4 +37,8 @@
 		width: 100%;
 		height: 100%;
 	}
+
+	:global(body) {
+		font-family: 'Helvetica', 'Arial', sans-serif;
+	}
 </style>
