@@ -7,7 +7,7 @@
 	import SlideShow from '../../components/photography/SlideShow.svelte';
 
 	const web_era: WebEras = 'modern_minimal';
-	let isMobile: boolean = $derived(false);
+	let isMobile: boolean = $state(false);
 
 	const images: Image[] = [
 		{
@@ -40,48 +40,54 @@
 	});
 </script>
 
-<div class="photography-page" class:modern-minimal-background={web_era === 'modern_minimal'}>
-	<TitleBar era={web_era} {isMobile} />
+<div class="photography-page modern-minimal-background modern-minimal-font">
+	<TitleBar era={web_era} {isMobile} compact />
 
-	<div class="photography-page-content">
-		<div class:modern-minimal-container={web_era === 'modern_minimal'} style="padding: 1rem">
+	<main class="photography-page-content site-shell">
+		<section class="modern-minimal-section">
+			<header class="modern-minimal-section-header">
+				<p class="modern-minimal-eyebrow">{m.photography()}</p>
+				<h2 class="modern-minimal-display">{m.my_journey()}</h2>
+			</header>
+			<div class="modern-minimal-prose">
+				<p>
+					Lorem ipsum dolor sit amet, consectetur adipiscing elit. In facilisis non libero at
+					dignissim. Phasellus semper nisl sed nisi pretium, eu volutpat est imperdiet. Vestibulum
+					gravida sem eget erat pharetra, eu fringilla ante vestibulum. Sed eu justo eget libero
+					tristique scelerisque imperdiet non dui.
+				</p>
+				<p>
+					Pellentesque neque sapien, tempus at diam in, euismod dignissim neque. Duis quis nibh ac
+					erat varius bibendum. Maecenas ultrices felis eget facilisis ultrices. In congue euismod
+					dui, nec sollicitudin nibh gravida eget.
+				</p>
+			</div>
+		</section>
+
+		<section class="modern-minimal-section">
 			<SlideShow {images} />
-		</div>
-		<div class:modern-minimal-container={web_era === 'modern_minimal'} style="padding: 1rem">
-			<h3>My Journey</h3>
-			<p>
-				Lorem ipsum dolor sit amet, consectetur adipiscing elit. In facilisis non libero at
-				dignissim. Phasellus semper nisl sed nisi pretium, eu volutpat est imperdiet. Vestibulum
-				gravida sem eget erat pharetra, eu fringilla ante vestibulum. Sed eu justo eget libero
-				tristique scelerisque imperdiet non dui. Pellentesque neque sapien, tempus at diam in,
-				euismod dignissim neque. Duis quis nibh ac erat varius bibendum. Maecenas ultrices felis
-				eget facilisis ultrices. In congue euismod dui, nec sollicitudin nibh gravida eget. Ut
-				malesuada ante vel est gravida, a congue eros consequat. Donec sagittis nulla ac arcu
-				pretium, aliquam luctus arcu varius. Cras feugiat hendrerit urna et auctor. Nulla vehicula
-				eleifend lacinia. Curabitur condimentum sagittis posuere. Mauris feugiat ipsum in metus
-				iaculis, a eleifend urna tempor. Vestibulum pharetra, orci non aliquet consequat, lorem ante
-				venenatis lacus, et ultricies diam ligula vel turpis. Mauris nisl augue, pretium vitae
-				ligula vitae, tincidunt convallis nulla.
-			</p>
-		</div>
-	</div>
+		</section>
+	</main>
 </div>
 
 <style lang="css">
 	.photography-page {
 		width: 100%;
-		min-height: 98vh;
-		padding: 1vh 0;
+		flex: 1;
 		display: flex;
 		flex-direction: column;
 		margin: 0;
-		flex: 1;
 	}
 
 	.photography-page-content {
-		margin: 1rem;
 		display: flex;
 		flex-direction: column;
-		gap: 1rem;
+	}
+
+	/* Clear the fixed mobile action bar. */
+	@media (max-width: 768px) {
+		.photography-page-content {
+			padding-bottom: 5.5rem;
+		}
 	}
 </style>

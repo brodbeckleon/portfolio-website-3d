@@ -259,7 +259,7 @@
 			margin: 0 auto;
 		"
 		>
-			{#each snakeMap.flat() as cell}
+			{#each snakeMap.flat() as cell, cellIndex (cellIndex)}
 				<div
 					style="
 					background-color: {cell.isOccupied ? '#333' : cell.isFood ? '#f00' : '#fff'};

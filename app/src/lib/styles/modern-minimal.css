@@ -1,171 +1,548 @@
 /* ==========================================================
-   THEME VARIABLES
+   MODERN MINIMAL
+   Neutral surfaces, one sage accent, hairlines instead of fills.
+   Order: palette -> tokens -> base -> layout -> surfaces -> controls
    ========================================================== */
 
-/* ----- Light Mode (default) ----- */
+/* ----------------------------------------------------------
+   Palette — every colour value is defined exactly once here.
+   The light/dark mapping below only re-points the semantic
+   tokens, so there is a single place to change a colour.
+   ---------------------------------------------------------- */
+:root {
+	/* light ramp */
+	--mm-l-bg: #fbfbf9;
+	--mm-l-sunken: #f2f2ee;
+	--mm-l-surface: #ffffff;
+	--mm-l-surface-2: #f6f6f2;
+	--mm-l-border: #e6e6e0;
+	--mm-l-border-strong: #d2d2ca;
+	--mm-l-text: #1a1b18;
+	--mm-l-text-muted: #5f6058;
+	--mm-l-text-subtle: #73746b;
+	--mm-l-accent: #4f6b46;
+	--mm-l-accent-hover: #3d5536;
+	--mm-l-accent-ink: #ffffff;
+	--mm-l-accent-wash: #eef2ec;
+	--mm-l-scrim: rgba(251, 251, 249, 0.55);
+	--mm-l-shadow-color: 24 26 20;
+	--mm-l-tile-correct: #4f6b46;
+	--mm-l-tile-correct-ink: #ffffff;
+	--mm-l-tile-present: #9a6f1f;
+	--mm-l-tile-present-ink: #ffffff;
+	--mm-l-tile-absent: #6f7068;
+	--mm-l-tile-absent-ink: #ffffff;
+
+	/* dark ramp */
+	--mm-d-bg: #101110;
+	--mm-d-sunken: #0b0c0b;
+	--mm-d-surface: #191a18;
+	--mm-d-surface-2: #222320;
+	--mm-d-border: #2c2d29;
+	--mm-d-border-strong: #3e3f3a;
+	--mm-d-text: #eceae4;
+	--mm-d-text-muted: #a2a399;
+	--mm-d-text-subtle: #8c8d83;
+	--mm-d-accent: #a6c598;
+	--mm-d-accent-hover: #bdd8b1;
+	--mm-d-accent-ink: #12140f;
+	--mm-d-accent-wash: #1c2318;
+	--mm-d-scrim: rgba(16, 17, 16, 0.55);
+	--mm-d-shadow-color: 0 0 0;
+	--mm-d-tile-correct: #a6c598;
+	--mm-d-tile-correct-ink: #12140f;
+	--mm-d-tile-present: #d8ab57;
+	--mm-d-tile-present-ink: #12140f;
+	--mm-d-tile-absent: #4c4d47;
+	--mm-d-tile-absent-ink: #e6e5df;
+}
+
+/* ----- Semantic tokens: light (default) ----- */
 :root,
 :root[data-theme='light'] {
-	--mm-bg: #f1f3e0;
-	--mm-bg-2: #d2dcb6;
-	--mm-accent: #a1bc98;
-	--mm-text: #4a4f3e; /* more readable than 778873 */
-	--mm-muted: color-mix(in srgb, var(--mm-text), transparent 40%);
-	--mm-focus: rgba(0, 0, 0, 0.25);
-	--mm-radius: 10px;
+	--mm-bg: var(--mm-l-bg);
+	--mm-sunken: var(--mm-l-sunken);
+	--mm-surface: var(--mm-l-surface);
+	--mm-surface-2: var(--mm-l-surface-2);
+	--mm-border: var(--mm-l-border);
+	--mm-border-strong: var(--mm-l-border-strong);
+	--mm-text: var(--mm-l-text);
+	--mm-text-muted: var(--mm-l-text-muted);
+	--mm-text-subtle: var(--mm-l-text-subtle);
+	--mm-accent: var(--mm-l-accent);
+	--mm-accent-hover: var(--mm-l-accent-hover);
+	--mm-accent-ink: var(--mm-l-accent-ink);
+	--mm-accent-wash: var(--mm-l-accent-wash);
+	--mm-scrim: var(--mm-l-scrim);
+	--mm-shadow-color: var(--mm-l-shadow-color);
+	--mm-tile-correct: var(--mm-l-tile-correct);
+	--mm-tile-correct-ink: var(--mm-l-tile-correct-ink);
+	--mm-tile-present: var(--mm-l-tile-present);
+	--mm-tile-present-ink: var(--mm-l-tile-present-ink);
+	--mm-tile-absent: var(--mm-l-tile-absent);
+	--mm-tile-absent-ink: var(--mm-l-tile-absent-ink);
 }
 
-/* ----- Dark Mode ----- */
-:root[data-theme='dark'] {
-	--mm-bg: #1b3c53;
-	--mm-bg-2: #234c6a;
-	--mm-accent: #456882;
-	--mm-text: #e3e3e3;
-	--mm-muted: color-mix(in srgb, var(--mm-text), transparent 55%);
-	--mm-focus: rgba(255, 255, 255, 0.22);
-	--mm-radius: 10px;
-}
-
-/* ----- Automatic dark mode fallback when user did NOT force theme ----- */
+/* ----- Semantic tokens: dark, when the user did NOT force light ----- */
 @media (prefers-color-scheme: dark) {
 	:root:not([data-theme='light']) {
-		--mm-bg: #1b3c53;
-		--mm-bg-2: #234c6a;
-		--mm-accent: #456882;
-		--mm-text: #e3e3e3;
-		--mm-muted: color-mix(in srgb, var(--mm-text), transparent 55%);
-		--mm-focus: rgba(255, 255, 255, 0.22);
+		--mm-bg: var(--mm-d-bg);
+		--mm-sunken: var(--mm-d-sunken);
+		--mm-surface: var(--mm-d-surface);
+		--mm-surface-2: var(--mm-d-surface-2);
+		--mm-border: var(--mm-d-border);
+		--mm-border-strong: var(--mm-d-border-strong);
+		--mm-text: var(--mm-d-text);
+		--mm-text-muted: var(--mm-d-text-muted);
+		--mm-text-subtle: var(--mm-d-text-subtle);
+		--mm-accent: var(--mm-d-accent);
+		--mm-accent-hover: var(--mm-d-accent-hover);
+		--mm-accent-ink: var(--mm-d-accent-ink);
+		--mm-accent-wash: var(--mm-d-accent-wash);
+		--mm-scrim: var(--mm-d-scrim);
+		--mm-shadow-color: var(--mm-d-shadow-color);
+		--mm-tile-correct: var(--mm-d-tile-correct);
+		--mm-tile-correct-ink: var(--mm-d-tile-correct-ink);
+		--mm-tile-present: var(--mm-d-tile-present);
+		--mm-tile-present-ink: var(--mm-d-tile-present-ink);
+		--mm-tile-absent: var(--mm-d-tile-absent);
+		--mm-tile-absent-ink: var(--mm-d-tile-absent-ink);
 	}
 }
 
-/* ==========================================================
-   MODERN MINIMAL — UPDATED
-   ========================================================== */
-
-.modern-minimal-background {
-	background-color: var(--mm-bg);
-	transition: 0.3s ease;
+/* ----- Semantic tokens: dark, explicitly chosen ----- */
+:root[data-theme='dark'] {
+	--mm-bg: var(--mm-d-bg);
+	--mm-sunken: var(--mm-d-sunken);
+	--mm-surface: var(--mm-d-surface);
+	--mm-surface-2: var(--mm-d-surface-2);
+	--mm-border: var(--mm-d-border);
+	--mm-border-strong: var(--mm-d-border-strong);
+	--mm-text: var(--mm-d-text);
+	--mm-text-muted: var(--mm-d-text-muted);
+	--mm-text-subtle: var(--mm-d-text-subtle);
+	--mm-accent: var(--mm-d-accent);
+	--mm-accent-hover: var(--mm-d-accent-hover);
+	--mm-accent-ink: var(--mm-d-accent-ink);
+	--mm-accent-wash: var(--mm-d-accent-wash);
+	--mm-scrim: var(--mm-d-scrim);
+	--mm-shadow-color: var(--mm-d-shadow-color);
+	--mm-tile-correct: var(--mm-d-tile-correct);
+	--mm-tile-correct-ink: var(--mm-d-tile-correct-ink);
+	--mm-tile-present: var(--mm-d-tile-present);
+	--mm-tile-present-ink: var(--mm-d-tile-present-ink);
+	--mm-tile-absent: var(--mm-d-tile-absent);
+	--mm-tile-absent-ink: var(--mm-d-tile-absent-ink);
 }
 
+/* ----------------------------------------------------------
+   Non-colour tokens
+   ---------------------------------------------------------- */
+:root {
+	--mm-font-sans:
+		'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue',
+		Arial, 'Hiragino Sans', 'Noto Sans JP', 'Yu Gothic', sans-serif;
+
+	/* type scale — fluid where it matters, fixed for UI chrome */
+	--mm-text-2xs: 0.6875rem;
+	--mm-text-xs: 0.75rem;
+	--mm-text-sm: 0.875rem;
+	--mm-text-base: 1rem;
+	--mm-text-lg: clamp(1.0625rem, 1.01rem + 0.28vw, 1.1875rem);
+	--mm-text-xl: clamp(1.25rem, 1.14rem + 0.55vw, 1.5rem);
+	--mm-text-2xl: clamp(1.5rem, 1.28rem + 1.1vw, 2rem);
+	--mm-text-3xl: clamp(2rem, 1.56rem + 2.2vw, 3rem);
+
+	--mm-leading-tight: 1.1;
+	--mm-leading-snug: 1.3;
+	--mm-leading: 1.6;
+	--mm-leading-relaxed: 1.75;
+
+	--mm-tracking-tight: -0.022em;
+	--mm-tracking-wide: 0.09em;
+
+	--mm-measure: 66ch;
+
+	/* spacing — 4px base */
+	--mm-s1: 0.25rem;
+	--mm-s2: 0.5rem;
+	--mm-s3: 0.75rem;
+	--mm-s4: 1rem;
+	--mm-s5: 1.5rem;
+	--mm-s6: 2rem;
+	--mm-s7: 3rem;
+	--mm-s8: 4rem;
+	--mm-s9: 6rem;
+
+	/* nested radii: outer larger than inner */
+	--mm-radius-sm: 6px;
+	--mm-radius-md: 10px;
+	--mm-radius-lg: 16px;
+	--mm-radius-pill: 999px;
+	/* legacy alias, still referenced by SlideShow.svelte */
+	--mm-radius: var(--mm-radius-md);
+
+	--mm-ease: cubic-bezier(0.2, 0, 0, 1);
+	--mm-duration: 180ms;
+
+	--mm-shadow-sm: 0 1px 2px rgb(var(--mm-shadow-color) / 0.05);
+	--mm-shadow-md:
+		0 1px 2px rgb(var(--mm-shadow-color) / 0.04),
+		0 8px 24px -14px rgb(var(--mm-shadow-color) / 0.18);
+	--mm-shadow-lg: 0 16px 40px -16px rgb(var(--mm-shadow-color) / 0.3);
+}
+
+/* ----------------------------------------------------------
+   Base
+   ---------------------------------------------------------- */
+.modern-minimal-background {
+	background-color: var(--mm-bg);
+	color: var(--mm-text);
+	transition:
+		background-color var(--mm-duration) var(--mm-ease),
+		color var(--mm-duration) var(--mm-ease);
+}
+
+.modern-minimal-font,
+.modern-minimal-background,
+.modern-minimal-container,
+.modern-minimal-panel,
+.modern-minimal-button,
+.modern-minimal-secondary-button,
+.modern-minimal-dropdown-button,
 .modern-minimal-dropdown-menu,
 .modern-minimal-dropdown-item,
-.modern-minimal-3way-toggle,
-.modern-minimal-container {
-	position: relative;
-	border-radius: var(--mm-radius);
-	overflow: hidden !important;
-	background: var(--mm-bg-2) !important;
+.modern-minimal-3way-toggle {
+	font-family: var(--mm-font-sans);
+	font-weight: 400;
+	font-synthesis-weight: none;
+	line-height: var(--mm-leading);
+	letter-spacing: normal;
+	color: var(--mm-text);
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+/* ----------------------------------------------------------
+   Layout primitives
+   ---------------------------------------------------------- */
+
+/* Sections separated by whitespace + a hairline, not by boxes. */
+.modern-minimal-section {
+	display: flex;
+	flex-direction: column;
+	gap: var(--mm-s5);
+	padding-block: clamp(var(--mm-s6), 5vw, var(--mm-s8));
+	border-top: 1px solid var(--mm-border);
+}
+
+.modern-minimal-section:first-child {
+	border-top: 0;
+}
+
+/* Tight grouping for a heading block (eyebrow + title + lead). */
+.modern-minimal-section-header {
+	display: flex;
+	flex-direction: column;
+	gap: var(--mm-s3);
 }
 
 /* ----------------------------------------------------------
    Typography
    ---------------------------------------------------------- */
-.modern-minimal-dropdown-menu,
-.modern-minimal-dropdown-item,
-.modern-minimal-3way-toggle,
-.modern-minimal-button,
-.modern-minimal-container,
-.modern-minimal-font {
-	font-family:
-		system-ui,
-		-apple-system,
-		'Segoe UI',
-		Roboto,
-		'Helvetica Neue',
-		Arial,
-		sans-serif;
-	font-weight: 400;
+.modern-minimal-eyebrow {
+	margin: 0;
+	font-size: var(--mm-text-xs);
+	font-weight: 500;
+	letter-spacing: var(--mm-tracking-wide);
+	text-transform: uppercase;
+	color: var(--mm-text-subtle);
+}
+
+.modern-minimal-display,
+.modern-minimal-heading,
+.modern-minimal-subheading {
+	margin: 0;
+	font-weight: 600;
+	line-height: var(--mm-leading-tight);
+	letter-spacing: var(--mm-tracking-tight);
 	color: var(--mm-text);
-	line-height: 1.45;
-	letter-spacing: 0.2px;
+	text-wrap: balance;
+}
+
+.modern-minimal-display {
+	font-size: var(--mm-text-3xl);
+}
+
+.modern-minimal-heading {
+	font-size: var(--mm-text-2xl);
+}
+
+.modern-minimal-subheading {
+	font-size: var(--mm-text-xl);
+	line-height: var(--mm-leading-snug);
+}
+
+.modern-minimal-lead {
+	margin: 0;
+	max-width: var(--mm-measure);
+	font-size: var(--mm-text-lg);
+	line-height: var(--mm-leading-relaxed);
+	color: var(--mm-text-muted);
+	text-wrap: pretty;
+}
+
+.modern-minimal-prose {
+	max-width: var(--mm-measure);
+	font-size: var(--mm-text-base);
+	line-height: var(--mm-leading-relaxed);
+	color: var(--mm-text-muted);
+	text-wrap: pretty;
+}
+
+.modern-minimal-prose > * {
+	margin-block: 0;
+}
+
+.modern-minimal-prose > * + * {
+	margin-block-start: var(--mm-s4);
+}
+
+.modern-minimal-prose strong {
+	font-weight: 600;
+	color: var(--mm-text);
+}
+
+.modern-minimal-prose a {
+	color: var(--mm-accent);
+	text-decoration-thickness: 1px;
+	text-underline-offset: 0.2em;
+}
+
+.modern-minimal-prose a:hover {
+	color: var(--mm-accent-hover);
 }
 
 /* ----------------------------------------------------------
-   Buttons
+   Surfaces
    ---------------------------------------------------------- */
-.modern-minimal-dropdown-button,
-.modern-minimal-button {
-	border-radius: var(--mm-radius);
-	border: none;
-	background: var(--mm-bg-2);
-	color: var(--mm-text) !important;
-	font-size: 0.95rem;
-	cursor: pointer;
-	transition: all 0.18s ease;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	/*box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);*/
+.modern-minimal-container,
+.modern-minimal-panel {
+	position: relative;
+	box-sizing: border-box;
+	background: var(--mm-surface);
+	border: 1px solid var(--mm-border);
+	border-radius: var(--mm-radius-lg);
+	box-shadow: var(--mm-shadow-md);
 }
 
-.modern-minimal-secondary-button {
-	border-radius: var(--mm-radius);
-	border: none;
-	background: var(--mm-accent);
-	color: var(--mm-text) !important;
-	font-size: 0.95rem;
-	cursor: pointer;
-	transition: all 0.18s ease;
-	display: flex;
+/* Chrome that should read as part of the page, not as a card. */
+.modern-minimal-bare {
+	background: none;
+	border: 0;
+	box-shadow: none;
+	padding: 0;
+}
+
+.modern-minimal-wordmark {
+	margin: 0;
+	padding: 0;
+	background: none;
+	border: 0;
+	font-size: var(--mm-text-lg);
+	font-weight: 600;
+	letter-spacing: var(--mm-tracking-tight);
+	line-height: 1;
+	color: var(--mm-text);
+	transition: color var(--mm-duration) var(--mm-ease);
+}
+
+.modern-minimal-wordmark:hover {
+	color: var(--mm-accent);
+}
+
+/* ----------------------------------------------------------
+   Controls
+   ---------------------------------------------------------- */
+.modern-minimal-button,
+.modern-minimal-secondary-button,
+.modern-minimal-dropdown-button {
+	box-sizing: border-box;
+	display: inline-flex;
 	align-items: center;
 	justify-content: center;
+	gap: var(--mm-s2);
+	font-size: var(--mm-text-sm);
+	font-weight: 500;
+	cursor: pointer;
+	border: 1px solid transparent;
+	border-radius: var(--mm-radius-sm);
+	transition:
+		background-color var(--mm-duration) var(--mm-ease),
+		border-color var(--mm-duration) var(--mm-ease),
+		color var(--mm-duration) var(--mm-ease);
+}
+
+/* Quiet button — the default. Only hover/active add a surface. */
+.modern-minimal-button {
+	background: transparent;
+	color: var(--mm-text-muted);
 }
 
 .modern-minimal-button:hover {
-	background: var(--mm-accent) !important;
+	background: var(--mm-surface-2);
+	color: var(--mm-text);
 }
 
+/* Selected state is a raised pill, clearly different from hover. */
 .modern-minimal-button.active,
-.modern-minimal-button:active {
-	background: var(--mm-accent);
+.modern-minimal-button[aria-pressed='true'] {
+	background: var(--mm-surface);
+	border-color: var(--mm-border);
+	box-shadow: var(--mm-shadow-sm);
+	color: var(--mm-text);
 }
 
 .modern-minimal-button.inactive {
-	background: var(--mm-bg);
+	background: transparent;
 }
 
-.modern-minimal-button:focus-visible {
-	outline: 3px solid var(--mm-focus);
-	outline-offset: 2px;
+.modern-minimal-button:disabled {
+	opacity: 0.4;
+	cursor: not-allowed;
 }
 
+/* Filled accent button — the one loud element in the theme. */
+.modern-minimal-secondary-button {
+	background: var(--mm-accent);
+	border-color: var(--mm-accent);
+	color: var(--mm-accent-ink);
+}
+
+.modern-minimal-secondary-button:hover {
+	background: var(--mm-accent-hover);
+	border-color: var(--mm-accent-hover);
+	color: var(--mm-accent-ink);
+}
+
+/* Segmented control: sunken track, raised active pill. */
 .modern-minimal-3way-toggle {
-	padding: 0.5rem;
-	gap: 0.5rem;
+	display: inline-flex;
+	width: fit-content;
+	gap: var(--mm-s1);
+	padding: var(--mm-s1);
+	background: var(--mm-sunken);
+	border: 1px solid var(--mm-border);
+	border-radius: var(--mm-radius-md);
+}
+
+.modern-minimal-dropdown-button {
+	background: var(--mm-surface);
+	border-color: var(--mm-border);
+	border-radius: var(--mm-radius-md);
+	color: var(--mm-text);
 }
 
 .modern-minimal-dropdown-button:hover {
-	background: var(--mm-accent);
+	background: var(--mm-surface-2);
+	border-color: var(--mm-border-strong);
 }
 
 .modern-minimal-dropdown-menu {
-	background: var(--mm-bg-2) !important;
-	border: 1px solid var(--mm-accent);
+	box-sizing: border-box;
+	padding: var(--mm-s1);
+	gap: 2px;
+	background: var(--mm-surface);
+	border: 1px solid var(--mm-border);
+	border-radius: var(--mm-radius-md);
+	box-shadow: var(--mm-shadow-lg);
 }
 
 .modern-minimal-dropdown-item {
-}
-.modern-minimal-dropdown-item:hover {
-}
-.modern-minimal-dropdown-item.active {
+	border: 0;
+	border-radius: var(--mm-radius-sm);
+	background: transparent;
+	color: var(--mm-text-muted);
+	font-size: var(--mm-text-sm);
+	font-weight: 500;
+	cursor: pointer;
+	transition:
+		background-color var(--mm-duration) var(--mm-ease),
+		color var(--mm-duration) var(--mm-ease);
 }
 
-.modern-minimal-link {
+.modern-minimal-dropdown-item:hover {
+	background: var(--mm-surface-2);
 	color: var(--mm-text);
+}
+
+.modern-minimal-dropdown-item.active {
+	background: var(--mm-accent-wash);
+	color: var(--mm-accent);
+	font-weight: 600;
+}
+
+/* ----------------------------------------------------------
+   Links & icons
+   ---------------------------------------------------------- */
+.modern-minimal-link {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: var(--mm-s2);
+	border: 0;
+	border-radius: var(--mm-radius-sm);
 	background: none;
-	transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+	color: var(--mm-text-muted);
+	transition:
+		color var(--mm-duration) var(--mm-ease),
+		background-color var(--mm-duration) var(--mm-ease);
+}
+
+.modern-minimal-link:hover {
+	background: var(--mm-surface-2);
+	color: var(--mm-text);
 }
 
 .modern-minimal-icon {
-	color: var(--mm-text);
-}
-.modern-minimal-icon-link:hover {
-	transform: scale(1.1) !important;
+	display: inline-flex;
+	color: currentColor;
 }
 
-/* Reduced motion */
+.modern-minimal-icon-link {
+	display: inline-flex;
+	transition: transform var(--mm-duration) var(--mm-ease);
+}
+
+.modern-minimal-link:hover .modern-minimal-icon-link {
+	transform: translateY(-1px);
+}
+
+/* ----------------------------------------------------------
+   Focus — one ring for every interactive element
+   ---------------------------------------------------------- */
+.modern-minimal-button:focus-visible,
+.modern-minimal-secondary-button:focus-visible,
+.modern-minimal-dropdown-button:focus-visible,
+.modern-minimal-dropdown-item:focus-visible,
+.modern-minimal-link:focus-visible,
+.modern-minimal-wordmark:focus-visible {
+	outline: 2px solid var(--mm-accent);
+	outline-offset: 2px;
+}
+
+/* ----------------------------------------------------------
+   Reduced motion
+   ---------------------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
-	* {
-		transition: none !important;
-		animation: none !important;
+	.modern-minimal-background,
+	.modern-minimal-button,
+	.modern-minimal-secondary-button,
+	.modern-minimal-dropdown-button,
+	.modern-minimal-dropdown-item,
+	.modern-minimal-link,
+	.modern-minimal-icon-link,
+	.modern-minimal-wordmark {
+		transition: none;
 	}
 }

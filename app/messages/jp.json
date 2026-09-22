@@ -1,37 +1,29 @@
 {
 	"$schema": "https://inlang.com/schema/inlang_message_format",
-
 	"english": "英語",
 	"german": "ドイツ語",
 	"japanese": "日本語",
-
 	"leon_shinichi": "レオン・伸一",
 	"zurich_switzerland": "チューリッヒ、スイス",
-
 	"photography": "写真",
 	"information_technology": "情報科学",
-
 	"welcome_message_1": "こんにちは、僕は<strong>{name}</strong>です。",
 	"welcome_message_2": "<strong>{place}</strong> の\nフルスタック開発者およびビジュアルアーティスト。",
 	"welcome_message_3": "ITおよびクリエイティブプロジェクトを実行します。",
 	"welcome_message_4": "コーヒーを飲んで、<strong>さあ、仕事に取り掛かろう</strong>❗",
-
 	"early_web": "初期ウェブ",
 	"frutiger_aero": "フルティガー・エアロ",
 	"modern_minimal": "モダン・ミニマル",
 	"glassmorphism": "グラスモルフィスム",
-
 	"loading_scene": "読み込み中",
 	"open_link": "{website_name}のリンクを開く",
 	"return_to_homepage": "ホームページに戻る",
 	"toggle_socials": "ソーシャルをトグルする",
 	"wip_banner_title": "制作中",
 	"wip_banner_body": "このサイトは制作の最中です。内容が変わったり一時的に動かないことがあります。",
-
 	"alt_daikoku_toyota_chaser": "大黒PAのトヨタチェイサー",
 	"alt_tokyo_tower_mori_art_museum": "森美術館から撮影した東京タワー",
 	"alt_ueteliberg_kindergarten": "雪の丘で遊ぶ学校のクラス",
-
 	"snake": "スネーク",
 	"wordle": "ワードル",
 	"choose_difficulty": "難易度を選択",
@@ -46,5 +38,13 @@
 	"ask_try_again": "もういちど ちょうせん しますか？",
 	"try_again": "リトライ",
 	"score": "スコア",
-	"high_score": "ハイスコア"
+	"high_score": "ハイスコア",
+	"my_journey": "これまでの歩み",
+	"web_era": "ウェブの時代",
+	"theme_system": "システム設定",
+	"theme_light": "ライトテーマ",
+	"theme_dark": "ダークテーマ",
+	"switch_theme": "カラーテーマ: {theme}。クリックで切り替え。",
+	"socials": "リンク",
+	"coming_soon": "近日公開"
 }

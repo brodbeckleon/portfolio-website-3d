@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { ChevronLeft, ChevronRight } from '@lucide/svelte';
 	import type { Image } from '$lib/Types.ts';
+	import { m } from '$lib/paraglide/messages';
 	import { onMount } from 'svelte';
 
 	interface SlideShowProps {
@@ -14,7 +15,10 @@
 	let imageShowingIndex = $state(0);
 	let image = $derived(images[imageShowingIndex]);
 
-	let imageContainerRef: HTMLDivElement | undefined = $state();
+	const goToSlide = (index: number) => {
+		elapsedTime = 0;
+		imageShowingIndex = index;
+	};
 
 	const nextSlide = () => {
 		elapsedTime = 0;
@@ -66,21 +70,31 @@
 		<ChevronLeft />
 	</button>
 
-	<div class="image-wrapper" bind:this={imageContainerRef}>
-		<img
-			class="slide-show-image"
-			alt={image.name}
-			src={image.path}
-			style:border-radius={imageContainerRef &&
-			imageContainerRef.scrollHeight > imageContainerRef.clientHeight
-				? '0'
-				: 'var(--mm-radius)'}
-		/>
+	<div class="image-wrapper">
+		<img class="slide-show-image" alt={image.name} src={image.path} />
 	</div>
 
 	<button class="slide-show-button" type="button" onclick={nextSlide} aria-label="go to next slide">
 		<ChevronRight />
 	</button>
+</div>
+
+<div class="slide-show-indicators" role="tablist" aria-label={m.photography()}>
+	{#each images as item, index (item.path)}
+		<button
+			type="button"
+			class="slide-show-dot"
+			role="tab"
+			aria-selected={index === imageShowingIndex}
+			aria-label={item.name}
+			onclick={() => goToSlide(index)}
+		>
+			<span
+				class="slide-show-dot__fill"
+				style:transform="scaleX({index === imageShowingIndex ? elapsedTime / duration : 0})"
+			></span>
+		</button>
+	{/each}
 </div>
 
 <style lang="css">
@@ -89,20 +103,20 @@
 		flex-direction: row;
 		justify-content: space-between;
 		align-items: center;
-		height: 80vh;
+		height: min(72vh, 42rem);
 		width: 100%;
-		gap: 1rem;
+		gap: var(--mm-s4);
 	}
 
+	/* No frame behind the photo: the image itself carries the radius, so a
+	   portrait shot does not sit inside a visible letterbox band. */
 	.image-wrapper {
 		height: 100%;
 		width: 100%;
 		display: flex;
 		justify-content: center;
 		align-items: center;
-		border-radius: var(--mm-radius);
 		overflow: hidden;
-		background-color: transparent;
 	}
 
 	.slide-show-image {
@@ -110,22 +124,89 @@
 		max-height: 100%;
 		object-fit: contain;
 		display: block;
+		border-radius: var(--mm-radius-lg);
+	}
+
+	.slide-show-indicators {
+		display: flex;
+		justify-content: center;
+		gap: var(--mm-s2);
+		margin-top: var(--mm-s5);
+	}
+
+	.slide-show-dot {
+		position: relative;
+		width: 2.5rem;
+		height: 1rem;
+		padding: 0;
+		display: flex;
+		align-items: center;
+		background: none;
+		border: 0;
+		cursor: pointer;
+	}
+
+	.slide-show-dot::before {
+		content: '';
+		position: absolute;
+		width: 2.5rem;
+		height: 2px;
+		border-radius: 999px;
+		background: var(--mm-border-strong);
+	}
+
+	.slide-show-dot__fill {
+		position: relative;
+		width: 2.5rem;
+		height: 2px;
+		border-radius: 999px;
+		background: var(--mm-accent);
+		transform-origin: left center;
+		transform: scaleX(0);
+	}
+
+	.slide-show-dot:focus-visible {
+		outline: 2px solid var(--mm-accent);
+		outline-offset: 2px;
+		border-radius: var(--mm-radius-sm);
 	}
 
 	.slide-show-button {
-		background-color: var(--mm-bg);
-		border-radius: var(--mm-radius);
-		border: none;
-		padding: 0.5rem;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		flex: none;
+		padding: var(--mm-s2);
+		background-color: var(--mm-surface);
+		border: 1px solid var(--mm-border);
+		border-radius: var(--mm-radius-md);
+		color: var(--mm-text-muted);
 		cursor: pointer;
 		z-index: 10;
+		transition:
+			background-color var(--mm-duration) var(--mm-ease),
+			border-color var(--mm-duration) var(--mm-ease),
+			color var(--mm-duration) var(--mm-ease);
 	}
 
 	.slide-show-button:hover {
-		background-color: rgba(255, 255, 255, 0.4);
+		background-color: var(--mm-surface-2);
+		border-color: var(--mm-border-strong);
+		color: var(--mm-text);
 	}
 
 	.slide-show-button:active {
-		background-color: rgba(255, 255, 255, 0.3);
+		background-color: var(--mm-accent-wash);
+	}
+
+	.slide-show-button:focus-visible {
+		outline: 2px solid var(--mm-accent);
+		outline-offset: 2px;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.slide-show-button {
+			transition: none;
+		}
 	}
 </style>

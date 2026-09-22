@@ -4,7 +4,7 @@
 	import { browser } from '$app/environment';
 	import { onMount } from 'svelte';
 
-	let isMobile = $derived(false);
+	let isMobile = $state(false);
 
 	function checkIfMobile() {
 		if (browser) {
@@ -18,7 +18,14 @@
 		checkIfMobile();
 		window.addEventListener('resize', checkIfMobile);
 
-		return () => window.removeEventListener('resize', checkIfMobile);
+		// The 3D scene is exactly one viewport tall; lock scrolling while it is
+		// mounted instead of globally, so /it and /photography stay scrollable.
+		document.documentElement.classList.add('lock-scroll');
+
+		return () => {
+			window.removeEventListener('resize', checkIfMobile);
+			document.documentElement.classList.remove('lock-scroll');
+		};
 	});
 </script>
 
@@ -28,17 +35,7 @@
 </div>
 
 <style lang="css">
-	:global(body) {
-		margin: 0;
-		overflow: hidden;
-	}
-
-	:global(#svelte) {
-		width: 100%;
-		height: 100%;
-	}
-
-	:global(body) {
+	.home-page {
 		font-family: 'Helvetica', 'Arial', sans-serif;
 	}
 </style>

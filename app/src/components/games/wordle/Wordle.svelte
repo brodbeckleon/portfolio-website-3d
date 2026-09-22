@@ -185,20 +185,16 @@
 </script>
 
 <div class="wordle-app">
-	<header style="display: flex; justify-content: center;">
-		<h1>{m.wordle()}</h1>
+	<header class="wordle-header">
+		<h3 class="modern-minimal-subheading">{m.wordle()}</h3>
 	</header>
 
-	<main
-		class="wordle-main"
-		style="opacity: {wordleGameState === 'playing' ? 1 : 0.3};
-"
-	>
+	<main class="wordle-main" class:is-idle={wordleGameState !== 'playing'}>
 		<!-- Table -->
 		<section class="table" style="--columns: {columns}; --rows: {maxRows};">
-			{#each tableState as row}
+			{#each tableState as row, rowIndex (rowIndex)}
 				<div class="board-row">
-					{#each row as cell}
+					{#each row as cell, cellIndex (cellIndex)}
 						{@const { char, state } = cell}
 						<div class="cell" data-state={state}>
 							<span class="cell-char">{char}</span>
@@ -210,18 +206,18 @@
 
 		<!-- Keyboard -->
 		<section class="keyboard">
-			{#each keyboardLayout as row, rowIndex}
+			{#each keyboardLayout as row, rowIndex (rowIndex)}
 				<div class="keyboard-row">
 					{#if rowIndex === keyboardLayout.length - 1}
 						<button
-							class="key"
+							class="key key--wide"
 							onclick={() => handleKeyPress('Enter')}
 							type="button"
 							aria-label="Enter">Enter</button
 						>
 					{/if}
 
-					{#each row as key}
+					{#each row as key (key)}
 						<button
 							class="key"
 							data-state={keyboardState.get(key) ?? 'none'}
@@ -235,7 +231,7 @@
 
 					{#if rowIndex === keyboardLayout.length - 1}
 						<button
-							class="key"
+							class="key key--wide"
 							onclick={() => handleKeyPress('Backspace')}
 							type="button"
 							aria-label="Backspace"
@@ -253,47 +249,36 @@
 		</section>
 	</main>
 	{#if wordleGameState !== 'playing'}
-		<div
-			style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; background-color: rgba(255, 255, 255, 0.3);"
-		>
-			<div
-				class="modern-minimal-container"
-				style="padding: 16px; display: flex; flex-direction: column; justify-content: center; align-items: center;"
-			>
+		<div class="wordle-overlay">
+			<div class="modern-minimal-container wordle-dialog">
 				{#if wordleGameState === 'start'}
-					<h4>{m.choose_language()}</h4>
-					<div
-						style="display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 12px"
-					>
+					<h4 class="wordle-dialog-title">{m.choose_language()}</h4>
+					<div class="wordle-dialog-actions">
 						<button
-							class="modern-minimal-secondary-button"
-							style="padding: 8px; width: 80px"
+							class="modern-minimal-secondary-button wordle-dialog-button"
 							onclick={() => setWordleLanguage('en')}
 						>
 							{m.english()}
 						</button>
 						<button
-							class="modern-minimal-secondary-button"
-							style="padding: 8px; width: 80px"
+							class="modern-minimal-secondary-button wordle-dialog-button"
 							onclick={() => setWordleLanguage('de')}
 						>
 							{m.german()}
 						</button>
 					</div>
 				{:else if wordleGameState === 'won'}
-					<h3>{m.you_won()}</h3>
+					<h4 class="wordle-dialog-title">{m.you_won()}</h4>
 					<button
-						class="modern-minimal-secondary-button"
-						style="padding: 8px; width: 100px"
+						class="modern-minimal-secondary-button wordle-dialog-button"
 						onclick={() => restartGame()}
 					>
 						{m.try_again()}
 					</button>
 				{:else if wordleGameState === 'lost'}
-					<h3>{m.you_lost()}</h3>
+					<h4 class="wordle-dialog-title">{m.you_lost()}</h4>
 					<button
-						class="modern-minimal-secondary-button"
-						style="padding: 8px; width: 100px"
+						class="modern-minimal-secondary-button wordle-dialog-button"
 						onclick={() => restartGame()}
 					>
 						{m.try_again()}
@@ -308,74 +293,202 @@
 
 <style lang="css">
 	.wordle-app {
+		--wordle-gap: clamp(0.25rem, 1.2vw, 0.5rem);
+
+		position: relative;
+		width: 100%;
 		max-width: 520px;
 		margin: 0 auto;
-		font-family: system-ui, sans-serif;
+		font-family: var(--mm-font-sans);
 	}
+
+	.wordle-header {
+		display: flex;
+		justify-content: center;
+		margin-bottom: var(--mm-s5);
+	}
+
+	.wordle-main {
+		transition: opacity var(--mm-duration) var(--mm-ease);
+	}
+
+	.wordle-main.is-idle {
+		opacity: 0.75;
+	}
+
 	.table {
 		display: grid;
-		gap: 8px;
-		margin: 16px 0;
+		gap: var(--wordle-gap);
+		margin: 0 0 var(--mm-s5);
 	}
+
 	.board-row {
 		display: flex;
-		gap: 8px;
+		gap: var(--wordle-gap);
 		justify-content: center;
 	}
+
+	/* Fluid so the board and keyboard fit a phone instead of forcing the page
+	   to scroll sideways. */
 	.cell {
-		width: 48px;
-		height: 56px;
-		border: 2px solid #ddd;
+		width: clamp(2.25rem, 11vw, 3rem);
+		height: clamp(2.75rem, 13vw, 3.5rem);
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		font-weight: 700;
+		background: transparent;
+		border: 2px solid var(--mm-border-strong);
+		border-radius: var(--mm-radius-sm);
+		color: var(--mm-text);
+		font-size: clamp(1.125rem, 5vw, 1.5rem);
+		font-weight: 600;
+		line-height: 1;
 		text-transform: uppercase;
+		transition:
+			background-color var(--mm-duration) var(--mm-ease),
+			border-color var(--mm-duration) var(--mm-ease),
+			color var(--mm-duration) var(--mm-ease);
 	}
+
 	.cell[data-state='green'] {
-		background: #6aaa64;
-		color: white;
-		border-color: #6aaa64;
+		background: var(--mm-tile-correct);
+		border-color: var(--mm-tile-correct);
+		color: var(--mm-tile-correct-ink);
 	}
+
 	.cell[data-state='yellow'] {
-		background: #c9b458;
-		color: white;
-		border-color: #c9b458;
+		background: var(--mm-tile-present);
+		border-color: var(--mm-tile-present);
+		color: var(--mm-tile-present-ink);
 	}
+
 	.cell[data-state='grey'] {
-		background: #787c7e;
-		color: white;
-		border-color: #787c7e;
+		background: var(--mm-tile-absent);
+		border-color: var(--mm-tile-absent);
+		color: var(--mm-tile-absent-ink);
 	}
+
 	.keyboard {
-		margin-top: 12px;
+		display: flex;
+		flex-direction: column;
+		gap: var(--wordle-gap);
 	}
+
 	.keyboard-row {
 		display: flex;
-		gap: 8px;
+		width: 100%;
+		gap: var(--wordle-gap);
 		justify-content: center;
-		margin: 6px 0;
+		margin: 0;
 	}
+
+	/* Keys share the row width instead of claiming a fixed minimum, so the
+	   keyboard fits any phone without forcing a sideways scroll. */
 	.key {
-		min-width: 36px;
-		height: 36px;
-		padding: 10px 8px;
-		border-radius: 6px;
-		border: none;
-		font-weight: 600;
+		flex: 1 1 0;
+		min-width: 0;
+		max-width: 2.75rem;
+		height: clamp(2.25rem, 9vw, 2.5rem);
+		padding: 0 0.125rem;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		background: var(--mm-surface-2);
+		border: 1px solid var(--mm-border);
+		border-radius: var(--mm-radius-sm);
+		color: var(--mm-text-muted);
+		font-family: inherit;
+		font-size: clamp(0.625rem, 2.6vw, 0.875rem);
+		font-weight: 500;
 		text-transform: uppercase;
 		cursor: pointer;
+		transition:
+			background-color var(--mm-duration) var(--mm-ease),
+			color var(--mm-duration) var(--mm-ease);
 	}
+
+	.key--wide {
+		flex-grow: 1.8;
+		max-width: 4.5rem;
+	}
+
+	.key:hover:not(:disabled) {
+		background: var(--mm-surface);
+		color: var(--mm-text);
+	}
+
+	.key:disabled {
+		opacity: 0.4;
+		cursor: not-allowed;
+	}
+
+	.key:focus-visible {
+		outline: 2px solid var(--mm-accent);
+		outline-offset: 2px;
+	}
+
 	.key[data-state='green'] {
-		background: #6aaa64;
-		color: white;
+		background: var(--mm-tile-correct);
+		border-color: var(--mm-tile-correct);
+		color: var(--mm-tile-correct-ink);
 	}
+
 	.key[data-state='yellow'] {
-		background: #c9b458;
-		color: white;
+		background: var(--mm-tile-present);
+		border-color: var(--mm-tile-present);
+		color: var(--mm-tile-present-ink);
 	}
+
 	.key[data-state='grey'] {
-		background: #787c7e;
-		color: white;
+		background: var(--mm-tile-absent);
+		border-color: var(--mm-tile-absent);
+		color: var(--mm-tile-absent-ink);
+	}
+
+	.wordle-overlay {
+		position: absolute;
+		inset: 0;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		align-items: center;
+		background: var(--mm-scrim);
+		backdrop-filter: blur(2px);
+		-webkit-backdrop-filter: blur(2px);
+	}
+
+	.wordle-dialog {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--mm-s4);
+		padding: var(--mm-s5);
+	}
+
+	.wordle-dialog-title {
+		margin: 0;
+		font-size: var(--mm-text-lg);
+		font-weight: 600;
+		letter-spacing: var(--mm-tracking-tight);
+		color: var(--mm-text);
+	}
+
+	.wordle-dialog-actions {
+		display: flex;
+		gap: var(--mm-s3);
+	}
+
+	.wordle-dialog-button {
+		min-width: 6rem;
+		padding: var(--mm-s2) var(--mm-s4);
+		height: 2.25rem;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.wordle-main,
+		.cell,
+		.key {
+			transition: none;
+		}
 	}
 </style>

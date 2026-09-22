@@ -12,6 +12,9 @@
 
 	let { era, isMobile }: SocialsProps = $props();
 
+	// Early web predates icon UI: that era gets plain text labels only.
+	let showIcons = $derived(era !== 'early_web');
+
 	let showSocialDropdown = $state(false);
 	let buttonWidth = $state(0);
 
@@ -89,11 +92,12 @@
 					class:earlyweb-dropdown-menu={era === 'early_web'}
 					class:frutiger-aero-dropdown-menu={era === 'frutiger_aero'}
 					class:modern-minimal-dropdown-menu={era === 'modern_minimal'}
-					style="width: {buttonWidth}px"
+					style:width={showIcons ? `${buttonWidth}px` : undefined}
 				>
 					{#each socialLinks as { icon: IconComponent, href, text, png } (href)}
 						<button
 							class="mobile-dropdown-item"
+							class:flush={era === 'modern_minimal'}
 							class:earlyweb-dropdown-item={era === 'early_web'}
 							class:frutiger-aero-dropdown-item={era === 'frutiger_aero'}
 							class:modern-minimal-dropdown-item={era === 'modern_minimal'}
@@ -103,14 +107,13 @@
 							}}
 							aria-label={m.open_link({ website_name: text })}
 						>
-							<div
-								class:earlyweb-icon={era === 'early_web'}
-								class:modern-minimal-icon={era === 'modern_minimal'}
-							>
+							<div class:modern-minimal-icon={era === 'modern_minimal'}>
 								{#if era === 'frutiger_aero'}
 									<img src={png} alt={text} class="frutiger-aero-icon" />
-								{:else}
+								{:else if showIcons}
 									<IconComponent strokeWidth={era === 'modern_minimal' ? 1.5 : 1} />
+								{:else}
+									<span class="earlyweb-link-text">{text}</span>
 								{/if}
 							</div>
 						</button>
@@ -120,10 +123,11 @@
 
 			<button
 				class="mobile-share-button"
+				class:is-text={!showIcons}
 				class:glassmorphism-container={era === 'glassmorphism'}
 				class:earlyweb-button={era === 'early_web'}
 				class:frutiger-aero-share-button={era === 'frutiger_aero'}
-				class:modern-minimal-button={era === 'modern_minimal'}
+				class:modern-minimal-dropdown-button={era === 'modern_minimal'}
 				onclick={toggleDropdown}
 				aria-label={m.toggle_socials()}
 				aria-expanded={showSocialDropdown}
@@ -131,8 +135,10 @@
 			>
 				{#if era === 'frutiger_aero'}
 					<img src={frutigerAeroIcons.share} alt="Share" class="frutiger-aero-share-icon" />
-				{:else}
+				{:else if showIcons}
 					<Share2 strokeWidth={era === 'modern_minimal' ? 1.5 : 1} />
+				{:else}
+					<span>{m.socials()}</span>
 				{/if}
 			</button>
 		</div>
@@ -140,10 +146,10 @@
 		<!-- Desktop view -->
 		<div
 			class="social-links"
+			class:flush={era === 'modern_minimal'}
 			class:glassmorphism-container={era === 'glassmorphism'}
 			class:earlyweb-container={era === 'early_web'}
 			class:frutiger-aero-container={era === 'frutiger_aero'}
-			class:modern-minimal-container={era === 'modern_minimal'}
 		>
 			{#each socialLinks as { icon: IconComponent, href, text, png } (href)}
 				<button
@@ -187,8 +193,16 @@
 	.social-links {
 		height: 48px;
 		display: flex;
+		align-items: center;
 		justify-content: space-between;
 		padding: 0 12px;
+	}
+
+	/* Modern minimal keeps the icons on the page background, no card. */
+	.social-links.flush {
+		padding: 0;
+		gap: 0.25rem;
+		justify-content: flex-start;
 	}
 
 	/** mobile **/
@@ -207,7 +221,8 @@
 
 		.mobile-social-dropdown-menu {
 			position: absolute;
-			width: 48px;
+			width: max-content;
+			min-width: 48px;
 			bottom: 54px;
 			left: 0;
 			z-index: 10;
@@ -223,6 +238,17 @@
 			background: none;
 			border: none;
 			color: white;
+		}
+
+		/* Modern minimal's dropdown is a light surface — inherit its ink. */
+		.mobile-dropdown-item.flush {
+			color: inherit;
+		}
+
+		.mobile-share-button.is-text {
+			width: auto;
+			min-width: 48px;
+			padding: 0 10px;
 		}
 
 		.mobile-share-button {

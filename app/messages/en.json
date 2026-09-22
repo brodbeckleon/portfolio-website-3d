@@ -1,37 +1,29 @@
 {
 	"$schema": "https://inlang.com/schema/inlang_message_format",
-
 	"english": "English",
 	"german": "German",
 	"japanese": "Japanese",
-
 	"leon_shinichi": "Léon Shin'ichi",
 	"zurich_switzerland": "Zurich, Switzerland",
-
 	"photography": "photography",
 	"information_technology": "information technology",
-
 	"welcome_message_1": "Hello, I'm <strong>{name}</strong>.",
 	"welcome_message_2": "A full stack developer and visual creator\nbased in <strong>{place}</strong>.",
 	"welcome_message_3": "I execute IT and creative projects.",
 	"welcome_message_4": "Let's grab a coffee <strong>& get to work</strong>❗",
-
 	"early_web": "Early Web",
 	"frutiger_aero": "Frutiger Aero",
 	"modern_minimal": "Modern Minimal",
 	"glassmorphism": "Glassmorphism",
-
 	"loading_scene": "Loading Scene",
 	"open_link": "open {website_name} link",
 	"return_to_homepage": "return to the homepage",
 	"toggle_socials": "toggle socials",
 	"wip_banner_title": "Work in progress",
 	"wip_banner_body": "This site is being built live; things may change or break.",
-
 	"alt_daikoku_toyota_chaser": "Toyota Chaser at Daikoku PA",
 	"alt_tokyo_tower_mori_art_museum": "Tokyo Tower shot from Mori Art Museum",
 	"alt_ueteliberg_kindergarten": "School class playing on a snowy hill",
-
 	"snake": "Snake",
 	"wordle": "Wordle",
 	"choose_difficulty": "Choose difficulty",
@@ -46,5 +38,13 @@
 	"ask_try_again": "Do you want to try again?",
 	"try_again": "Try again",
 	"score": "Score",
-	"high_score": "High Score"
+	"high_score": "High Score",
+	"my_journey": "My journey",
+	"web_era": "Web era",
+	"theme_system": "System theme",
+	"theme_light": "Light theme",
+	"theme_dark": "Dark theme",
+	"switch_theme": "Colour theme: {theme}. Click to switch.",
+	"socials": "Links",
+	"coming_soon": "Coming soon"
 }
