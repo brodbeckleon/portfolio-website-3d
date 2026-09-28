@@ -436,35 +436,50 @@
 	border-radius: var(--mm-radius-md);
 }
 
+/* Header chrome is quiet at rest — same as the social icons on the other side
+   of the bar — and only earns a surface on hover or while its menu is open. */
 .modern-minimal-dropdown-button {
-	background: var(--mm-surface);
-	border-color: var(--mm-border);
+	background: transparent;
+	border-color: transparent;
 	border-radius: var(--mm-radius-md);
-	color: var(--mm-text);
+	color: var(--mm-text-muted);
 }
 
 .modern-minimal-dropdown-button:hover {
 	background: var(--mm-surface-2);
-	border-color: var(--mm-border-strong);
+	color: var(--mm-text);
+}
+
+.modern-minimal-dropdown-button[aria-expanded='true'] {
+	background: var(--mm-surface-2);
+	border-color: var(--mm-border);
+	color: var(--mm-text);
 }
 
 .modern-minimal-dropdown-menu {
 	box-sizing: border-box;
+	width: max-content;
 	padding: var(--mm-s1);
-	gap: 2px;
+	gap: 1px;
 	background: var(--mm-surface);
 	border: 1px solid var(--mm-border);
 	border-radius: var(--mm-radius-md);
-	box-shadow: var(--mm-shadow-lg);
+	box-shadow: var(--mm-shadow-md), var(--mm-shadow-lg);
 }
 
 .modern-minimal-dropdown-item {
+	display: flex;
+	align-items: center;
+	justify-content: flex-start;
+	gap: var(--mm-s3);
+	padding-inline: var(--mm-s3);
 	border: 0;
 	border-radius: var(--mm-radius-sm);
 	background: transparent;
 	color: var(--mm-text-muted);
 	font-size: var(--mm-text-sm);
 	font-weight: 500;
+	text-align: left;
 	cursor: pointer;
 	transition:
 		background-color var(--mm-duration) var(--mm-ease),
@@ -476,10 +491,15 @@
 	color: var(--mm-text);
 }
 
+/* A check carries the selection; no fill needed to shout about it. */
 .modern-minimal-dropdown-item.active {
-	background: var(--mm-accent-wash);
-	color: var(--mm-accent);
+	background: transparent;
+	color: var(--mm-text);
 	font-weight: 600;
+}
+
+.modern-minimal-dropdown-item.active:hover {
+	background: var(--mm-surface-2);
 }
 
 /* ----------------------------------------------------------

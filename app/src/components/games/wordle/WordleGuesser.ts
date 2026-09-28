@@ -1,92 +1,100 @@
 import {
-	checkGuess,
 	getAvailableChars,
-	getCorrectChars,
 	getContainedCharsWIncorrectPositions,
-	getGuesses,
-	setGuesses
+	getCorrectChars
 } from './WordleChecker.ts';
-import { filePath } from './WordleGame.ts';
+import { columns } from './WordleHelper.ts';
 
-export async function findWord(targetWord: string) {
-	console.log('starting to find word');
+// Random assembly rarely hits a real word, so each frame tries a batch and only
+// the last attempt is shown. The minimum keeps the search visible even when it
+// gets lucky early; the maximum falls back to picking from the word list.
+const attemptsPerFrame = 150;
+const minSearchMs = 700;
+const maxSearchMs = 4000;
 
-	try {
-		const response = await fetch(filePath);
+type Constraints = {
+	pools: string[][];
+	requiredChars: string[];
+};
 
-		if (!response.ok) {
-			throw new Error(`HTTP error! status: ${response.status}`);
-		}
+function getConstraints(): Constraints {
+	const correctChars = getCorrectChars();
+	const misplaced = getContainedCharsWIncorrectPositions();
+	const available = getAvailableChars();
 
-		const text = await response.text();
+	const pools = Array.from({ length: columns }, (_, i) => {
+		const fixed = correctChars.charAt(i);
+		if (fixed !== '-') return [fixed];
+		return available.filter((char) => !(misplaced.get(char) ?? []).includes(i));
+	});
 
-		const words = text
-			.split('\n')
-			.map((w) => w.trim().toLowerCase())
-			.filter((w) => /^[a-z]{5}$/u.test(w));
-		console.log('words fetched and filtered to length of 5 words');
-
-		for (let i = 0; i < 6; i++) {
-			console.log('Starting guess: \t\t', i + 1);
-			const wordCandidate = await buildString(words);
-
-			await checkGuess(wordCandidate, targetWord);
-
-			if (wordCandidate === targetWord) {
-				console.log('Wort found');
-				console.log(wordCandidate);
-				break;
-			} else {
-				console.log('Guess ' + (i + 1) + ': \t\t\t\t', wordCandidate);
-				console.log('Correct Chars:\t\t', getCorrectChars());
-				console.log(
-					'Contained Chars with incorrect Position:\t\n',
-					await getContainedCharsWIncorrectPositions()
-				);
-				console.log('Available chars:\t', await getAvailableChars());
-
-				const guesses = await getGuesses();
-				guesses.push(wordCandidate);
-				await setGuesses(guesses);
-			}
-		}
-
-		if ((await getGuesses()).length === 6) {
-			console.log('Word not found.');
-		}
-	} catch (error) {
-		console.error('Error loading word list:', error);
-	}
+	return { pools, requiredChars: [...misplaced.keys()] };
 }
 
-async function buildString(words: string[]): Promise<string> {
-	let string: string = await getCorrectChars();
-	while (true) {
-		for (let i: number = 0; i < 5; i++) {
-			if (string.charAt(i) === '-') {
-				let charToInsert: string = '';
-				while (true) {
-					const randomIndex: number = Math.floor(
-						Math.random() * (await getAvailableChars()).length
-					);
-					charToInsert = (await getAvailableChars())[randomIndex];
-
-					let unavailableIndexes: number[] = [];
-					if ((await getContainedCharsWIncorrectPositions()).has(charToInsert)) {
-						unavailableIndexes =
-							(await getContainedCharsWIncorrectPositions()).get(charToInsert) ?? [];
-					}
-					if (!unavailableIndexes.includes(i)) break;
-				}
-
-				string = string.substring(0, i) + charToInsert + string.substring(i + 1);
-			}
-		}
-		if (words.includes(string) && !(await getGuesses()).includes(string)) {
-			break;
-		} else {
-			string = await getCorrectChars();
-		}
+function buildString({ pools }: Constraints): string {
+	let string = '';
+	for (const pool of pools) {
+		string += pool[Math.floor(Math.random() * pool.length)];
 	}
 	return string;
+}
+
+function fitsConstraints(word: string, { pools, requiredChars }: Constraints): boolean {
+	for (let i = 0; i < columns; i++) {
+		if (!pools[i].includes(word.charAt(i))) return false;
+	}
+	return requiredChars.every((char) => word.includes(char));
+}
+
+export function findNextGuess(
+	words: string[],
+	guessed: string[],
+	onCandidate: (candidate: string) => void,
+	isCancelled: () => boolean
+): Promise<string | null> {
+	const wordSet = new Set(words);
+	const constraints = getConstraints();
+	const isNewWord = (word: string) =>
+		wordSet.has(word) && !guessed.includes(word) && fitsConstraints(word, constraints);
+
+	const start = performance.now();
+	let found: string | null = null;
+
+	return new Promise((resolve) => {
+		const step = () => {
+			if (isCancelled()) {
+				resolve(null);
+				return;
+			}
+
+			let candidate = '';
+			for (let i = 0; i < attemptsPerFrame && !found; i++) {
+				candidate = buildString(constraints);
+				if (isNewWord(candidate)) found = candidate;
+			}
+			// Keep scrambling for show until the minimum search time has passed.
+			if (found) candidate = buildString(constraints);
+
+			const elapsed = performance.now() - start;
+
+			if (!found && elapsed > maxSearchMs) {
+				const remaining = words.filter(isNewWord);
+				found = remaining[Math.floor(Math.random() * remaining.length)] ?? null;
+				if (!found) {
+					resolve(null);
+					return;
+				}
+			}
+
+			if (found && elapsed >= minSearchMs) {
+				resolve(found);
+				return;
+			}
+
+			onCandidate(candidate);
+			requestAnimationFrame(step);
+		};
+
+		requestAnimationFrame(step);
+	});
 }

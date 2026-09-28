@@ -1,9 +1,11 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { fade } from 'svelte/transition';
 	import type { GameStates } from '$lib/Types.ts';
 	import { m } from '$lib/paraglide/messages';
 	import {
 		getTargetWord,
+		getWords,
 		init as initWordleGame,
 		isInWordList,
 		setLanguage,
@@ -12,7 +14,7 @@
 	import { checkGuess } from './WordleChecker.ts';
 	import { SvelteMap } from 'svelte/reactivity';
 	import { columns, getRowStates, type LetterState } from './WordleHelper.ts';
-	import { findWord } from './WordleGuesser.ts';
+	import { findNextGuess } from './WordleGuesser.ts';
 	import { BrainCircuit, Delete } from '@lucide/svelte';
 
 	type tableCell = { char: string; state: LetterState };
@@ -32,6 +34,14 @@
 
 	const maxRows = 6;
 
+	let solving: boolean = $state(false);
+	// Bumped to cancel a running solver (restart, stop, unmount).
+	let solveRun = 0;
+
+	let shakingRow: number = $state(-1);
+	let notice: string = $state('');
+	let noticeTimer: ReturnType<typeof setTimeout> | undefined;
+
 	$effect(() => {
 		const onKey = (e: KeyboardEvent) => {
 			const k = e.key;
@@ -50,9 +60,17 @@
 
 	onMount(() => {
 		initWordle();
+		return () => {
+			solveRun++;
+			clearTimeout(noticeTimer);
+		};
 	});
 
 	function initWordle() {
+		solveRun++;
+		solving = false;
+		currentGuess = '';
+
 		for (const row of keyboardLayout) {
 			for (const char of row) {
 				keyboardState.set(char, 'none');
@@ -122,17 +140,14 @@
 
 	async function submitWord() {
 		const guess = currentGuess.trim().toLowerCase();
-		if (!guess) return;
 
 		if (guess.length !== columns) {
-			console.warn(`Please enter ${columns} letters`);
+			rejectGuess(m.not_enough_letters());
 			return;
 		}
 
 		if (!(await isInWordList(guess))) {
-			console.error('Word not in list');
-			currentGuess = '';
-			await updateWordleTableLetters();
+			rejectGuess(m.not_in_word_list());
 			return;
 		}
 
@@ -144,10 +159,22 @@
 
 		const lastGuess = guesses.at(guesses.length - 1);
 		if (lastGuess === (await getTargetWord())) wordleGameState = 'won' as GameStates;
-		if (guesses.length === 6) wordleGameState = 'lost' as GameStates;
+		else if (guesses.length === maxRows) wordleGameState = 'lost' as GameStates;
+	}
+
+	function rejectGuess(text: string) {
+		// Reset first so a repeated rejection restarts the animation.
+		shakingRow = -1;
+		requestAnimationFrame(() => (shakingRow = guesses.length));
+
+		notice = text;
+		clearTimeout(noticeTimer);
+		noticeTimer = setTimeout(() => (notice = ''), 1500);
 	}
 
 	function handleKeyPress(key: string) {
+		if (solving || wordleGameState !== 'playing') return;
+
 		if (key === 'Enter') {
 			submitWord();
 			return;
@@ -165,10 +192,44 @@
 		}
 	}
 
-	async function findWordAutomatically() {
-		const targetWord = await getTargetWord();
+	const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-		await findWord(targetWord);
+	function stopSolver() {
+		solveRun++;
+		solving = false;
+		currentGuess = '';
+		updateWordleTableLetters();
+	}
+
+	async function findWordAutomatically() {
+		if (solving) {
+			stopSolver();
+			return;
+		}
+		if (wordleGameState !== 'playing') return;
+
+		const run = ++solveRun;
+		const isCancelled = () => run !== solveRun || wordleGameState !== 'playing';
+		solving = true;
+
+		while (!isCancelled()) {
+			const guess = await findNextGuess(
+				getWords(),
+				guesses,
+				(candidate) => {
+					currentGuess = candidate;
+					updateWordleTableLetters();
+				},
+				isCancelled
+			);
+			if (!guess || isCancelled()) break;
+
+			currentGuess = guess;
+			await submitWord();
+			await wait(450);
+		}
+
+		if (run === solveRun) solving = false;
 	}
 
 	async function setWordleLanguage(lang: WordleLanguage) {
@@ -192,8 +253,16 @@
 	<main class="wordle-main" class:is-idle={wordleGameState !== 'playing'}>
 		<!-- Table -->
 		<section class="table" style="--columns: {columns}; --rows: {maxRows};">
+			{#if notice}
+				<p class="wordle-notice" role="status" transition:fade={{ duration: 150 }}>{notice}</p>
+			{/if}
 			{#each tableState as row, rowIndex (rowIndex)}
-				<div class="board-row">
+				<div
+					class="board-row"
+					class:is-shaking={rowIndex === shakingRow}
+					class:is-searching={solving && rowIndex === guesses.length}
+					onanimationend={() => (shakingRow = -1)}
+				>
 					{#each row as cell, cellIndex (cellIndex)}
 						{@const { char, state } = cell}
 						<div class="cell" data-state={state}>
@@ -240,7 +309,16 @@
 						</button>
 					{/if}
 					{#if rowIndex === keyboardLayout.length - 2}
-						<button class="key" disabled onclick={findWordAutomatically} type="button">
+						<button
+							class="key"
+							class:is-active={solving}
+							disabled={wordleGameState !== 'playing'}
+							onclick={findWordAutomatically}
+							type="button"
+							aria-label={m.solve_automatically()}
+							aria-pressed={solving}
+							title={m.solve_automatically()}
+						>
 							<BrainCircuit size={18} strokeWidth={1.5} />
 						</button>
 					{/if}
@@ -317,6 +395,7 @@
 	}
 
 	.table {
+		position: relative;
 		display: grid;
 		gap: var(--wordle-gap);
 		margin: 0 0 var(--mm-s5);
@@ -368,6 +447,53 @@
 		color: var(--mm-tile-absent-ink);
 	}
 
+	.board-row.is-shaking {
+		animation: wordle-shake 400ms var(--mm-ease);
+	}
+
+	@keyframes wordle-shake {
+		10%,
+		90% {
+			transform: translateX(-1px);
+		}
+		20%,
+		80% {
+			transform: translateX(2px);
+		}
+		30%,
+		50%,
+		70% {
+			transform: translateX(-4px);
+		}
+		40%,
+		60% {
+			transform: translateX(4px);
+		}
+	}
+
+	.board-row.is-searching .cell {
+		border-color: var(--mm-accent);
+		color: var(--mm-text-muted);
+		transition: none;
+	}
+
+	.wordle-notice {
+		position: absolute;
+		top: var(--mm-s3);
+		left: 50%;
+		z-index: 1;
+		transform: translateX(-50%);
+		margin: 0;
+		padding: var(--mm-s2) var(--mm-s4);
+		background: var(--mm-text);
+		border-radius: var(--mm-radius-sm);
+		color: var(--mm-bg);
+		font-size: 0.875rem;
+		font-weight: 600;
+		white-space: nowrap;
+		pointer-events: none;
+	}
+
 	.keyboard {
 		display: flex;
 		flex-direction: column;
@@ -405,6 +531,12 @@
 		transition:
 			background-color var(--mm-duration) var(--mm-ease),
 			color var(--mm-duration) var(--mm-ease);
+	}
+
+	.key.is-active {
+		background: var(--mm-accent-wash);
+		border-color: var(--mm-accent);
+		color: var(--mm-accent);
 	}
 
 	.key--wide {
@@ -489,6 +621,10 @@
 		.cell,
 		.key {
 			transition: none;
+		}
+
+		.board-row.is-shaking {
+			animation: none;
 		}
 	}
 </style>

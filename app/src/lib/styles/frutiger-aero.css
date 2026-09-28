@@ -341,3 +341,49 @@
 .frutiger-aero-share-icon {
 	width: 48px;
 }
+
+/* ---------------------------------------------------------
+   TYPOGRAPHY — hierarchy for page content
+   The base era font is bold with a heavy glow, which works for
+   chrome but not for paragraphs; these walk it back.
+   --------------------------------------------------------- */
+
+.frutiger-aero-eyebrow {
+	margin: 0;
+	font-size: 0.75rem;
+	font-weight: 700;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: rgba(255, 255, 255, 0.75);
+	text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
+}
+
+.frutiger-aero-display {
+	margin: 0;
+	font-size: clamp(1.75rem, 1.4rem + 1.6vw, 2.5rem);
+	font-weight: 700;
+	line-height: 1.15;
+	color: #ffffff;
+	text-shadow:
+		0 1px 2px rgba(0, 0, 0, 0.5),
+		0 2px 12px rgba(0, 0, 0, 0.45),
+		0 0 24px rgba(255, 255, 255, 0.2);
+}
+
+.frutiger-aero-prose {
+	max-width: 62ch;
+	font-weight: 400;
+	font-size: 1rem;
+	line-height: 1.7;
+	color: rgba(255, 255, 255, 0.92);
+	/* A tight shadow for legibility, not the decorative glow. */
+	text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+.frutiger-aero-prose > * {
+	margin-block: 0;
+}
+
+.frutiger-aero-prose > * + * {
+	margin-block-start: 1rem;
+}

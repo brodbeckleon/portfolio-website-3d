@@ -24,15 +24,11 @@ const konsonanten: string[] = [
 	'm'
 ];
 
-let guesses: string[] = [];
-let containedChars: string[] = [];
 let containedCharsWIncorrectPositions: Map<string, number[]> = new Map();
 let correctChars: string = '-----';
 let availableChars: string[] = vokale.concat(konsonanten);
 
 export async function initWordleChecker() {
-	guesses = [];
-	containedChars = [];
 	containedCharsWIncorrectPositions = new Map();
 	correctChars = '-----';
 	availableChars = vokale.concat(konsonanten);
@@ -55,38 +51,24 @@ export async function checkGuess(candidate: string, targetWord: string) {
 			continue;
 		}
 
-		if (checkWord.includes(char) && !containedChars.includes(char)) {
-			containedChars.push(char);
-
-			if (!containedCharsWIncorrectPositions.has(char)) {
-				containedCharsWIncorrectPositions.set(char, []);
-			}
-
-			containedCharsWIncorrectPositions.get(char)!.push(i);
-		}
-
-		if (!checkWord.includes(char)) {
+		if (checkWord.includes(char)) {
+			const positions = containedCharsWIncorrectPositions.get(char) ?? [];
+			if (!positions.includes(i)) positions.push(i);
+			containedCharsWIncorrectPositions.set(char, positions);
+		} else {
 			availableChars = availableChars.filter((ch) => ch !== char);
 		}
 	}
 }
 
-export async function getGuesses(): Promise<string[]> {
-	return guesses;
-}
-
-export async function setGuesses(values: string[]): Promise<void> {
-	guesses = values;
-}
-
-export async function getContainedCharsWIncorrectPositions(): Promise<Map<string, number[]>> {
+export function getContainedCharsWIncorrectPositions(): Map<string, number[]> {
 	return containedCharsWIncorrectPositions;
 }
 
-export async function getCorrectChars(): Promise<string> {
+export function getCorrectChars(): string {
 	return correctChars;
 }
 
-export async function getAvailableChars(): Promise<string[]> {
+export function getAvailableChars(): string[] {
 	return availableChars;
 }

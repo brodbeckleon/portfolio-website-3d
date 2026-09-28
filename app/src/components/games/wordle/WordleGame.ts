@@ -38,6 +38,10 @@ export async function init(): Promise<void> {
 	await initWordleChecker();
 }
 
+export function getWords(): string[] {
+	return words;
+}
+
 export async function getTargetWord(): Promise<string> {
 	return targetWord;
 }

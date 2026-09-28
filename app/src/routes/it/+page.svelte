@@ -7,6 +7,7 @@
 	import { onMount } from 'svelte';
 	import Snake from '../../components/games/snake/Snake.svelte';
 	import Wordle from '../../components/games/wordle/Wordle.svelte';
+	import Harmonia from '../../components/games/harmonia/Harmonia.svelte';
 
 	// The explicit type argument keeps the full union: a bare literal would let
 	// TypeScript narrow web_era and report the other era checks as dead code.
@@ -111,10 +112,7 @@
 				{#if isEarlyWeb}
 					<Snake {isMobile} />
 				{:else if isFrutigerAero}
-					<div class="it-placeholder">
-						<h3 class="frutiger-aero-display">Harmonia</h3>
-						<p class="frutiger-aero-prose">{m.coming_soon()}</p>
-					</div>
+					<Harmonia />
 				{:else if isModernMinimal}
 					<Wordle />
 				{/if}
@@ -188,16 +186,6 @@
 
 	.it-module--legacy {
 		padding: 1rem 0;
-	}
-
-	.it-placeholder {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		gap: 0.5rem;
-		min-height: 14rem;
-		text-align: center;
 	}
 
 	@media (max-width: 768px) {

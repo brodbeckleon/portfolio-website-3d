@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ChevronDown, Earth, ChevronUp } from '@lucide/svelte';
+	import { Check, ChevronDown, Earth, ChevronUp } from '@lucide/svelte';
 	import { getLocale, setLocale } from '$lib/paraglide/runtime';
 	import type { WebEras } from '$lib/Types.ts';
 	import { fade } from 'svelte/transition';
@@ -10,6 +10,12 @@
 	}
 
 	let { era, isMobile }: LanguageDropDownProps = $props();
+
+	// Early web predates icon UI: that era gets plain text labels only.
+	let showIcons = $derived(era !== 'early_web');
+	let isMinimal = $derived(era === 'modern_minimal');
+	// Smaller glyphs sit better next to 14px chrome type.
+	let iconSize = $derived(isMinimal ? 20 : 24);
 
 	let showLangDropdown = $state(false);
 	let buttonWidth = $state(0);
@@ -40,34 +46,39 @@
 <div class="language-dropdown">
 	<button
 		class="dropdown-btn"
+		class:is-minimal={isMinimal}
 		class:glassmorphism-button={era === 'glassmorphism'}
 		class:earlyweb-button={era === 'early_web'}
 		class:frutiger-aero-dropdown-menu-button={era === 'frutiger_aero'}
 		class:modern-minimal-dropdown-button={era === 'modern_minimal'}
 		onclick={toggleDropdown}
+		aria-haspopup="listbox"
+		aria-expanded={showLangDropdown}
 		bind:clientWidth={buttonWidth}
 	>
-		{#if era !== 'frutiger_aero'}
-			<Earth strokeWidth={era === 'modern_minimal' ? 1.5 : 1} />
-		{:else if era === 'frutiger_aero'}
+		{#if era === 'frutiger_aero'}
 			<img src={frutigerAeroEarthIconPath} alt="Earth" class="frutiger-aero-icon" />
+		{:else if showIcons}
+			<Earth size={iconSize} strokeWidth={isMinimal ? 1.75 : 1} />
 		{/if}
-		{#if !isMobile}
+		{#if !isMobile || !showIcons}
 			<span class="lang-label">{availableLocaleNames[current]}</span>
 		{/if}
-		<div class={showLangDropdown ? 'chevron rotated' : 'chevron'}>
-			{#if !isMobile}
-				<ChevronDown strokeWidth={era === 'modern_minimal' ? 1.5 : 1} />
-			{:else}
-				<ChevronUp strokeWidth={era === 'modern_minimal' ? 1.5 : 1} />
-			{/if}
-		</div>
+		{#if showIcons}
+			<div class={showLangDropdown ? 'chevron rotated' : 'chevron'}>
+				{#if !isMobile}
+					<ChevronDown size={isMinimal ? 16 : 24} strokeWidth={isMinimal ? 1.75 : 1} />
+				{:else}
+					<ChevronUp size={isMinimal ? 16 : 24} strokeWidth={isMinimal ? 1.75 : 1} />
+				{/if}
+			</div>
+		{/if}
 	</button>
 
 	{#if showLangDropdown}
 		<div
 			class="language-dropdown-menu"
-			style="width: {buttonWidth}px"
+			style:min-width="{buttonWidth}px"
 			class:glassmorphism-dropdown-menu={era === 'glassmorphism'}
 			class:earlyweb-dropdown-menu={era === 'early_web'}
 			class:frutiger-aero-dropdown-menu={era === 'frutiger_aero'}
@@ -80,10 +91,16 @@
 					class:glassmorphism-dropdown-item={era === 'glassmorphism'}
 					class:earlyweb-dropdown-item={era === 'early_web'}
 					class:frutiger-aero-dropdown-item={era === 'frutiger_aero'}
-					class:modern-minimal-dropdown-item={era === 'modern_minimal'}
+					class:modern-minimal-dropdown-item={isMinimal}
 					onclick={() => changeLanguage(lang)}
 				>
-					{availableLocaleNames[lang]}
+					<span>{availableLocaleNames[lang]}</span>
+					{#if isMinimal}
+						<!-- Always rendered so picking a language does not shift the labels. -->
+						<span class="dropdown-check" class:is-current={current === lang} aria-hidden="true">
+							<Check size={16} strokeWidth={2} />
+						</span>
+					{/if}
 				</button>
 			{/each}
 		</div>
@@ -91,6 +108,28 @@
 </div>
 
 <style lang="css">
+	.language-dropdown {
+		position: relative;
+		width: fit-content;
+	}
+
+	.dropdown-btn.is-minimal {
+		height: 40px;
+		padding: 0 10px;
+		gap: 6px;
+	}
+
+	.dropdown-check {
+		display: inline-flex;
+		margin-left: auto;
+		color: var(--mm-accent);
+		opacity: 0;
+	}
+
+	.dropdown-check.is-current {
+		opacity: 1;
+	}
+
 	.dropdown-btn {
 		position: relative;
 		height: 48px;
@@ -103,10 +142,12 @@
 		cursor: pointer;
 	}
 
+	/* right:0 against the positioned wrapper keeps the menu under the button
+	   instead of pinning it to whichever ancestor happened to be positioned. */
 	.language-dropdown-menu {
-		top: 54px;
+		top: calc(100% + 6px);
 		bottom: auto;
-		right: 1rem;
+		right: 0;
 		position: absolute;
 		display: flex;
 		flex-direction: column;
@@ -141,7 +182,7 @@
 		.language-dropdown-menu {
 			position: absolute;
 			top: auto;
-			bottom: 54px;
+			bottom: calc(100% + 6px);
 			right: 0;
 			z-index: 10;
 			display: flex;
