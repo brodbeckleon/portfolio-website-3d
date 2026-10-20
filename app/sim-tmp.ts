@@ -1,18 +1,17 @@
 import { readFileSync } from 'node:fs';
-(globalThis as any).requestAnimationFrame = (cb: () => void) => setTimeout(cb, 0);
-const dir =
-	'/Users/brodbeckleon/Documents/privateCodingFiles/portfolio-website-3d/app/src/components/games/wordle/';
-const { initWordleChecker, checkGuess } = await import(dir + 'WordleChecker.ts');
-const { findNextGuess } = await import(dir + 'WordleGuesser.ts');
-for (const lang of ['english', 'german']) {
-	const words = readFileSync(`static/game-assets/wordle/wordlist-${lang}.txt`, 'utf8')
+Object.assign(globalThis, { requestAnimationFrame: (cb: () => void) => setTimeout(cb, 0) });
+const dir = new URL('./src/components/games/wordle/', import.meta.url);
+const { initWordleChecker, checkGuess } = await import(new URL('WordleChecker.ts', dir).href);
+const { findNextGuess } = await import(new URL('WordleGuesser.ts', dir).href);
+for (const lang of ['en', 'de']) {
+	const words = readFileSync(new URL(`words/${lang}.txt`, dir), 'utf8')
 		.split('\n')
 		.map((w) => w.trim().toLowerCase())
 		.filter((w) => /^[a-z]{5}$/u.test(w));
+	const games = 40;
 	let wins = 0,
 		frames = 0,
-		games = 40,
-		fallback = 0;
+		slowestGuessMs = 0;
 	for (let g = 0; g < games; g++) {
 		await initWordleChecker();
 		const target = words[Math.floor(Math.random() * words.length)];
@@ -25,7 +24,7 @@ for (const lang of ['english', 'german']) {
 				() => frames++,
 				() => false
 			);
-			if (performance.now() - t0 > 3900) fallback++;
+			slowestGuessMs = Math.max(slowestGuessMs, performance.now() - t0);
 			if (!guess) {
 				console.log('null guess!', target, guesses);
 				break;
@@ -42,6 +41,6 @@ for (const lang of ['english', 'german']) {
 		lang,
 		`wins ${wins}/${games}`,
 		`avg frames/game ${(frames / games).toFixed(0)}`,
-		`fallbacks ${fallback}`
+		`slowest guess ${slowestGuessMs.toFixed(0)} ms`
 	);
 }

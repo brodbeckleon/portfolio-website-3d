@@ -13,7 +13,9 @@ export const toggleable_eras: WebEras[] = ['early_web', 'frutiger_aero', 'modern
 
 export type Image = {
 	name: string;
+	/** The JPEG, for browsers that cannot show the AVIF. */
 	path: string;
+	avif: string;
 };
 
 export type GameStates = 'paused' | 'playing' | 'lost' | 'won' | 'start';

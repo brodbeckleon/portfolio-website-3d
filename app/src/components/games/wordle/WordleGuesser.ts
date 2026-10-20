@@ -5,12 +5,9 @@ import {
 } from './WordleChecker.ts';
 import { columns } from './WordleHelper.ts';
 
-// Random assembly rarely hits a real word, so each frame tries a batch and only
-// the last attempt is shown. The minimum keeps the search visible even when it
-// gets lucky early; the maximum falls back to picking from the word list.
-const attemptsPerFrame = 150;
+// The guess is chosen up front; the scramble of letters still in play only runs
+// this long so the search stays visible.
 const minSearchMs = 700;
-const maxSearchMs = 4000;
 
 type Constraints = {
 	pools: string[][];
@@ -52,13 +49,20 @@ export function findNextGuess(
 	onCandidate: (candidate: string) => void,
 	isCancelled: () => boolean
 ): Promise<string | null> {
-	const wordSet = new Set(words);
 	const constraints = getConstraints();
-	const isNewWord = (word: string) =>
-		wordSet.has(word) && !guessed.includes(word) && fitsConstraints(word, constraints);
+	// guessed is the game's $state array: copied once, so the filter below does
+	// not go through its proxy for every word in the list.
+	const guessedWords = new Set(guessed);
+	// Searching by random assembly made every buildable string equally likely,
+	// so its first hit was a uniform pick among the distinct words that fit. A
+	// uniform pick from those words directly gives the same odds without the
+	// seconds-long stalls when the letters rarely line up.
+	const remaining = [...new Set(words)].filter(
+		(word) => !guessedWords.has(word) && fitsConstraints(word, constraints)
+	);
+	const found = remaining[Math.floor(Math.random() * remaining.length)] ?? null;
 
 	const start = performance.now();
-	let found: string | null = null;
 
 	return new Promise((resolve) => {
 		const step = () => {
@@ -67,31 +71,12 @@ export function findNextGuess(
 				return;
 			}
 
-			let candidate = '';
-			for (let i = 0; i < attemptsPerFrame && !found; i++) {
-				candidate = buildString(constraints);
-				if (isNewWord(candidate)) found = candidate;
-			}
-			// Keep scrambling for show until the minimum search time has passed.
-			if (found) candidate = buildString(constraints);
-
-			const elapsed = performance.now() - start;
-
-			if (!found && elapsed > maxSearchMs) {
-				const remaining = words.filter(isNewWord);
-				found = remaining[Math.floor(Math.random() * remaining.length)] ?? null;
-				if (!found) {
-					resolve(null);
-					return;
-				}
-			}
-
-			if (found && elapsed >= minSearchMs) {
+			if (performance.now() - start >= minSearchMs) {
 				resolve(found);
 				return;
 			}
 
-			onCandidate(candidate);
+			onCandidate(buildString(constraints));
 			requestAnimationFrame(step);
 		};
 

@@ -41,8 +41,15 @@
 	--aero-active-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
+/* Relative URLs, so Vite content-hashes the wallpaper into /_app/immutable, which is
+   cached for a year. The plain JPEG line is for engines without image-set() type()
+   (Chrome < 113, Safari < 17, Firefox < 89), which drop the declaration after it. */
 .frutiger-aero-background {
-	background-image: url('/background-images/windows_vista_50.jpg');
+	background-image: url('../assets/frutiger/windows_vista_50.jpg');
+	background-image: image-set(
+		url('../assets/frutiger/windows_vista_50.avif') type('image/avif'),
+		url('../assets/frutiger/windows_vista_50.jpg') type('image/jpeg')
+	);
 	background-size: cover;
 	background-position: center;
 	background-repeat: no-repeat;
@@ -133,7 +140,6 @@
 	text-shadow:
 		0 1px 3px rgba(0, 0, 0, 0.5),
 		0 0 4px rgba(255, 255, 255, 0.2);
-	animation: aero-glow 4s infinite ease-in-out;
 }
 
 .frutiger-aero-dropdown-menu {
@@ -295,30 +301,15 @@
 		drop-shadow(0 0 36px rgba(255, 255, 255, 0.12));
 }
 
-/* Optional subtle pulse for active state */
-@keyframes aero-glow {
-	0% {
-		box-shadow:
-			var(--aero-active-shadow),
-			0 0 8px rgba(255, 255, 255, 0.05);
-	}
-	50% {
-		box-shadow:
-			var(--aero-active-shadow),
-			0 0 12px rgba(255, 255, 255, 0.1);
-	}
-	100% {
-		box-shadow:
-			var(--aero-active-shadow),
-			0 0 8px rgba(255, 255, 255, 0.05);
-	}
-}
-
-/* Apply the glow animation to all active elements */
+/* Active elements keep a faint static glow, the midpoint of the 4s pulse that used to
+   run here (8-12px, 5-10% white). The pulse was too faint to see, but a box-shadow
+   animation repaints every frame and kept every frosted surface around it re-blurring. */
 .frutiger-aero-3way-toggle-button.active,
 .frutiger-aero-button.active,
 .frutiger-aero-dropdown-menu-button.active {
-	animation: aero-glow 4s infinite ease-in-out;
+	box-shadow:
+		var(--aero-active-shadow),
+		0 0 10px rgba(255, 255, 255, 0.075);
 }
 
 .frutiger-aero-share-button {

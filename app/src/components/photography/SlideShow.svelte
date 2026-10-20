@@ -9,19 +9,25 @@
 	}
 	let { images }: SlideShowProps = $props();
 
-	let elapsedTime: number = $state(0);
-	const duration: number = 5000;
-
 	let imageShowingIndex = $state(0);
 	let image = $derived(images[imageShowingIndex]);
 
+	// The progress bar is a CSS animation that advances the slide when it ends.
+	// Every slide change bumps the cycle, which re-creates the bar so it starts
+	// over, also when the dot of the slide already showing is clicked.
+	let cycle = $state(0);
+
+	// The timer only starts once the page has hydrated: an animation that ran
+	// out before that would end with nobody listening, and the show would stop.
+	let started = $state(false);
+
 	const goToSlide = (index: number) => {
-		elapsedTime = 0;
+		cycle += 1;
 		imageShowingIndex = index;
 	};
 
 	const nextSlide = () => {
-		elapsedTime = 0;
+		cycle += 1;
 		if (imageShowingIndex === images.length - 1) {
 			imageShowingIndex = 0;
 		} else {
@@ -30,7 +36,7 @@
 	};
 
 	const prevSlide = () => {
-		elapsedTime = 0;
+		cycle += 1;
 		if (imageShowingIndex === 0) {
 			imageShowingIndex = images.length - 1;
 		} else {
@@ -38,25 +44,18 @@
 		}
 	};
 
+	// Once the photo on screen has loaded, fetch the next one so the switch
+	// does not wait on the network. Waiting for the load keeps it from competing
+	// with the first photo, and currentSrc tells which file the browser picked
+	// from the <picture>, so the next one comes in the same format.
+	const preloadNext = (event: Event) => {
+		const { currentSrc } = event.currentTarget as HTMLImageElement;
+		const next = images[(imageShowingIndex + 1) % images.length];
+		new window.Image().src = currentSrc.endsWith('.avif') ? next.avif : next.path;
+	};
+
 	onMount(() => {
-		let last_time = performance.now();
-
-		let frame = requestAnimationFrame(function update(time) {
-			frame = requestAnimationFrame(update);
-
-			const delta = Math.min(time - last_time, duration - elapsedTime);
-			elapsedTime += delta;
-			last_time = time;
-
-			if (elapsedTime >= duration) {
-				elapsedTime = 0;
-				nextSlide();
-			}
-		});
-
-		return () => {
-			cancelAnimationFrame(frame);
-		};
+		started = true;
 	});
 </script>
 
@@ -71,7 +70,18 @@
 	</button>
 
 	<div class="image-wrapper">
-		<img class="slide-show-image" alt={image.name} src={image.path} />
+		<!-- No decoding="async": the same <img> swaps photos, and an async decode
+		     can leave it empty for a frame on every switch. -->
+		<picture>
+			<source type="image/avif" srcset={image.avif} />
+			<img
+				class="slide-show-image"
+				alt={image.name}
+				src={image.path}
+				fetchpriority={imageShowingIndex === 0 ? 'high' : undefined}
+				onload={preloadNext}
+			/>
+		</picture>
 	</div>
 
 	<button class="slide-show-button" type="button" onclick={nextSlide} aria-label="go to next slide">
@@ -89,10 +99,13 @@
 			aria-label={item.name}
 			onclick={() => goToSlide(index)}
 		>
-			<span
-				class="slide-show-dot__fill"
-				style:transform="scaleX({index === imageShowingIndex ? elapsedTime / duration : 0})"
-			></span>
+			{#key cycle}
+				<span
+					class="slide-show-dot__fill"
+					class:slide-show-dot__fill--running={started && index === imageShowingIndex}
+					onanimationend={nextSlide}
+				></span>
+			{/key}
 		</button>
 	{/each}
 </div>
@@ -117,6 +130,13 @@
 		justify-content: center;
 		align-items: center;
 		overflow: hidden;
+	}
+
+	/* The <picture> only picks the file; without a box of its own the image
+	   stays the wrapper's flex item, so its max sizes still resolve against
+	   the wrapper. */
+	picture {
+		display: contents;
 	}
 
 	.slide-show-image {
@@ -163,6 +183,18 @@
 		background: var(--mm-accent);
 		transform-origin: left center;
 		transform: scaleX(0);
+	}
+
+	/* Five seconds per slide. Keep this out of any reduced-motion rule: the
+	   slide only advances when the animation ends. */
+	.slide-show-dot__fill--running {
+		animation: slide-show-progress 5s linear forwards;
+	}
+
+	@keyframes slide-show-progress {
+		to {
+			transform: scaleX(1);
+		}
 	}
 
 	.slide-show-dot:focus-visible {

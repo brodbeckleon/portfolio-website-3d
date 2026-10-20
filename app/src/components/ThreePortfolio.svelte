@@ -8,10 +8,11 @@
 		RoomEnvironment,
 		UnrealBloomPass
 	} from 'three-stdlib';
-	import { goto } from '$app/navigation';
+	import { goto, preloadCode } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { m } from '$lib/paraglide/messages';
 	import { loadModel, preloadModels } from '$lib/modelCache.ts';
+	import { MODEL_URLS } from '$lib/sceneModels.ts';
 	import { createSteam } from '$lib/steam.ts';
 	import { createHoverGlow } from '$lib/hoverGlow.ts';
 	import { initTheme, theme as themeStore } from '$lib/theme.svelte.ts';
@@ -31,13 +32,6 @@
 	// Shared with the header's toggle, so switching there relights the scene
 	// instead of only recolouring the HTML around it.
 	let prefersDarkMode = $derived(themeStore.isDark);
-
-	const MODEL_URLS = {
-		camera: '/models/camera.glb',
-		computer: '/models/computer.glb',
-		deskLamp: '/models/draco-desk_lamp.glb',
-		coffeeCup: '/models/coffee_cup.glb'
-	};
 
 	onMount(() => {
 		initTheme();
@@ -136,10 +130,16 @@
 		const camera = new THREE.PerspectiveCamera(40, node.clientWidth / node.clientHeight, 0.1, 100);
 		camera.position.set(0.75, 0.3, 1.8);
 
+		// The scene is drawn into the composer's own target, which has no MSAA,
+		// and all that reaches the canvas is the bloom pass's two full-screen
+		// quads, which leave it opaque, so antialiasing and alpha on it bought
+		// nothing but memory.
+		// Logarithmic depth is gone too: the 0.1-100 range does not need it,
+		// and it wrote gl_FragDepth in every shader, which turns off the GPU's
+		// early depth rejection.
 		const renderer = new THREE.WebGLRenderer({
-			antialias: true,
-			logarithmicDepthBuffer: true,
-			alpha: true
+			antialias: false,
+			alpha: false
 		});
 		renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 		renderer.setSize(node.clientWidth, node.clientHeight);
@@ -152,10 +152,18 @@
 		node.appendChild(renderer.domElement);
 
 		// Image-based lighting: gives the metal and ceramic something to reflect
-		// instead of leaving them lit by direct lights alone.
+		// instead of leaving them lit by direct lights alone. It is generated
+		// once, so the generator and the room it is rendered from are let go
+		// straight away; only the finished map stays.
 		const pmrem = new THREE.PMREMGenerator(renderer);
-		pmrem.compileEquirectangularShader();
-		const environmentRT = pmrem.fromScene(RoomEnvironment(), 0.04);
+		const room = RoomEnvironment();
+		const environmentRT = pmrem.fromScene(room, 0.04);
+		pmrem.dispose();
+		room.traverse((child) => {
+			if (!(child instanceof Mesh)) return;
+			child.geometry.dispose();
+			(child.material as THREE.Material).dispose();
+		});
 		scene.environment = environmentRT.texture;
 		scene.environmentIntensity = currentTheme.environmentIntensity;
 
@@ -181,6 +189,10 @@
 		const floor = new THREE.Mesh(floorGeo, floorMat);
 		floor.rotation.x = -Math.PI / 2;
 		floor.receiveShadow = true;
+		// Drawn after the models: it is the one surface that takes all the
+		// shadows, and this way early depth rejection skips it wherever a model
+		// already covers it.
+		floor.renderOrder = 1;
 		scene.add(floor);
 
 		// --- Lights ---
@@ -205,6 +217,7 @@
 		);
 		directionalLight.position.set(0, 2.5 * SCALE_FACTOR, 0.75 * SCALE_FACTOR);
 		directionalLight.castShadow = true;
+		directionalLight.shadow.autoUpdate = false;
 		directionalLight.shadow.mapSize.width = 2048;
 		directionalLight.shadow.mapSize.height = 2048;
 		directionalLight.shadow.camera.near = 0.2;
@@ -230,6 +243,7 @@
 		);
 		deskLampSpotLight.position.set(-0.72, 0.9, -0.6);
 		deskLampSpotLight.castShadow = true;
+		deskLampSpotLight.shadow.autoUpdate = false;
 		deskLampSpotLight.shadow.mapSize.width = 1024;
 		deskLampSpotLight.shadow.mapSize.height = 1024;
 		deskLampSpotLight.shadow.intensity = currentTheme.deskLampShadowIntensity;
@@ -262,6 +276,7 @@
 		);
 		hoverSpotLight.position.set(0, 3 * SCALE_FACTOR, 0);
 		hoverSpotLight.castShadow = true;
+		hoverSpotLight.shadow.autoUpdate = false;
 		hoverSpotLight.shadow.mapSize.width = 2048;
 		hoverSpotLight.shadow.mapSize.height = 2048;
 		hoverSpotLight.shadow.bias = -0.001;
@@ -278,6 +293,21 @@
 		hoverLightTarget.position.set(0, 0, 0);
 		scene.add(hoverLightTarget);
 		hoverSpotLight.target = hoverLightTarget;
+
+		/**
+		 * Nothing that casts a shadow ever moves, so the shadow maps are drawn
+		 * once and kept instead of being redrawn every frame, which used to be
+		 * about half of all draw calls. This has them redrawn on the next frame:
+		 * call it whenever a caster or a light changes. (The hover light moves
+		 * with its target, so it asks for its own redraw when that changes.)
+		 */
+		function refreshShadows() {
+			directionalLight.shadow.needsUpdate = true;
+			deskLampSpotLight.shadow.needsUpdate = true;
+			hoverSpotLight.shadow.needsUpdate = true;
+		}
+
+		refreshShadows();
 
 		// --- Text Labels ---
 		function stripHtml(html: string): string {
@@ -338,14 +368,18 @@
 			fontSize: number = 40
 		): THREE.Mesh {
 			const texture = createTextTexture(text, fontSize, fillColor, textAlignment, isBold);
+			// Front faces only: the polar angle is locked, so the underside is never
+			// in view. The alpha test drops the empty texels, most of each plane,
+			// before they run the full lighting only to blend in at zero alpha.
+			// The lift above the floor (heightOffset) is what keeps the planes
+			// clear of it; a polygon offset never had an effect under the old
+			// logarithmic depth, and leaving it out keeps it that way.
 			const material = new THREE.MeshStandardMaterial({
 				map: texture,
 				transparent: true,
 				depthWrite: true,
-				side: THREE.DoubleSide,
-				polygonOffset: true,
-				polygonOffsetFactor: -1,
-				polygonOffsetUnits: -1
+				side: THREE.FrontSide,
+				alphaTest: 0.002
 			});
 
 			const aspectRatio = texture.image.width / texture.image.height;
@@ -523,18 +557,18 @@
 
 		let disposed = false;
 		let settledModels = 0;
+		// Whether the hidden scene behind the loading screen has something new
+		// to draw (see animate).
+		let sceneDirty = true;
 
 		/**
 		 * Counts successes and failures alike, so a missing file cannot leave
-		 * the loading screen up forever.
+		 * the loading screen up forever. A failure gets its frame too: the
+		 * frame after the last one settles is what lifts the loading screen.
 		 */
 		function onModelSettled() {
 			settledModels += 1;
-			if (settledModels === totalModels) {
-				setTimeout(() => {
-					isLoading = false;
-				}, 500);
-			}
+			sceneDirty = true;
 		}
 
 		function onModelLoaded() {
@@ -542,12 +576,57 @@
 			onModelSettled();
 		}
 
+		// A lost context never finishes linking anything, so nothing may wait
+		// on it past that point.
+		const contextLost = new Promise<void>((settle) => {
+			renderer.domElement.addEventListener('webglcontextlost', () => settle(), { once: true });
+		});
+
+		// Settles once every compile so far has. compileAsync polls the context
+		// until its programs have linked, so the context and the materials it
+		// was handed have to outlive them (see destroy).
+		let compiling: Promise<unknown> = Promise.resolve();
+
+		/**
+		 * Builds an object's shader programs ahead of its first frame, with the
+		 * driver linking them in parallel where it can, instead of that frame
+		 * stalling on them.
+		 */
+		function compileAhead(object: THREE.Object3D): Promise<void> {
+			// The scene is drawn into the composer's target, not the canvas, and
+			// three builds different programs for that (no tone mapping, linear
+			// output); compiling against the canvas would warm the wrong ones.
+			const previousTarget = renderer.getRenderTarget();
+			renderer.setRenderTarget(composer.readBuffer);
+			let done: Promise<void>;
+			try {
+				done = Promise.race([renderer.compileAsync(object, camera, scene), contextLost]).then(
+					() => {},
+					() => {}
+				);
+			} catch {
+				// The first frame that draws it compiles it instead, as it always did.
+				done = Promise.resolve();
+			} finally {
+				renderer.setRenderTarget(previousTarget);
+			}
+			compiling = Promise.all([compiling, done]);
+			return done;
+		}
+
 		async function addModel(url: string, place: (model: THREE.Object3D) => void) {
 			try {
 				const model = await loadModel(url);
 				if (disposed) return;
 				place(model);
+				// The hover pick can reach the model from here on, but no render
+				// brings its matrices up to date until it is in the scene.
+				model.updateMatrixWorld(true);
+				hoverDirty = true;
+				await compileAhead(model);
+				if (disposed) return;
 				scene.add(model);
+				refreshShadows();
 				onModelLoaded();
 			} catch (error) {
 				console.error(`[scene] could not load ${url}`, error);
@@ -627,6 +706,16 @@
 		controls.minPolarAngle = angle;
 		controls.maxPolarAngle = angle;
 
+		// When anything last moved or changed the picture other than the steam.
+		// The frame cap in animate only applies once the scene has been left
+		// alone for a moment.
+		let lastActivity = 0;
+		function markActive() {
+			lastActivity = performance.now();
+		}
+		controls.addEventListener('start', markActive);
+		controls.addEventListener('change', markActive);
+
 		const dragThresholdSq = 25;
 		let pointerDownPos: { x: number; y: number } | null = null;
 		let suppressNextClick = false;
@@ -661,10 +750,21 @@
 		let flickerTimer = 0;
 		let activeModel: THREE.Object3D | null = null;
 
+		// The hover pick depends only on the pointer, the camera and the models,
+		// none of which move on their own, so it is redone only when one of them
+		// did instead of raycasting both models every frame. hoverDirty covers
+		// the pointer, the viewport and arriving models; the camera is compared
+		// by matrix (see animate).
+		let hoverDirty = true;
+		let hoveredModel: THREE.Object3D | null = null;
+		const pickedWith = new THREE.Matrix4();
+
 		function onMouseMove(event: MouseEvent) {
 			const rect = renderer.domElement.getBoundingClientRect();
 			mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
 			mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+			hoverDirty = true;
+			markActive();
 		}
 
 		function isModelInCenter(model: THREE.Object3D | undefined, threshold = 0.4): boolean {
@@ -673,6 +773,25 @@
 			model.getWorldPosition(worldPosition);
 			worldPosition.project(camera);
 			return Math.abs(worldPosition.x) < threshold && Math.abs(worldPosition.y) < threshold;
+		}
+
+		function findHoveredModel(): THREE.Object3D | null {
+			if (isMobile) {
+				if (isModelInCenter(cameraModel)) return cameraModel;
+				if (isModelInCenter(macintoshModel)) return macintoshModel;
+				return null;
+			}
+
+			if (!cameraModel || !macintoshModel) return null;
+			raycaster.setFromCamera(mouse, camera);
+			const intersects = raycaster.intersectObjects([cameraModel, macintoshModel], true);
+			if (intersects.length === 0) return null;
+
+			let current: Object3D | null = intersects[0].object;
+			while (current && current !== cameraModel && current !== macintoshModel) {
+				current = current.parent;
+			}
+			return current;
 		}
 
 		const hoverWorldPosition = new THREE.Vector3();
@@ -689,6 +808,9 @@
 			if (activeModel !== previousActiveModel) {
 				previousActiveModel = activeModel;
 				flickerTimer = 0;
+				// The light is about to move to it, so its shadow map has to be
+				// redrawn from there; it never is on its own.
+				if (activeModel) hoverSpotLight.shadow.needsUpdate = true;
 			}
 
 			// Only the fade in and out is smoothed.
@@ -754,19 +876,75 @@
 			}
 		}
 
-		if (!isMobile) {
+		// Decided once: isMobile can change on resize, and the listener has to
+		// come off the same way it went on.
+		const tracksPointer = !isMobile;
+		if (tracksPointer) {
 			window.addEventListener('mousemove', onMouseMove);
 		}
 		window.addEventListener('click', onClick);
 
+		// A restored context comes back with blank shadow maps, and nothing else
+		// would redraw them.
+		renderer.domElement.addEventListener('webglcontextrestored', refreshShadows);
+
+		/**
+		 * In the dark theme the hover light joins the lamp, and every lit
+		 * material then needs another program, for two shadowed spotlights,
+		 * which the first hover used to compile on the spot. Building those in
+		 * the background beforehand takes that stall away. The light theme
+		 * never shows the light, so it is not worth the work there.
+		 */
+		let hoverProgramsWarm = false;
+		function warmHoverPrograms() {
+			if (hoverProgramsWarm || disposed || !prefersDarkMode || settledModels < totalModels) {
+				return;
+			}
+			hoverProgramsWarm = true;
+			// Only while the compile reads the scene's lights, which it does
+			// straight away; the light is never drawn like this.
+			const wasVisible = hoverSpotLight.visible;
+			hoverSpotLight.visible = true;
+			compileAhead(scene);
+			hoverSpotLight.visible = wasVisible;
+		}
+
+		function revealScene() {
+			isLoading = false;
+			// Neither is needed to show the scene, so both wait until after the
+			// frame that does.
+			setTimeout(() => {
+				if (disposed) return;
+				warmHoverPrograms();
+				// The objects navigate with goto(), which SvelteKit's link
+				// preloading never sees, so their pages' code is fetched here.
+				preloadCode(resolve('/it')).catch(() => {});
+				preloadCode(resolve('/photography')).catch(() => {});
+			});
+		}
+
 		// --- Animation Loop ---
 		let animationFrameId: number;
 		let lastTime = 0;
+		let lastFrameTime = 0;
 
 		let elapsedTime = 0;
 
 		function animate(time: number) {
 			animationFrameId = requestAnimationFrame(animate);
+
+			// Left alone, the only thing moving is the slow steam, which looks the
+			// same at 60 and at 120 fps, so high-refresh screens skip frames. One
+			// is only skipped when the next still lands within 1/60 s (plus a
+			// millisecond of jitter) of the last one drawn: nothing ever updates
+			// less often than on a 60 Hz screen, and as soon as anything is
+			// touched or hovered, or a hover is still fading out (to the glow's
+			// own cut-off), the loop is back at the display's own rate.
+			const frameInterval = time - lastFrameTime;
+			lastFrameTime = time;
+			const idle = time - lastActivity > 300 && !activeModel && hoverLevel < 0.004;
+			if (idle && time - lastTime + frameInterval < 1000 / 60 + 1) return;
+
 			controls.update();
 
 			// requestAnimationFrame pauses on a hidden tab, so the first frame
@@ -777,35 +955,35 @@
 			elapsedTime += deltaTime;
 			flickerTime += deltaTime * 5;
 
-			activeModel = null;
-
-			if (!isMobile) {
-				if (cameraModel && macintoshModel) {
-					raycaster.setFromCamera(mouse, camera);
-					const intersects = raycaster.intersectObjects([cameraModel, macintoshModel], true);
-
-					if (intersects.length > 0) {
-						let current: Object3D = intersects[0].object;
-						while (current && current !== cameraModel && current !== macintoshModel) {
-							if (current.parent instanceof THREE.Object3D) {
-								current = current.parent;
-							}
-						}
-						if (current === cameraModel || current === macintoshModel) {
-							activeModel = current;
-						}
-					}
-				}
-			} else {
-				if (isModelInCenter(cameraModel)) {
-					activeModel = cameraModel;
-				} else if (isModelInCenter(macintoshModel)) {
-					activeModel = macintoshModel;
-				}
+			// The camera counts by the matrix the pick actually reads, which trails
+			// the controls by a frame, rather than by their change event.
+			if (hoverDirty || !camera.matrixWorld.equals(pickedWith)) {
+				hoverDirty = false;
+				pickedWith.copy(camera.matrixWorld);
+				hoveredModel = findHoveredModel();
 			}
+			activeModel = hoveredModel;
 
 			updateSpotlight(deltaTime);
 			steam.update(elapsedTime);
+
+			// Behind the opaque loading screen only an arriving model changes
+			// anything, so the hidden scene is drawn once per arrival: each model
+			// still gets its upload in a frame of its own, without the whole
+			// pipeline running for nothing in between.
+			if (isLoading) {
+				if (sceneDirty) {
+					sceneDirty = false;
+					composer.render();
+					return;
+				}
+				// Lifted on the frame after the complete scene was first drawn, so
+				// that draw's upload stall stays hidden and the first frame anyone
+				// sees is an ordinary one.
+				if (settledModels < totalModels) return;
+				revealScene();
+			}
+
 			composer.render();
 		}
 
@@ -813,12 +991,31 @@
 		animate(lastTime);
 
 		// --- Resize Handler ---
+		let viewWidth = node.clientWidth;
+		let viewHeight = node.clientHeight;
+
 		const handleResize = () => {
-			camera.aspect = node.clientWidth / node.clientHeight;
+			// isMobile may have flipped as well, which changes how the hover is
+			// picked.
+			hoverDirty = true;
+
+			const width = node.clientWidth;
+			const height = node.clientHeight;
+			// renderer.setSize clears the canvas even when nothing changed, and
+			// mobile browser bars fire resizes that leave this element as it was.
+			if (width === viewWidth && height === viewHeight) return;
+			viewWidth = width;
+			viewHeight = height;
+
+			camera.aspect = width / height;
 			camera.updateProjectionMatrix();
-			renderer.setSize(node.clientWidth, node.clientHeight);
-			composer.setSize(node.clientWidth, node.clientHeight);
-			bloomPass.setSize(node.clientWidth, node.clientHeight);
+			renderer.setSize(width, height);
+			// This sizes the bloom chain too, in device pixels like the first
+			// frame. Sizing it again in CSS pixels afterwards, as was done here,
+			// quartered its resolution on HiDPI screens after any resize.
+			composer.setSize(width, height);
+			// The canvas was just cleared, so this frame has to draw.
+			markActive();
 		};
 		window.addEventListener('resize', handleResize);
 
@@ -930,10 +1127,23 @@
 					m.welcome_message_4();
 				updateTextMesh(welcomeTextMesh, welcomeTextString, newTheme.textColor, 20, 'center', false);
 			}
+
+			// The page around the canvas switches on this very frame, so the
+			// scene must not sit it out under the idle frame cap.
+			markActive();
+			// Only after the frame that shows the switch, which already has the
+			// text to redraw; a bare timeout would usually run before it.
+			requestAnimationFrame(() => setTimeout(warmHoverPrograms));
 		}
 
-		// Watch for theme changes
+		// Watch for theme changes. The scene was just built in the current
+		// theme, so only an actual switch rebuilds it (all three text textures
+		// included).
+		let appliedDark = prefersDarkMode;
 		$effect(() => {
+			const dark = prefersDarkMode;
+			if (dark === appliedDark) return;
+			appliedDark = dark;
 			updateTheme();
 		});
 
@@ -943,7 +1153,7 @@
 				disposed = true;
 				cancelAnimationFrame(animationFrameId);
 
-				if (!isMobile) {
+				if (tracksPointer) {
 					window.removeEventListener('mousemove', onMouseMove);
 				}
 				window.removeEventListener('click', onClick);
@@ -953,28 +1163,42 @@
 				renderer.domElement.removeEventListener('pointermove', handlePointerMove);
 				renderer.domElement.removeEventListener('pointerup', handlePointerUp);
 				renderer.domElement.removeEventListener('pointerleave', handlePointerUp);
+				renderer.domElement.removeEventListener('webglcontextrestored', refreshShadows);
 
 				controls.dispose();
 
-				// Only dispose what this scene created. Model geometries and
-				// materials are shared with the module cache, so disposing them
-				// here would break the next visit to this page.
-				steam.dispose();
-				hoverGlow.dispose();
-				floorGeo.dispose();
-				floorMat.dispose();
+				// A compile still in flight keeps polling the programs of every
+				// material it was handed, this scene's own included once the hover
+				// light has been warmed, and a material disposed under it breaks
+				// that poll for good. So everything waits for it to finish.
+				compiling.then(() => {
+					// Only dispose what this scene created. Model geometries and
+					// materials are shared with the module cache, so disposing them
+					// here would break the next visit to this page.
+					steam.dispose();
+					hoverGlow.dispose();
+					floorGeo.dispose();
+					floorMat.dispose();
 
-				for (const mesh of [photographyTextMesh, itTextMesh, welcomeTextMesh]) {
-					if (!mesh) continue;
-					mesh.geometry.dispose();
-					const material = mesh.material as MeshStandardMaterial;
-					material.map?.dispose();
-					material.dispose();
-				}
+					for (const mesh of [photographyTextMesh, itTextMesh, welcomeTextMesh]) {
+						if (!mesh) continue;
+						mesh.geometry.dispose();
+						const material = mesh.material as MeshStandardMaterial;
+						material.map?.dispose();
+						material.dispose();
+					}
 
-				environmentRT.texture.dispose();
-				pmrem.dispose();
-				renderer.dispose();
+					environmentRT.dispose();
+					composer.dispose();
+					bloomPass.dispose();
+
+					// The cached models carry dispose listeners that close over this
+					// context, so dropping the renderer alone never frees it; losing
+					// it releases its GPU memory now rather than whenever the browser
+					// runs into its context limit.
+					renderer.dispose();
+					renderer.forceContextLoss();
+				});
 
 				scene.remove(hoverSpotLight);
 				scene.remove(hoverLightTarget);

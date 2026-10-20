@@ -5,9 +5,9 @@
 	import { m } from '$lib/paraglide/messages';
 	import { browser } from '$app/environment';
 	import { onMount } from 'svelte';
-	import Snake from '../../components/games/snake/Snake.svelte';
+	import type Snake from '../../components/games/snake/Snake.svelte';
 	import Wordle from '../../components/games/wordle/Wordle.svelte';
-	import Harmonia from '../../components/games/harmonia/Harmonia.svelte';
+	import type Harmonia from '../../components/games/harmonia/Harmonia.svelte';
 
 	// The explicit type argument keeps the full union: a bare literal would let
 	// TypeScript narrow web_era and report the other era checks as dead code.
@@ -16,6 +16,45 @@
 	let isEarlyWeb = $derived(web_era === 'early_web');
 	let isFrutigerAero = $derived(web_era === 'frutiger_aero');
 	let isModernMinimal = $derived(web_era === 'modern_minimal');
+
+	// Only the default era's game ships with the page; Snake and Harmonia load
+	// the first time their era is picked. Once loaded they are kept, so going
+	// back to an era renders its game at once instead of an empty module.
+	let SnakeGame = $state<typeof Snake>();
+	let HarmoniaGame = $state<typeof Harmonia>();
+
+	// The SSR check keeps these imports out of the server build. SvelteKit puts
+	// the CSS of every lazy component the server can reach into the page head,
+	// which would load Harmonia's styles up front after all. SSR only renders
+	// the default era, so it never needs either game.
+	function loadSnake() {
+		if (import.meta.env.SSR || SnakeGame) return;
+		import('../../components/games/snake/Snake.svelte').then(
+			(module) => (SnakeGame = module.default),
+			// Left unset, so picking the era again retries.
+			(error) => console.error('[it] could not load Snake', error)
+		);
+	}
+
+	function loadHarmonia() {
+		if (import.meta.env.SSR || HarmoniaGame) return;
+		import('../../components/games/harmonia/Harmonia.svelte').then(
+			(module) => (HarmoniaGame = module.default),
+			(error) => console.error('[it] could not load Harmonia', error)
+		);
+	}
+
+	// Starting the download when the switch is hovered or focused usually has
+	// the game ready by the time the click lands.
+	function warmEraGames() {
+		loadSnake();
+		loadHarmonia();
+	}
+
+	$effect(() => {
+		if (isEarlyWeb) loadSnake();
+		else if (isFrutigerAero) loadHarmonia();
+	});
 
 	let isMobile: boolean = $state(false);
 
@@ -48,7 +87,7 @@
 
 	<!-- Fixed height and the shared shell, directly under a fixed-height header:
 	     the switch keeps the exact same spot whichever era you land in. -->
-	<div class="it-era-bar site-shell">
+	<div class="it-era-bar site-shell" onpointerenter={warmEraGames} onfocusin={warmEraGames}>
 		<span
 			class="it-era-bar__label"
 			class:modern-minimal-eyebrow={isModernMinimal}
@@ -110,9 +149,13 @@
 				class:frutiger-aero-container={isFrutigerAero}
 			>
 				{#if isEarlyWeb}
-					<Snake {isMobile} />
+					{#if SnakeGame}
+						<SnakeGame {isMobile} />
+					{/if}
 				{:else if isFrutigerAero}
-					<Harmonia />
+					{#if HarmoniaGame}
+						<HarmoniaGame />
+					{/if}
 				{:else if isModernMinimal}
 					<Wordle />
 				{/if}

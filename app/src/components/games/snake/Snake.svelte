@@ -69,6 +69,8 @@
 			body: [{ x: startingPosition, y: startingPosition }],
 			direction: { x: 0, y: 0 }
 		};
+		// Turns left over from the last game would steer the new one.
+		nextDirections = [];
 
 		updateMap();
 	}
@@ -146,9 +148,19 @@
 		}
 	}
 
+	// Each tick takes one queued turn, so the queue only has to hold a quick
+	// double turn. Anything longer lets mashed keys pile up into seconds of lag.
+	const maxQueuedDirections = 2;
+
 	function setDirection(dx: number, dy: number) {
-		const currentDir = snake.direction;
-		if (currentDir.x !== -dx || currentDir.y !== -dy) {
+		if (gameState !== 'playing' || nextDirections.length >= maxQueuedDirections) return;
+
+		// Judged against the direction the snake will have when this turn
+		// applies, so two quick turns cannot reverse it into its own neck.
+		const lastDir = nextDirections.at(-1) ?? snake.direction;
+		const isSame = lastDir.x === dx && lastDir.y === dy;
+		const isReverse = lastDir.x === -dx && lastDir.y === -dy;
+		if (!isSame && !isReverse) {
 			nextDirections.push({ x: dx, y: dy });
 		}
 	}

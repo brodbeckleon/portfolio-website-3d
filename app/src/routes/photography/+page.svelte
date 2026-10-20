@@ -6,21 +6,35 @@
 	import type { WebEras, Image } from '$lib/Types.ts';
 	import SlideShow from '../../components/photography/SlideShow.svelte';
 
+	// Imported through Vite so the photos are content-hashed into /_app/immutable
+	// and cached for good. The JPEGs are the untouched originals; the AVIFs are
+	// made from them by scripts/optimize-images.mjs, at a quality that keeps the
+	// film grain, and are what every current browser picks.
+	import daikokuJpg from '$lib/assets/photography/Daikoku-Toyota-Chaser.jpg';
+	import daikokuAvif from '$lib/assets/photography/Daikoku-Toyota-Chaser.avif';
+	import moriJpg from '$lib/assets/photography/MoriArtMuseum-TokyoTower.jpg';
+	import moriAvif from '$lib/assets/photography/MoriArtMuseum-TokyoTower.avif';
+	import uetlibergJpg from '$lib/assets/photography/Ueteliberg-Kindergarten.jpg';
+	import uetlibergAvif from '$lib/assets/photography/Ueteliberg-Kindergarten.avif';
+
 	const web_era: WebEras = 'modern_minimal';
 	let isMobile: boolean = $state(false);
 
 	const images: Image[] = [
 		{
 			name: m.alt_daikoku_toyota_chaser(),
-			path: 'photography-page-images/Daikoku-Toyota-Chaser.jpg'
+			path: daikokuJpg,
+			avif: daikokuAvif
 		},
 		{
 			name: m.alt_tokyo_tower_mori_art_museum(),
-			path: 'photography-page-images/MoriArtMuseum-TokyoTower.jpg'
+			path: moriJpg,
+			avif: moriAvif
 		},
 		{
 			name: m.alt_ueteliberg_kindergarten(),
-			path: 'photography-page-images/Ueteliberg-Kindergarten.jpg'
+			path: uetlibergJpg,
+			avif: uetlibergAvif
 		}
 	];
 
