@@ -179,8 +179,6 @@
 	--mm-radius-md: 10px;
 	--mm-radius-lg: 16px;
 	--mm-radius-pill: 999px;
-	/* legacy alias, still referenced by SlideShow.svelte */
-	--mm-radius: var(--mm-radius-md);
 
 	--mm-ease: cubic-bezier(0.2, 0, 0, 1);
 	--mm-duration: 180ms;

@@ -1,5 +1,7 @@
 /**
- * Rebuilds the shipped images in src/lib/assets from their originals.
+ * Rebuilds the Frutiger Aero images in src/lib/assets/frutiger from their
+ * originals. The photography page's photos are not handled here:
+ * @sveltejs/enhanced-img encodes those at build time.
  *
  * sharp is not an app dependency, so install it ad hoc first:
  *   npm i --no-save sharp@0.35.5
@@ -48,19 +50,4 @@ for (const [name, resize] of Object.entries(icons)) {
 		.toFile(frutigerTarget(`${name}.webp`));
 }
 
-// --- Photography (the JPEGs in src/lib/assets/photography are the originals) ---
-// The sRGB profile is kept so the AVIF is colour-managed exactly like the JPEG;
-// the camera metadata goes. Below quality 80 the film grain of the night shot
-// starts to smooth out.
-for (const name of [
-	'Daikoku-Toyota-Chaser',
-	'MoriArtMuseum-TokyoTower',
-	'Ueteliberg-Kindergarten'
-]) {
-	await sharp(at('src/lib/assets/photography', `${name}.jpg`))
-		.keepIccProfile()
-		.avif({ quality: 80, chromaSubsampling: '4:2:0', effort: 9 })
-		.toFile(at('src/lib/assets/photography', `${name}.avif`));
-}
-
-console.log('images written to src/lib/assets');
+console.log('images written to src/lib/assets/frutiger');

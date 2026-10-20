@@ -1,0 +1,193 @@
+/* ==========================================================
+   PAPER & INK
+   The photography side: warm paper, one indigo ink (紺藍), grain behind
+   the content and never over the photos. Order: palette -> semantic
+   tokens -> modern-minimal remap -> base.
+   ========================================================== */
+
+/* ----------------------------------------------------------
+   Palette — light paper and a dark sumi variant. Every colour value is
+   defined once here; contrast against its paper is noted where text uses it.
+   ---------------------------------------------------------- */
+:root {
+	--pi-l-paper: #f4efe3;
+	--pi-l-paper-2: #ebe6da;
+	--pi-l-ink: #1f3a74; /* 9.6:1 */
+	--pi-l-ink-muted: #4a5f8b; /* 5.6:1 */
+	--pi-l-ink-subtle: #55688f; /* 4.9:1 */
+	--pi-l-ink-hover: #142a5a;
+	--pi-l-watermark: #e2dbca;
+	--pi-l-grain-opacity: 0.14;
+	--pi-l-grain-blend: multiply;
+
+	--pi-d-paper: #14130f;
+	--pi-d-paper-2: #1e1d19;
+	--pi-d-ink: #b8c5e6; /* 10.8:1 */
+	--pi-d-ink-muted: #949eb7; /* 6.9:1 */
+	--pi-d-ink-subtle: #80889d; /* 5.3:1 */
+	--pi-d-ink-hover: #d3dcf2;
+	--pi-d-watermark: #221f19;
+	--pi-d-grain-opacity: 0.075;
+	--pi-d-grain-blend: screen;
+}
+
+/* ----- Semantic tokens: light (default) ----- */
+:root,
+:root[data-theme='light'] {
+	--pi-paper: var(--pi-l-paper);
+	--pi-paper-2: var(--pi-l-paper-2);
+	--pi-ink: var(--pi-l-ink);
+	--pi-ink-muted: var(--pi-l-ink-muted);
+	--pi-ink-subtle: var(--pi-l-ink-subtle);
+	--pi-ink-hover: var(--pi-l-ink-hover);
+	--pi-watermark: var(--pi-l-watermark);
+	--pi-grain-opacity: var(--pi-l-grain-opacity);
+	--pi-grain-blend: var(--pi-l-grain-blend);
+}
+
+/* ----- Semantic tokens: dark, when the user did NOT force light ----- */
+@media (prefers-color-scheme: dark) {
+	:root:not([data-theme='light']) {
+		--pi-paper: var(--pi-d-paper);
+		--pi-paper-2: var(--pi-d-paper-2);
+		--pi-ink: var(--pi-d-ink);
+		--pi-ink-muted: var(--pi-d-ink-muted);
+		--pi-ink-subtle: var(--pi-d-ink-subtle);
+		--pi-ink-hover: var(--pi-d-ink-hover);
+		--pi-watermark: var(--pi-d-watermark);
+		--pi-grain-opacity: var(--pi-d-grain-opacity);
+		--pi-grain-blend: var(--pi-d-grain-blend);
+	}
+}
+
+/* ----- Semantic tokens: dark, explicitly chosen ----- */
+:root[data-theme='dark'] {
+	--pi-paper: var(--pi-d-paper);
+	--pi-paper-2: var(--pi-d-paper-2);
+	--pi-ink: var(--pi-d-ink);
+	--pi-ink-muted: var(--pi-d-ink-muted);
+	--pi-ink-subtle: var(--pi-d-ink-subtle);
+	--pi-ink-hover: var(--pi-d-ink-hover);
+	--pi-watermark: var(--pi-d-watermark);
+	--pi-grain-opacity: var(--pi-d-grain-opacity);
+	--pi-grain-blend: var(--pi-d-grain-blend);
+}
+
+/* ----------------------------------------------------------
+   Non-colour tokens
+   ---------------------------------------------------------- */
+:root {
+	--pi-font-display: 'Bodoni Moda Variable', 'Bodoni Moda', 'Didot', 'Bodoni 72', serif;
+	--pi-font-kanji: 'Shippori Mincho', 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+
+	--pi-text-hero: clamp(3rem, 1.2rem + 9.6vw, 11rem);
+	--pi-text-title: clamp(2.25rem, 1.4rem + 4.2vw, 5.5rem);
+	--pi-text-watermark: clamp(5rem, 2rem + 14vw, 17rem);
+
+	--pi-line: color-mix(in srgb, var(--pi-ink) 40%, transparent);
+
+	/* The paper's grain, one tile for every surface that carries it: the
+	   page layer, the loupe and the fixed bars, which would otherwise read
+	   as smooth patches on grainy paper. Fractal noise reads as paper fibre
+	   where plain turbulence reads as static; stitchTiles hides the seams.
+	   The matrix turns the soft grey noise into opaque specks on mostly
+	   clear paper. Sizes are px: a bare % in a data URI is a broken escape.
+	   Paint it with --pi-grain-opacity and --pi-grain-blend. */
+	--pi-grain-tile: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='3.2 0 0 0 -0.9 3.2 0 0 0 -0.9 3.2 0 0 0 -0.9 0 0 0 0 1'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)'/%3E%3C/svg%3E");
+	--pi-grain-size: 220px;
+	--pi-gutter: clamp(1rem, 0.4rem + 3vw, 3.75rem);
+	--pi-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ----------------------------------------------------------
+   Modern-minimal remap. The photography page reuses the shared header,
+   theme toggle and language menu, which all read --mm-* tokens; pointing
+   those at the ink here restyles them without touching the components.
+   ---------------------------------------------------------- */
+.paper-ink {
+	--mm-bg: var(--pi-paper);
+	--mm-sunken: var(--pi-paper-2);
+	--mm-surface: var(--pi-paper);
+	--mm-surface-2: var(--pi-paper-2);
+	--mm-border: color-mix(in srgb, var(--pi-ink) 18%, transparent);
+	--mm-border-strong: color-mix(in srgb, var(--pi-ink) 38%, transparent);
+	--mm-text: var(--pi-ink);
+	--mm-text-muted: var(--pi-ink-muted);
+	--mm-text-subtle: var(--pi-ink-subtle);
+	--mm-accent: var(--pi-ink);
+	--mm-accent-hover: var(--pi-ink-hover);
+	--mm-accent-ink: var(--pi-paper);
+	--mm-accent-wash: color-mix(in srgb, var(--pi-ink) 8%, transparent);
+	--mm-scrim: color-mix(in srgb, var(--pi-paper) 60%, transparent);
+
+	/* A wider column than the other routes: the photos want the room, and
+	   the shared header widens with it so its edges line up with the page. */
+	--shell-max: 96rem;
+	--shell-gutter: var(--pi-gutter);
+
+	background-color: var(--pi-paper);
+	color: var(--pi-ink);
+}
+
+/* ----------------------------------------------------------
+   Base
+   ---------------------------------------------------------- */
+
+/* Japanese has no spaces, so narrow columns otherwise break mid-word
+   ("くだ / さい"). Both properties inherit, so every story, caption and
+   label on the page breaks between phrases where the browser supports it
+   and wraps as before where it does not. lang="ja" comes from the document
+   (hooks.server.ts maps the jp locale to it). */
+.paper-ink:lang(ja) {
+	word-break: auto-phrase;
+	line-break: strict;
+}
+
+/* "[Camera]" — the bracketed label that sits over every value. */
+.paper-ink-label {
+	font-size: var(--mm-text-xs);
+	line-height: var(--mm-leading-snug);
+	color: var(--pi-ink-muted);
+}
+
+.paper-ink-label::before {
+	content: '[';
+}
+
+.paper-ink-label::after {
+	content: ']';
+}
+
+.paper-ink-display {
+	font-family: var(--pi-font-display);
+	font-optical-sizing: auto;
+	font-weight: 400;
+	line-height: 0.92;
+	letter-spacing: -0.01em;
+	text-transform: uppercase;
+}
+
+.paper-ink-rule {
+	border: 0;
+	border-top: 1px dashed var(--pi-line);
+	margin: 0;
+}
+
+/* Ink reveal (see $lib/ink.ts). app.html adds ink-ready before first paint
+   when motion is allowed, so marked text never flashes in sharp first. If
+   the script that arms it never runs, the failsafe shows everything after
+   a few seconds rather than leaving the page blank. */
+html.ink-ready [data-ink]:not([data-ink-armed]) {
+	opacity: 0;
+	animation: ink-failsafe 0s linear 6s forwards;
+}
+
+html.ink-ready [data-ink][data-ink-armed]:not([data-inked]) {
+	opacity: 0;
+}
+
+@keyframes ink-failsafe {
+	to {
+		opacity: 1;
+	}
+}

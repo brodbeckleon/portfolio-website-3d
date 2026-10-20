@@ -57,8 +57,12 @@ const webp = (slots, [size, quality, lossless = false, nearLossless = false]) =>
 		effort: 100
 	});
 
-/** Textured models: geometry is kept as is, only the textures are resized. */
-async function optimizeTextured(name, { base, mr, normal, opaque = false, merge = false }) {
+/**
+ * Textured models: geometry is kept as is, only the textures are resized.
+ * `keepNodes` leaves the node tree alone for models the scene animates by
+ * part name.
+ */
+async function optimizeTextured(name, { base, mr, normal, opaque = false, keepNodes = false }) {
 	const doc = await io.read(source(name));
 	// The camera's single material is exported as BLEND, which the scene
 	// overrides to opaque anyway; baking it in keeps it out of the
@@ -68,11 +72,7 @@ async function optimizeTextured(name, { base, mr, normal, opaque = false, merge 
 	await doc.transform(
 		dedup(),
 		prune({ keepAttributes: false, keepSolidTextures: false }),
-		flatten(),
-		// Only for models whose parts share one material: one draw call
-		// instead of one per part. The computer stays split because joining it
-		// makes the hover raycast slower.
-		...(merge ? [weld(), join()] : []),
+		...(keepNodes ? [] : [flatten()]),
 		webp(/^baseColor/, base),
 		webp(/^metallicRoughness/, mr),
 		webp(/^normal/, normal),
@@ -165,12 +165,14 @@ async function optimizeLamp(name, { error, normalWeight }) {
 }
 
 await optimizeTextured('computer.glb', { base: [1024, 85], mr: [512, 90], normal: [1024, 90] });
+// The desk camera intro swings the advance lever and drops the release, so
+// its parts stay separate nodes under their original names.
 await optimizeTextured('camera.glb', {
 	base: [1024, 85],
 	mr: [512, 90, false, true],
 	normal: [1024, 90],
 	opaque: true,
-	merge: true
+	keepNodes: true
 });
 // ~100-160 px on screen even fully zoomed in: the 4096² sources were far
 // beyond what can ever be sampled.

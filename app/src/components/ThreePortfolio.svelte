@@ -8,7 +8,8 @@
 		RoomEnvironment,
 		UnrealBloomPass
 	} from 'three-stdlib';
-	import { goto, preloadCode } from '$app/navigation';
+	import { dev } from '$app/environment';
+	import { beforeNavigate, goto, preloadCode } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { m } from '$lib/paraglide/messages';
 	import { loadModel, preloadModels } from '$lib/modelCache.ts';
@@ -37,6 +38,13 @@
 		initTheme();
 		preloadModels(Object.values(MODEL_URLS));
 	});
+
+	// Set by the scene while the desk camera intro runs. The component only
+	// unmounts once a navigation has finished, so without this a title-bar
+	// link or Back pressed mid-intro would be overridden by the intro's own
+	// goto a few frames later.
+	let abandonCameraIntro: (() => void) | null = null;
+	beforeNavigate(() => abandonCameraIntro?.());
 
 	const theme = {
 		dark: {
@@ -846,11 +854,366 @@
 			hoverGlow.update(activeModel ? hoverWorldPosition : null, hoverLevel * flicker);
 		}
 
+		// --- Desk camera handoff ---
+		// Clicking the AT-1 winds it on and fires it before the page changes:
+		// the view closes in, the advance lever swings out and back, the
+		// shutter button drops, and only then does /photography load. It is
+		// all advanced from animate() on the scene's own clamped clock, so a
+		// hidden tab pauses it instead of letting it jump to the end.
+
+		/** Seconds from the click. Every step is a window on one clock, so they can overlap. */
+		const INTRO = {
+			dollyEnd: 0.45,
+			leverStart: 0.15,
+			leverEnd: 0.5,
+			shutterStart: 0.5,
+			shutterEnd: 0.6,
+			// A beat after the shutter, so the release registers before the page goes.
+			end: 0.68
+		};
+		// Short of a full stroke on purpose: a small swing reads as winding on
+		// without the lever sweeping across the shot.
+		const LEVER_SWING = THREE.MathUtils.degToRad(35);
+		// Used when the hinge cannot be found and the lever turns about its own
+		// origin instead; a big angle there would show the lever orbiting.
+		const LEVER_SWING_FALLBACK = THREE.MathUtils.degToRad(18);
+		// Half the button's height: a couple of millimetres at the model's real
+		// scale, about what the release actually travels.
+		const SHUTTER_TRAVEL = 0.5;
+		// Fraction of the current distance the view closes to.
+		const DOLLY_MIN = 0.5;
+		const DOLLY_MAX = 0.6;
+		// Tips the view a little higher than the orbit's fixed 60 degrees, so
+		// the top plate, where the lever and the release sit, faces the lens.
+		const DOLLY_LIFT = 0.15;
+		// The model stands upright on the desk, so its local up is world up.
+		const WORLD_UP = new THREE.Vector3(0, 1, 0);
+
+		interface LeverSwing {
+			object: THREE.Object3D;
+			restPosition: THREE.Vector3;
+			restQuaternion: THREE.Quaternion;
+			/** Hinge point and axis, both in the lever's parent space. */
+			hinge: THREE.Vector3;
+			axis: THREE.Vector3;
+			/** Signed, so a positive pulse always swings away from the body. */
+			angle: number;
+		}
+
+		interface ShutterDip {
+			object: THREE.Object3D;
+			restPosition: THREE.Vector3;
+			/** Full travel, in the button's parent space. */
+			travel: THREE.Vector3;
+		}
+
+		interface CameraIntro {
+			elapsed: number;
+			fromPosition: THREE.Vector3;
+			toPosition: THREE.Vector3;
+			fromTarget: THREE.Vector3;
+			toTarget: THREE.Vector3;
+			lever: LeverSwing | null;
+			shutter: ShutterDip | null;
+		}
+
+		let cameraIntro: CameraIntro | null = null;
+		// Set the moment goto is called, so nothing can navigate a second time.
+		let leavingForPhotography = false;
+
+		/**
+		 * GLTFLoader runs node names through PropertyBinding.sanitizeNodeName,
+		 * and the FBX names carry a '#' prefix whose survival should not be
+		 * relied on, so names are compared on their word characters only.
+		 * Matching the end, not includes(), keeps 'Shutter' from finding
+		 * 'Shutter_Speed'; skipping meshes lands on the node rather than the
+		 * '…_Textures_0' mesh inside it, whose transform is not the part's.
+		 */
+		function findCameraPart(part: string): THREE.Object3D | null {
+			let found: THREE.Object3D | null = null;
+			cameraModel.traverse((child) => {
+				if (found || child instanceof Mesh) return;
+				const name = child.name.replace(/\W/g, '');
+				if (name === part || name.endsWith(`_${part}`)) found = child;
+			});
+			if (!found && dev) {
+				console.warn(`[scene] camera part '${part}' not found; its intro step is skipped`);
+			}
+			return found;
+		}
+
+		/** Bounds of an object's geometry in its own space, so its long axis can be read off. */
+		function localGeometryBounds(object: THREE.Object3D): THREE.Box3 {
+			object.updateWorldMatrix(true, true);
+			const toLocal = object.matrixWorld.clone().invert();
+			const relative = new THREE.Matrix4();
+			const meshBounds = new THREE.Box3();
+			const bounds = new THREE.Box3();
+			object.traverse((child) => {
+				if (!(child instanceof Mesh)) return;
+				if (!child.geometry.boundingBox) child.geometry.computeBoundingBox();
+				relative.multiplyMatrices(toLocal, child.matrixWorld);
+				meshBounds.copy(child.geometry.boundingBox!).applyMatrix4(relative);
+				bounds.union(meshBounds);
+			});
+			return bounds;
+		}
+
+		function directionInSpaceOf(object: THREE.Object3D, worldDirection: THREE.Vector3) {
+			const toLocal = object.getWorldQuaternion(new THREE.Quaternion()).invert();
+			return worldDirection.clone().applyQuaternion(toLocal).normalize();
+		}
+
+		/**
+		 * Works out where the advance lever hinges and which way is "out".
+		 *
+		 * In this asset the lever's origin already sits on its hub, coaxial
+		 * with the shutter-speed dial, so it turns in place. That is checked
+		 * rather than assumed: if the origin is not near one end of the
+		 * lever's long axis, the hinge is taken as the end nearer the dial.
+		 * Either way the rotation is applied about that point in the parent's
+		 * space, so nothing is re-parented and restoring is two copies.
+		 */
+		function rigLever(
+			lever: THREE.Object3D,
+			dial: THREE.Object3D | null,
+			bodyCentre: THREE.Vector3
+		): LeverSwing | null {
+			const parent = lever.parent;
+			if (!parent) return null;
+
+			const bounds = localGeometryBounds(lever);
+			lever.updateMatrix();
+			const axis = directionInSpaceOf(parent, WORLD_UP);
+			const rest = {
+				object: lever,
+				restPosition: lever.position.clone(),
+				restQuaternion: lever.quaternion.clone(),
+				axis
+			};
+
+			if (bounds.isEmpty()) {
+				return { ...rest, hinge: lever.position.clone(), angle: LEVER_SWING_FALLBACK };
+			}
+
+			const size = bounds.getSize(new THREE.Vector3());
+			const longAxis = size.x >= size.y && size.x >= size.z ? 0 : size.y >= size.z ? 1 : 2;
+			const min = bounds.min.getComponent(longAxis);
+			const max = bounds.max.getComponent(longAxis);
+			const centre = bounds.getCenter(new THREE.Vector3());
+			const origin = new THREE.Vector3();
+			const originAlong = (0 - min) / (max - min);
+
+			const hingeLocal = new THREE.Vector3();
+			let hingeAtMin: boolean;
+			if (bounds.containsPoint(origin) && (originAlong < 0.3 || originAlong > 0.7)) {
+				hingeAtMin = originAlong < 0.5;
+			} else {
+				const dialLocal = dial
+					? lever.worldToLocal(dial.getWorldPosition(new THREE.Vector3()))
+					: origin.clone();
+				const dialAlong = dialLocal.getComponent(longAxis);
+				hingeAtMin = Math.abs(dialAlong - min) <= Math.abs(dialAlong - max);
+				hingeLocal.copy(centre).setComponent(longAxis, hingeAtMin ? min : max);
+			}
+
+			const tipLocal = centre.clone().setComponent(longAxis, hingeAtMin ? max : min);
+			const hinge = hingeLocal.applyMatrix4(lever.matrix);
+			const tip = tipLocal.applyMatrix4(lever.matrix);
+
+			// "Out" is whichever way leaves the tip further from the body, read
+			// on the desk plane so the sign holds however the model is rotated.
+			const reachAfterSwing = (angle: number) => {
+				const swung = tip
+					.clone()
+					.sub(hinge)
+					.applyAxisAngle(axis, angle)
+					.add(hinge)
+					.applyMatrix4(parent.matrixWorld);
+				return Math.hypot(swung.x - bodyCentre.x, swung.z - bodyCentre.z);
+			};
+			const angle =
+				reachAfterSwing(LEVER_SWING) >= reachAfterSwing(-LEVER_SWING) ? LEVER_SWING : -LEVER_SWING;
+
+			return { ...rest, hinge, angle };
+		}
+
+		function rigShutter(button: THREE.Object3D): ShutterDip | null {
+			const parent = button.parent;
+			if (!parent) return null;
+
+			const height = new THREE.Box3().setFromObject(button).getSize(new THREE.Vector3()).y;
+			if (height <= 0) return null;
+
+			// Measured in world space and carried back into the parent's, so the
+			// travel survives whatever scale and axis swaps the FBX export added.
+			const top = button.getWorldPosition(new THREE.Vector3());
+			const start = parent.worldToLocal(top.clone());
+			const end = parent.worldToLocal(top.addScaledVector(WORLD_UP, -height * SHUTTER_TRAVEL));
+			return { object: button, restPosition: button.position.clone(), travel: end.sub(start) };
+		}
+
+		/**
+		 * Where the view lands: on the current bearing, so the move reads as
+		 * stepping closer rather than flying somewhere, at a distance that
+		 * keeps the whole body in frame on narrow screens too.
+		 */
+		function framingFor(subject: THREE.Object3D) {
+			const bounds = new THREE.Box3().setFromObject(subject);
+			const centre = bounds.getCenter(new THREE.Vector3());
+			const radius = bounds.getBoundingSphere(new THREE.Sphere()).radius;
+
+			const offset = camera.position.clone().sub(controls.target);
+			const distance = offset.length();
+			const direction = offset.normalize();
+			direction.y += DOLLY_LIFT;
+			direction.normalize();
+
+			const halfVertical = THREE.MathUtils.degToRad(camera.fov / 2);
+			const halfHorizontal = Math.atan(Math.tan(halfVertical) * camera.aspect);
+			const fit = (radius / Math.sin(Math.min(halfVertical, halfHorizontal))) * 1.05;
+			const landing = THREE.MathUtils.clamp(fit, distance * DOLLY_MIN, distance * DOLLY_MAX);
+
+			return { target: centre, position: centre.clone().addScaledVector(direction, landing) };
+		}
+
+		function easeInOutCubic(t: number) {
+			return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+		}
+
+		/** 0 -> 1 -> 0 across [start, end]: out and straight back. */
+		function pulse(time: number, start: number, end: number) {
+			if (time <= start || time >= end) return 0;
+			return Math.sin(((time - start) / (end - start)) * Math.PI);
+		}
+
+		const leverSwing = new THREE.Quaternion();
+
+		function poseLever(lever: LeverSwing, amount: number) {
+			leverSwing.setFromAxisAngle(lever.axis, lever.angle * amount);
+			lever.object.position
+				.copy(lever.restPosition)
+				.sub(lever.hinge)
+				.applyQuaternion(leverSwing)
+				.add(lever.hinge);
+			lever.object.quaternion.multiplyQuaternions(leverSwing, lever.restQuaternion);
+		}
+
+		function playCameraIntro() {
+			if (cameraIntro || leavingForPhotography) return;
+
+			if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+				leaveForPhotography();
+				return;
+			}
+
+			const body = findCameraPart('Body');
+			const lever = findCameraPart('Film_Advance');
+			const dial = findCameraPart('Shutter_Speed');
+			const shutter = findCameraPart('Shutter');
+			const framing = framingFor(body ?? cameraModel);
+
+			cameraIntro = {
+				elapsed: 0,
+				fromPosition: camera.position.clone(),
+				toPosition: framing.position,
+				fromTarget: controls.target.clone(),
+				toTarget: framing.target,
+				lever: lever ? rigLever(lever, dial, framing.target) : null,
+				shutter: shutter ? rigShutter(shutter) : null
+			};
+			// The move is scripted; a drag mid-way would fight it.
+			controls.enabled = false;
+		}
+
+		function advanceCameraIntro(deltaTime: number) {
+			const intro = cameraIntro;
+			if (!intro) return;
+
+			intro.elapsed += deltaTime;
+			const time = intro.elapsed;
+
+			const dolly = easeInOutCubic(Math.min(time / INTRO.dollyEnd, 1));
+			camera.position.lerpVectors(intro.fromPosition, intro.toPosition, dolly);
+			controls.target.lerpVectors(intro.fromTarget, intro.toTarget, dolly);
+			camera.lookAt(controls.target);
+
+			if (intro.lever) {
+				poseLever(intro.lever, pulse(time, INTRO.leverStart, INTRO.leverEnd));
+			}
+			if (intro.shutter) {
+				const dip = pulse(time, INTRO.shutterStart, INTRO.shutterEnd);
+				intro.shutter.object.position
+					.copy(intro.shutter.restPosition)
+					.addScaledVector(intro.shutter.travel, dip);
+			}
+			// The shadow maps only redraw on request, and the lever and the
+			// release cast their own small shadows while they move.
+			refreshShadows();
+
+			if (time >= INTRO.end) finishCameraIntro();
+		}
+
+		/**
+		 * Puts back what the intro moved and leaves. The view itself stays
+		 * where it ended up: the page is going, and snapping back would show
+		 * in the frame the transition captures.
+		 */
+		function finishCameraIntro() {
+			if (!restoreAfterIntro()) return;
+			leaveForPhotography();
+		}
+
+		/** Puts the parts back and hands the desk to the controls; false if no intro ran. */
+		function restoreAfterIntro(): boolean {
+			const intro = cameraIntro;
+			if (!intro) return false;
+			cameraIntro = null;
+
+			if (intro.lever) {
+				intro.lever.object.position.copy(intro.lever.restPosition);
+				intro.lever.object.quaternion.copy(intro.lever.restQuaternion);
+			}
+			if (intro.shutter) {
+				intro.shutter.object.position.copy(intro.shutter.restPosition);
+			}
+			refreshShadows();
+			hoverDirty = true;
+			controls.enabled = true;
+			return true;
+		}
+
+		// Someone else's navigation (a title-bar link, Back) won the race: drop
+		// the intro without leaving. Our own goto also passes through here, and
+		// by then leavingForPhotography is set, so it is left alone.
+		abandonCameraIntro = () => {
+			if (!leavingForPhotography) restoreAfterIntro();
+		};
+
+		function leaveForPhotography() {
+			// The scene can be torn down mid-intro (Back, a header link); the
+			// page that replaced it must not then be navigated away from.
+			if (disposed || leavingForPhotography) return;
+			leavingForPhotography = true;
+			goto(resolve('/photography')).catch(() => {
+				// The navigation failed or was overtaken: hand the desk back.
+				leavingForPhotography = false;
+			});
+		}
+
 		function onClick(event: MouseEvent) {
 			if (suppressNextClick || !cameraModel || !macintoshModel) {
 				suppressNextClick = false;
 				return;
 			}
+
+			// goto has already run; a click now must not start a second navigation.
+			if (leavingForPhotography) return;
+
+			// This listens on window, so it also hears the title bar over the
+			// scene. Mid-intro only a click on the scene itself skips ahead; a
+			// theme toggle or a link is meant for what it landed on.
+			if (cameraIntro && event.target !== renderer.domElement) return;
 
 			const rect = renderer.domElement.getBoundingClientRect();
 			const clickMouse = new THREE.Vector2();
@@ -864,16 +1227,23 @@
 				let current: THREE.Object3D | null = intersects[0].object;
 				while (current) {
 					if (current === macintoshModel) {
+						// Mid-intro the visitor has already chosen; a stray hit on
+						// the Macintosh must not divert them to /it.
+						if (cameraIntro) return;
 						goto(resolve('/it'));
 						return;
 					}
 					if (current === cameraModel) {
-						goto(resolve('/photography'));
+						if (cameraIntro) finishCameraIntro();
+						else playCameraIntro();
 						return;
 					}
 					current = current.parent;
 				}
 			}
+
+			// Any other click during the intro is impatience: skip to the page.
+			if (cameraIntro) finishCameraIntro();
 		}
 
 		// Decided once: isMobile can change on resize, and the listener has to
@@ -939,13 +1309,17 @@
 			// millisecond of jitter) of the last one drawn: nothing ever updates
 			// less often than on a 60 Hz screen, and as soon as anything is
 			// touched or hovered, or a hover is still fading out (to the glow's
-			// own cut-off), the loop is back at the display's own rate.
+			// own cut-off), the loop is back at the display's own rate. The camera
+			// handoff always runs at full rate.
 			const frameInterval = time - lastFrameTime;
 			lastFrameTime = time;
-			const idle = time - lastActivity > 300 && !activeModel && hoverLevel < 0.004;
+			const idle = time - lastActivity > 300 && !activeModel && hoverLevel < 0.004 && !cameraIntro;
 			if (idle && time - lastTime + frameInterval < 1000 / 60 + 1) return;
 
-			controls.update();
+			// The handoff moves the view itself. Left running, the controls
+			// would pull it back to their fixed polar angle and distance range,
+			// mid-move and again in the frames before the page swaps.
+			if (!cameraIntro && !leavingForPhotography) controls.update();
 
 			// requestAnimationFrame pauses on a hidden tab, so the first frame
 			// back can carry a delta of many seconds. Clamping keeps every
@@ -954,6 +1328,8 @@
 			lastTime = time;
 			elapsedTime += deltaTime;
 			flickerTime += deltaTime * 5;
+
+			advanceCameraIntro(deltaTime);
 
 			// The camera counts by the matrix the pick actually reads, which trails
 			// the controls by a frame, rather than by their change event.
@@ -1150,7 +1526,10 @@
 		// --- Cleanup ---
 		return {
 			destroy() {
+				// Also what stops an intro cut short here from calling goto later.
 				disposed = true;
+				cameraIntro = null;
+				abandonCameraIntro = null;
 				cancelAnimationFrame(animationFrameId);
 
 				if (tracksPointer) {

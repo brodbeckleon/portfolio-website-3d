@@ -42,6 +42,11 @@
 			} catch {
 				/* storage unavailable (private mode) — fall back to system */
 			}
+			// Arms the ink reveal on the photography side before first paint;
+			// with reduced motion the text simply stays as it is.
+			if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+				document.documentElement.classList.add('ink-ready');
+			}
 		</script>
 		%sveltekit.head%
 	</head>
