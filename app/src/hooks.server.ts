@@ -6,7 +6,10 @@ const handleParaglide: Handle = ({ event, resolve }) =>
 		event.request = request;
 
 		return resolve(event, {
-			transformPageChunk: ({ html }) => html.replace('%paraglide.lang%', locale)
+			// The locale code 'jp' is a country, not a language: browsers only
+			// apply Japanese fonts and line breaking for the BCP 47 tag 'ja'.
+			transformPageChunk: ({ html }) =>
+				html.replace('%paraglide.lang%', locale === 'jp' ? 'ja' : locale)
 		});
 	});
 
