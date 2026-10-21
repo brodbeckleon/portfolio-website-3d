@@ -31,14 +31,10 @@ type InkOptions = {
 };
 
 const DURATION = 1100;
-/**
- * ms between filter updates. Every update re-runs the whole filter chain in
- * software, and the hero reveals a dozen elements at once; at ~30 fps the
- * smear still reads as fluid.
- */
-const FRAME_GAP = 30;
-/** Displacement in px below which the smear is invisible and the filter goes. */
-const DRY = 0.5;
+/** Wetness of the frozen smear copies cross-faded through during a reveal. */
+const STAGES = [1, 0.55, 0.28, 0.12];
+/** Keyframes per reveal; the curves between them are linear. */
+const SAMPLES = 40;
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
 /** Longest wait for the fonts before the intro starts anyway. */
@@ -87,7 +83,7 @@ function getDefs(): SVGDefsElement {
 	return defs;
 }
 
-function createFilter(id: string) {
+function createFilter(id: string, seed: number) {
 	const filter = document.createElementNS(SVG_NS, 'filter');
 	filter.id = id;
 	// Room for the smear to spill past the text box without being clipped.
@@ -102,7 +98,7 @@ function createFilter(id: string) {
 	// A second octave only adds detail finer than the blur on top of it
 	// leaves, and roughly doubled the noise work in every frame.
 	noise.setAttribute('numOctaves', '1');
-	noise.setAttribute('seed', String(counter % 97));
+	noise.setAttribute('seed', String(seed));
 	noise.setAttribute('result', 'noise');
 
 	const displace = document.createElementNS(SVG_NS, 'feDisplacementMap');
@@ -134,46 +130,95 @@ export function ink({ delay = 0, spread = 60 }: InkOptions = {}): Attachment<HTM
 		}
 
 		node.dataset.inkArmed = '';
-		let frame = 0;
 		let timer = 0;
 		let detached = false;
-		let cleanupFilter: (() => void) | null = null;
+		let animations: Animation[] = [];
+		let cleanup: (() => void) | null = null;
 
 		function reveal() {
-			const id = `ink-${++counter}`;
-			const { filter, displace, blur } = createFilter(id);
-			getDefs().append(filter);
-			node.style.filter = `url(#${id})`;
-			// Its own layer for as long as the filter runs; see the top.
-			node.style.willChange = 'transform';
-			node.dataset.inked = '';
+			const seed = ++counter % 97;
+			const parent = node.parentElement;
+			if (!parent) return;
 
-			cleanupFilter = () => {
-				node.style.filter = '';
-				node.style.opacity = '';
-				node.style.willChange = '';
-				filter.remove();
+			// Wetness over the reveal, sampled for the keyframes.
+			const times = Array.from({ length: SAMPLES + 1 }, (_, i) => i / SAMPLES);
+			const wets = times.map((t) => 1 - easeOutCubic(t));
+			const envelope = times.map((t) => Math.min(1, t * 2.2));
+
+			// How much of stage k shows at wetness w: a tent between its
+			// neighbours, so two adjacent stages always add up to one.
+			const levels = [...STAGES, 0];
+			const weight = (k: number, w: number) => {
+				const here = levels[k];
+				const wetter = levels[k - 1];
+				const drier = levels[k + 1];
+				if (w >= here)
+					return wetter === undefined ? 1 : Math.max(0, (wetter - w) / (wetter - here));
+				return drier === undefined ? 1 : Math.max(0, (w - drier) / (here - drier));
 			};
 
-			const start = performance.now();
-			let drawn = -Infinity;
-			frame = requestAnimationFrame(function step(now) {
-				const t = Math.min((now - start) / DURATION, 1);
-				const wet = 1 - easeOutCubic(t);
-				if (now - drawn >= FRAME_GAP) {
-					drawn = now;
-					displace.setAttribute('scale', String(spread * wet));
-					blur.setAttribute('stdDeviation', String(8 * wet));
-					node.style.opacity = String(Math.min(1, t * 2.2));
-				}
-				// The ease's long tail is sub-pixel; stop as soon as nothing shows.
-				if (t < 1 && spread * wet > DRY) {
-					frame = requestAnimationFrame(step);
-				} else {
-					cleanupFilter?.();
-					cleanupFilter = null;
-				}
+			const copies: HTMLElement[] = [];
+			const filters: SVGFilterElement[] = [];
+			STAGES.forEach((level, k) => {
+				const id = `ink-${counter}-${k}`;
+				const { filter, displace, blur } = createFilter(id, seed);
+				displace.setAttribute('scale', String(spread * level));
+				blur.setAttribute('stdDeviation', String(8 * level));
+				getDefs().append(filter);
+				filters.push(filter);
+
+				const copy = node.cloneNode(true) as HTMLElement;
+				for (const el of [copy, ...copy.querySelectorAll<HTMLElement>('[id]')])
+					el.removeAttribute('id');
+				delete copy.dataset.ink;
+				delete copy.dataset.inkArmed;
+				copy.setAttribute('aria-hidden', 'true');
+				copy.inert = true;
+				Object.assign(copy.style, {
+					position: 'absolute',
+					left: `${node.offsetLeft}px`,
+					top: `${node.offsetTop}px`,
+					width: `${node.offsetWidth}px`,
+					height: `${node.offsetHeight}px`,
+					margin: '0',
+					boxSizing: 'border-box',
+					pointerEvents: 'none',
+					filter: `url(#${id})`,
+					willChange: 'opacity',
+					opacity: '0'
+				});
+				node.after(copy);
+				copies.push(copy);
 			});
+
+			node.dataset.inked = '';
+			const timing = { duration: DURATION, easing: 'linear', fill: 'forwards' as const };
+			animations = copies.map((copy, k) =>
+				copy.animate(
+					times.map((_, i) => ({ opacity: envelope[i] * weight(k, wets[i]) })),
+					timing
+				)
+			);
+			animations.push(
+				node.animate(
+					times.map((_, i) => ({
+						opacity: envelope[i] * weight(STAGES.length, wets[i]),
+						filter: `blur(${(8 * wets[i]).toFixed(2)}px)`
+					})),
+					timing
+				)
+			);
+
+			cleanup = () => {
+				for (const animation of animations) animation.cancel();
+				for (const copy of copies) copy.remove();
+				for (const filter of filters) filter.remove();
+				animations = [];
+			};
+			animations.at(-1)!.finished.then(
+				() => cleanup?.(),
+				() => {}
+			);
 		}
 
 		const observer = new IntersectionObserver(
@@ -192,8 +237,7 @@ export function ink({ delay = 0, spread = 60 }: InkOptions = {}): Attachment<HTM
 			detached = true;
 			observer.disconnect();
 			clearTimeout(timer);
-			cancelAnimationFrame(frame);
-			cleanupFilter?.();
+			cleanup?.();
 		};
 	};
 }
