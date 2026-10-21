@@ -150,22 +150,13 @@
 		   of chrome and reads as the bottom margin of the page. */
 		.photography-page__chrome :global(.mobile-footer) {
 			inset: auto 0 0;
-			isolation: isolate;
 			padding: var(--mm-s2) var(--pi-gutter) max(var(--mm-s2), env(safe-area-inset-bottom));
 			border-top: 1px dashed var(--pi-line);
-			background: var(--pi-paper);
-		}
-
-		.photography-page__chrome :global(.mobile-footer)::before {
-			content: '';
-			position: absolute;
-			inset: 0;
-			z-index: -1;
-			background-image: var(--pi-grain-tile);
-			background-size: var(--pi-grain-size);
-			opacity: var(--pi-grain-opacity);
-			mix-blend-mode: var(--pi-grain-blend);
-			pointer-events: none;
+			/* padding-box: the grain stops at the dashed rule, as the paper's
+			   layer used to, instead of showing through it. */
+			background:
+				var(--pi-grain-tile) 0 0 / var(--pi-grain-size) padding-box,
+				var(--pi-paper);
 		}
 	}
 </style>

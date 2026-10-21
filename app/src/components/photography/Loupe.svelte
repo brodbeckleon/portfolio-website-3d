@@ -357,26 +357,18 @@
 		padding: 0;
 		border: 0;
 		overflow: hidden;
-		background: var(--pi-paper);
+		/* The page's moving grain sits below the top layer, so the dialog
+		   carries a still copy of its own. It is painted under the layout,
+		   and the photo is opaque, so it shows on the paper around the
+		   picture and never on it. */
+		background:
+			var(--pi-grain-tile) 0 0 / var(--pi-grain-size),
+			var(--pi-paper);
 		color: var(--pi-ink);
 	}
 
 	.loupe::backdrop {
 		background: var(--pi-paper);
-	}
-
-	/* The page's moving grain sits below the top layer, so the dialog carries
-	   a still copy of its own. It is painted under the layout, and the photo
-	   is opaque, so it shows on the paper around the picture and never on it. */
-	.loupe::before {
-		content: '';
-		position: absolute;
-		inset: 0;
-		background-image: var(--pi-grain-tile);
-		background-size: var(--pi-grain-size);
-		opacity: var(--pi-grain-opacity);
-		mix-blend-mode: var(--pi-grain-blend);
-		pointer-events: none;
 	}
 
 	.loupe:not([open]) {
@@ -624,27 +616,17 @@
 		}
 
 		/* Sticky over the scrolling photo, so it needs the paper behind it,
-		   and the paper needs its grain or the bar reads as a smooth strip.
-		   The grain sits in the bar's own stacking context, under its text. */
+		   and the paper needs its grain or the bar reads as a smooth strip. */
 		.loupe-bar {
 			position: sticky;
 			top: 0;
 			z-index: 1;
-			isolation: isolate;
 			padding-block: max(var(--mm-s3), env(safe-area-inset-top)) var(--mm-s3);
-			background: var(--pi-paper);
-		}
-
-		.loupe-bar::before {
-			content: '';
-			position: absolute;
-			inset: 0;
-			z-index: -1;
-			background-image: var(--pi-grain-tile);
-			background-size: var(--pi-grain-size);
-			opacity: var(--pi-grain-opacity);
-			mix-blend-mode: var(--pi-grain-blend);
-			pointer-events: none;
+			/* padding-box: the grain stops at the dashed rule, as the paper's
+			   layer used to, instead of showing through it. */
+			background:
+				var(--pi-grain-tile) 0 0 / var(--pi-grain-size) padding-box,
+				var(--pi-paper);
 		}
 
 		.loupe-counter {

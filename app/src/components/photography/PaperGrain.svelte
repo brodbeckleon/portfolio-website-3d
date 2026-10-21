@@ -11,8 +11,6 @@
 		z-index: 0;
 		overflow: hidden;
 		pointer-events: none;
-		opacity: var(--pi-grain-opacity);
-		mix-blend-mode: var(--pi-grain-blend);
 	}
 
 	/* Oversized so jumping it around never shows an edge: the largest jump
