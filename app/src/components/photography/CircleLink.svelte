@@ -65,12 +65,18 @@
 		border-radius: 50%;
 	}
 
+	/* Drawn at its full hover size and clipped down to the 5px dot, so the
+	   swell is a growing clip, painted crisp at every step. Scaling a 5px dot
+	   up instead left the compositor stretching a 5px bitmap until the
+	   transition ended, and the dot came in blurry. 1px short of the ring's
+	   inside, so it stops just short of the border. */
 	.circle-link__dot {
-		width: 5px;
-		height: 5px;
+		width: calc(100% - 1px);
+		height: calc(100% - 1px);
 		border-radius: 50%;
 		background-color: var(--pi-ink);
-		transition: transform 420ms var(--pi-ease-out);
+		clip-path: circle(2.5px);
+		transition: clip-path 420ms var(--pi-ease-out);
 	}
 
 	.circle-link__label {
@@ -83,8 +89,7 @@
 
 	.circle-link:hover .circle-link__dot,
 	.circle-link:focus-visible .circle-link__dot {
-		/* 44px ring / 5px dot, just short of the border. */
-		transform: scale(8.2);
+		clip-path: circle(50%);
 	}
 
 	.circle-link:hover .circle-link__label,
