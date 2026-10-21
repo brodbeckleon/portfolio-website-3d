@@ -21,6 +21,14 @@ type InkOptions = {
 };
 
 const DURATION = 1100;
+/**
+ * ms between filter updates. Every update re-runs the whole filter chain in
+ * software, and the hero reveals a dozen elements at once; at ~30 fps the
+ * smear still reads as fluid and costs half as much.
+ */
+const FRAME_GAP = 30;
+/** Displacement in px below which the smear is invisible and the filter goes. */
+const DRY = 0.5;
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
 let defs: SVGDefsElement | null = null;
@@ -49,7 +57,9 @@ function createFilter(id: string) {
 	const noise = document.createElementNS(SVG_NS, 'feTurbulence');
 	noise.setAttribute('type', 'fractalNoise');
 	noise.setAttribute('baseFrequency', '0.012 0.06');
-	noise.setAttribute('numOctaves', '2');
+	// A second octave only adds detail finer than the blur on top of it
+	// leaves, and roughly doubled the noise work in every frame.
+	noise.setAttribute('numOctaves', '1');
 	noise.setAttribute('seed', String(counter % 97));
 	noise.setAttribute('result', 'noise');
 
@@ -100,13 +110,18 @@ export function ink({ delay = 0, spread = 60 }: InkOptions = {}): Attachment<HTM
 			};
 
 			const start = performance.now();
+			let drawn = -Infinity;
 			frame = requestAnimationFrame(function step(now) {
 				const t = Math.min((now - start) / DURATION, 1);
 				const wet = 1 - easeOutCubic(t);
-				displace.setAttribute('scale', String(spread * wet));
-				blur.setAttribute('stdDeviation', String(8 * wet));
-				node.style.opacity = String(Math.min(1, t * 2.2));
-				if (t < 1) {
+				if (now - drawn >= FRAME_GAP) {
+					drawn = now;
+					displace.setAttribute('scale', String(spread * wet));
+					blur.setAttribute('stdDeviation', String(8 * wet));
+					node.style.opacity = String(Math.min(1, t * 2.2));
+				}
+				// The ease's long tail is sub-pixel; stop as soon as nothing shows.
+				if (t < 1 && spread * wet > DRY) {
 					frame = requestAnimationFrame(step);
 				} else {
 					cleanupFilter?.();

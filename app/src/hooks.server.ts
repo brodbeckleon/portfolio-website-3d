@@ -24,6 +24,9 @@ const handleParaglide: Handle = ({ event, resolve }) =>
 		// and the error page never use it, and the other subsets still load
 		// through unicode-range when a page needs them.
 		const preloadInter = event.route.id !== null && event.route.id !== '/';
+		// Bodoni sets the photography hero title, the largest text on the page
+		// and its first big paint; found late, the title swaps face after it.
+		const preloadBodoni = event.route.id?.startsWith('/photography') ?? false;
 
 		const response = await resolve(event, {
 			// The locale code 'jp' is a country, not a language: browsers only
@@ -33,7 +36,9 @@ const handleParaglide: Handle = ({ event, resolve }) =>
 			preload: ({ type, path }) =>
 				type === 'js' ||
 				type === 'css' ||
-				(type === 'font' && preloadInter && path.includes('inter-latin-wght-normal'))
+				(type === 'font' &&
+					((preloadInter && path.includes('inter-latin-wght-normal')) ||
+						(preloadBodoni && path.includes('bodoni-moda-latin-opsz-normal'))))
 		});
 
 		// Only on the server-rendered page itself: client-side visits to '/' never
