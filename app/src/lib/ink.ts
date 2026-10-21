@@ -14,7 +14,10 @@ import type { Attachment } from 'svelte/attachments';
  */
 
 type InkOptions = {
-	/** ms after the element comes into view, for staggering a group. */
+	/**
+	 * ms after the element comes into view (and the page has settled, see
+	 * whenSettled), for staggering a group.
+	 */
 	delay?: number;
 	/** Displacement in px at the start; larger text can take more. */
 	spread?: number;
@@ -31,8 +34,40 @@ const FRAME_GAP = 30;
 const DRY = 0.5;
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
+/** Longest wait for the fonts before the intro starts anyway. */
+const FONT_WAIT = 1500;
+/** Longest wait for an idle moment once the fonts are in. */
+const IDLE_WAIT = 400;
+
 let defs: SVGDefsElement | null = null;
 let counter = 0;
+let settled: Promise<void> | null = null;
+
+/**
+ * Resolves once the page has stopped starting up: the fonts have arrived
+ * (a face swapping in relayouts the text mid-reveal) and the browser has
+ * had an idle moment after hydration. The first second of a visit is when
+ * the page hydrates, lays out, swaps fonts and decodes the first photos;
+ * the intro running on top of all that is what stuttered, while the same
+ * animations on a quiet page run smoothly. Shared, so everything that waits
+ * starts together, and anything revealed later in the visit goes at once.
+ */
+export function whenSettled(): Promise<void> {
+	settled ??= Promise.race([
+		document.fonts.ready,
+		new Promise((resolve) => setTimeout(resolve, FONT_WAIT))
+	]).then(
+		() =>
+			new Promise<void>((resolve) => {
+				if ('requestIdleCallback' in window) {
+					requestIdleCallback(() => resolve(), { timeout: IDLE_WAIT });
+				} else {
+					setTimeout(resolve, 50);
+				}
+			})
+	);
+	return settled;
+}
 
 function getDefs(): SVGDefsElement {
 	if (defs?.isConnected) return defs;
@@ -94,6 +129,7 @@ export function ink({ delay = 0, spread = 60 }: InkOptions = {}): Attachment<HTM
 		node.dataset.inkArmed = '';
 		let frame = 0;
 		let timer = 0;
+		let detached = false;
 		let cleanupFilter: (() => void) | null = null;
 
 		function reveal() {
@@ -134,13 +170,16 @@ export function ink({ delay = 0, spread = 60 }: InkOptions = {}): Attachment<HTM
 			(entries) => {
 				if (!entries.some((entry) => entry.isIntersecting)) return;
 				observer.disconnect();
-				timer = window.setTimeout(reveal, delay);
+				whenSettled().then(() => {
+					if (!detached) timer = window.setTimeout(reveal, delay);
+				});
 			},
 			{ threshold: 0.15 }
 		);
 		observer.observe(node);
 
 		return () => {
+			detached = true;
 			observer.disconnect();
 			clearTimeout(timer);
 			cancelAnimationFrame(frame);
