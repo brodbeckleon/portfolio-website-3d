@@ -8,16 +8,15 @@ import type { Attachment } from 'svelte/attachments';
  * what paper-ink.css hides before first paint; the attachment only exists
  * in the browser.
  *
- * Each element gets its own SVG filter (turbulence -> displacement -> blur)
- * whose strength runs down to zero. Afterwards the filter is removed
- * entirely: a filtered element repaints on every frame, sharp text does not.
- *
- * While it is wet, the element is also lifted onto a compositor layer of its
- * own. Chrome rasterizes SVG filters on the CPU, and without the layer each
- * filter change repainted the big shared page layer around the element, for
- * every element of the hero at once: ~2.6 s of raster work in the first
- * seconds of a visit on a 2x screen, which was the stutter at the start.
- * With the layer only the element itself is redrawn, about a tenth of that.
+ * The smear is an SVG filter (turbulence -> displacement -> blur), but it is
+ * never animated. Browsers draw these filters on the CPU, again on every
+ * change: Safari managed a few frames a second with the hero's dozen
+ * elements smearing at once. Instead each element gets a few aria-hidden
+ * copies laid over it, each with the smear frozen at one wetness (STAGES)
+ * and drawn once, and the reveal cross-fades from the wettest copy through
+ * the drier ones to the element itself, which sharpens through a CSS blur.
+ * Opacity and a CSS blur are all that move, and the compositor runs those
+ * on the GPU. Afterwards the copies and their filters are removed.
  */
 
 type InkOptions = {
@@ -30,7 +29,8 @@ type InkOptions = {
 	spread?: number;
 };
 
-const DURATION = 1100;
+/** ms from the first smear to dry, sharp text. */
+const DURATION = 1800;
 /** Wetness of the frozen smear copies cross-faded through during a reveal. */
 const STAGES = [1, 0.55, 0.28, 0.12];
 /** Keyframes per reveal; the curves between them are linear. */

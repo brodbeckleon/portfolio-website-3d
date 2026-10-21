@@ -3,7 +3,7 @@
 	import { whenSettled } from '$lib/ink';
 
 	/** ms after the page settles: the hero's staggered ink reveal is done by then. */
-	const INTRO = 2000;
+	const INTRO = 2800;
 
 	let live = $state(false);
 
