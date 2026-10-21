@@ -1,23 +1,23 @@
 import * as THREE from 'three';
-import { DRACOLoader, GLTFLoader } from 'three-stdlib';
+import { GLTFLoader, MeshoptDecoder } from 'three-stdlib';
 
 /**
  * Models are fetched and parsed once per page session and handed out as clones.
- * Leaving and returning to the homepage then costs nothing: no refetch, no
- * re-parse, and the clones share the cached geometries and materials.
+ * Leaving and returning to the homepage then skips the refetch and the re-parse,
+ * and the clones share the cached geometries and materials. The GPU side is not
+ * cached: every visit's scene gets a WebGL context of its own (and gives it up
+ * on the way out), so geometry and textures are uploaded, and shaders compiled,
+ * again each time.
  */
-
-// Also caches the raw files, so anything else using a three loader benefits.
-THREE.Cache.enabled = true;
 
 let loader: GLTFLoader | undefined;
 
 function getLoader(): GLTFLoader {
 	if (!loader) {
-		const draco = new DRACOLoader();
-		draco.setDecoderPath('/draco/');
+		// The models are meshopt-compressed (scripts/optimize-models.mjs): the
+		// decoder is a few KB of inline wasm, with no extra fetch or workers.
 		loader = new GLTFLoader();
-		loader.setDRACOLoader(draco);
+		loader.setMeshoptDecoder(MeshoptDecoder());
 	}
 	return loader;
 }

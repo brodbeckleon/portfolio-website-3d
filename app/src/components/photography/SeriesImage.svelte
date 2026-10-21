@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Attachment } from 'svelte/attachments';
+	import { whenSettled } from '$lib/ink';
 	import { m } from '$lib/paraglide/messages';
 	import type { Photo } from '$lib/photos';
 
@@ -28,23 +29,30 @@
 	 *
 	 * Same contract as $lib/ink: data-shutter is in the server markup, and
 	 * html.ink-ready (motion allowed, JS on its way) hides it until this
-	 * attachment arms it. Without ink-ready the photo is simply there.
+	 * attachment arms it. Without ink-ready the photo is simply there. Like
+	 * the ink, a frame in view at load waits for the page to settle.
 	 */
 	const shutter: Attachment<HTMLElement> = (node) => {
 		if (!document.documentElement.classList.contains('ink-ready')) return;
 
 		armed = true;
+		let detached = false;
 		const observer = new IntersectionObserver(
 			(entries) => {
 				if (!entries.some((entry) => entry.isIntersecting)) return;
 				observer.disconnect();
-				shown = true;
+				whenSettled().then(() => {
+					if (!detached) shown = true;
+				});
 			},
 			{ threshold: 0.2 }
 		);
 		observer.observe(node);
 
-		return () => observer.disconnect();
+		return () => {
+			detached = true;
+			observer.disconnect();
+		};
 	};
 </script>
 

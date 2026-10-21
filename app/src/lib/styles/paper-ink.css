@@ -17,8 +17,8 @@
 	--pi-l-ink-subtle: #55688f; /* 4.9:1 */
 	--pi-l-ink-hover: #142a5a;
 	--pi-l-watermark: #e2dbca;
-	--pi-l-grain-opacity: 0.14;
-	--pi-l-grain-blend: multiply;
+	/* Ink specks at up to 14%: multiply at 0.14, baked in (see --pi-grain-tile). */
+	--pi-l-grain-tile: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 3.2 0 0 0 -0.9'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='gamma' amplitude='-0.14' exponent='0.4545' offset='0.14'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)'/%3E%3C/svg%3E");
 
 	--pi-d-paper: #14130f;
 	--pi-d-paper-2: #1e1d19;
@@ -27,8 +27,8 @@
 	--pi-d-ink-subtle: #80889d; /* 5.3:1 */
 	--pi-d-ink-hover: #d3dcf2;
 	--pi-d-watermark: #221f19;
-	--pi-d-grain-opacity: 0.075;
-	--pi-d-grain-blend: screen;
+	/* Light specks at up to 7.5%: screen at 0.075, baked in. */
+	--pi-d-grain-tile: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 3.2 0 0 0 -0.9'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='gamma' amplitude='0.075' exponent='0.4545' offset='0'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 /* ----- Semantic tokens: light (default) ----- */
@@ -41,8 +41,7 @@
 	--pi-ink-subtle: var(--pi-l-ink-subtle);
 	--pi-ink-hover: var(--pi-l-ink-hover);
 	--pi-watermark: var(--pi-l-watermark);
-	--pi-grain-opacity: var(--pi-l-grain-opacity);
-	--pi-grain-blend: var(--pi-l-grain-blend);
+	--pi-grain-tile: var(--pi-l-grain-tile);
 }
 
 /* ----- Semantic tokens: dark, when the user did NOT force light ----- */
@@ -55,8 +54,7 @@
 		--pi-ink-subtle: var(--pi-d-ink-subtle);
 		--pi-ink-hover: var(--pi-d-ink-hover);
 		--pi-watermark: var(--pi-d-watermark);
-		--pi-grain-opacity: var(--pi-d-grain-opacity);
-		--pi-grain-blend: var(--pi-d-grain-blend);
+		--pi-grain-tile: var(--pi-d-grain-tile);
 	}
 }
 
@@ -69,8 +67,7 @@
 	--pi-ink-subtle: var(--pi-d-ink-subtle);
 	--pi-ink-hover: var(--pi-d-ink-hover);
 	--pi-watermark: var(--pi-d-watermark);
-	--pi-grain-opacity: var(--pi-d-grain-opacity);
-	--pi-grain-blend: var(--pi-d-grain-blend);
+	--pi-grain-tile: var(--pi-d-grain-tile);
 }
 
 /* ----------------------------------------------------------
@@ -86,14 +83,22 @@
 
 	--pi-line: color-mix(in srgb, var(--pi-ink) 40%, transparent);
 
-	/* The paper's grain, one tile for every surface that carries it: the
-	   page layer, the loupe and the fixed bars, which would otherwise read
-	   as smooth patches on grainy paper. Fractal noise reads as paper fibre
-	   where plain turbulence reads as static; stitchTiles hides the seams.
-	   The matrix turns the soft grey noise into opaque specks on mostly
-	   clear paper. Sizes are px: a bare % in a data URI is a broken escape.
-	   Paint it with --pi-grain-opacity and --pi-grain-blend. */
-	--pi-grain-tile: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='3.2 0 0 0 -0.9 3.2 0 0 0 -0.9 3.2 0 0 0 -0.9 0 0 0 0 1'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)'/%3E%3C/svg%3E");
+	/* The paper's grain, one tile per theme for every surface that carries
+	   it: the page layer, the loupe and the fixed bars, which would
+	   otherwise read as smooth patches on grainy paper. Fractal noise reads
+	   as paper fibre where plain turbulence reads as static; stitchTiles
+	   hides the seams. The matrix turns the soft grey noise into specks on
+	   mostly clear paper. Sizes are px: a bare % in a data URI is a broken
+	   escape.
+
+	   Every grain surface lies on plain paper, so the blend it used to be
+	   painted with is baked into the tile's alpha instead: multiply at
+	   opacity o over paper is black at alpha o * (1 - grey), screen is white
+	   at alpha o * grey (the gamma turns the filter's linear grey into the
+	   sRGB one the blend saw). Same pixels, but nothing for the compositor
+	   to blend: a blended layer made it re-blend the page under it on every
+	   frame of the grain's flicker and of every scroll. The tiles live with
+	   the palette above; paint them as a plain background. */
 	--pi-grain-size: 220px;
 	--pi-gutter: clamp(1rem, 0.4rem + 3vw, 3.75rem);
 	--pi-ease-out: cubic-bezier(0.16, 1, 0.3, 1);

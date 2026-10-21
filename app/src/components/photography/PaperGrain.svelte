@@ -1,7 +1,33 @@
+<script lang="ts">
+	import { onMount } from 'svelte';
+	import { whenSettled } from '$lib/ink';
+
+	/** ms after the page settles: the hero's staggered ink reveal is done by then. */
+	const INTRO = 2000;
+
+	let live = $state(false);
+
+	// The flicker waits out the intro: a full-screen layer cutting to a new
+	// offset nine times a second is one more thing for the compositor while
+	// the page starts up and the hero reveals. Until then the grain is there,
+	// just still; without JS it stays still.
+	onMount(() => {
+		let timer = 0;
+		let detached = false;
+		whenSettled().then(() => {
+			if (!detached) timer = window.setTimeout(() => (live = true), INTRO);
+		});
+		return () => {
+			detached = true;
+			clearTimeout(timer);
+		};
+	});
+</script>
+
 <!-- Fixed behind the content and never over it: the photos sit above this
      layer, so the grain textures the paper and never the pictures. -->
 <div class="paper-grain" aria-hidden="true">
-	<div class="paper-grain__tile"></div>
+	<div class="paper-grain__tile" class:is-live={live}></div>
 </div>
 
 <style lang="css">
@@ -11,8 +37,6 @@
 		z-index: 0;
 		overflow: hidden;
 		pointer-events: none;
-		opacity: var(--pi-grain-opacity);
-		mix-blend-mode: var(--pi-grain-blend);
 	}
 
 	/* Oversized so jumping it around never shows an edge: the largest jump
@@ -25,8 +49,12 @@
 		inset: -20%;
 		background-image: var(--pi-grain-tile);
 		background-size: var(--pi-grain-size);
-		animation: paper-grain-shift 0.9s steps(1) infinite;
+		animation: paper-grain-shift 0.9s steps(1) infinite paused;
 		will-change: transform;
+	}
+
+	.paper-grain__tile.is-live {
+		animation-play-state: running;
 	}
 
 	/* Film grain flickers rather than drifts: eight hard cuts between

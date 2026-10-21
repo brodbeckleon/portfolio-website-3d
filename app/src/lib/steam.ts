@@ -176,6 +176,9 @@ export function createSteam(appearance: SteamAppearance): Steam {
 			transparent: true,
 			depthWrite: false,
 			side: THREE.DoubleSide,
+			// Every fragment of a ribbon has the same colour, so both faces blend
+			// the same in one pass as in three's separate back and front passes.
+			forceSinglePass: true,
 			blending: appearance.additive ? THREE.AdditiveBlending : THREE.NormalBlending
 		});
 

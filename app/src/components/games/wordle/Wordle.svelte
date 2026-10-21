@@ -38,6 +38,10 @@
 	// Bumped to cancel a running solver (restart, stop, unmount).
 	let solveRun = 0;
 
+	// Set while a language's list loads, so a second pick cannot start a
+	// competing load whose late answer would replace the first game's word.
+	let loadingList: boolean = $state(false);
+
 	let shakingRow: number = $state(-1);
 	let notice: string = $state('');
 	let noticeTimer: ReturnType<typeof setTimeout> | undefined;
@@ -233,8 +237,14 @@
 	}
 
 	async function setWordleLanguage(lang: WordleLanguage) {
-		await setLanguage(lang);
-		await initWordleGame();
+		if (loadingList) return;
+		loadingList = true;
+		try {
+			await setLanguage(lang);
+			await initWordleGame();
+		} finally {
+			loadingList = false;
+		}
 
 		wordleGameState = 'playing';
 	}
@@ -334,12 +344,14 @@
 					<div class="wordle-dialog-actions">
 						<button
 							class="modern-minimal-secondary-button wordle-dialog-button"
+							disabled={loadingList}
 							onclick={() => setWordleLanguage('en')}
 						>
 							{m.english()}
 						</button>
 						<button
 							class="modern-minimal-secondary-button wordle-dialog-button"
+							disabled={loadingList}
 							onclick={() => setWordleLanguage('de')}
 						>
 							{m.german()}

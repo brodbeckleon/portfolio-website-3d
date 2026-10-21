@@ -4,6 +4,11 @@
 	import { Github, Instagram, Youtube, Linkedin, Share2 } from '@lucide/svelte';
 	import { m } from '$lib/paraglide/messages';
 	import type { WebEras } from '$lib/Types.ts';
+	import github from '$lib/assets/frutiger/GitHub.webp';
+	import instagram from '$lib/assets/frutiger/Instagram.webp';
+	import youtube from '$lib/assets/frutiger/Youtube.webp';
+	import linkedin from '$lib/assets/frutiger/Linkedin.webp';
+	import share from '$lib/assets/frutiger/Share.webp';
 
 	interface SocialsProps {
 		era: WebEras;
@@ -18,38 +23,34 @@
 	let showSocialDropdown = $state(false);
 	let buttonWidth = $state(0);
 
-	const frutigerAeroIcons = {
-		github: '/frutiger-aero-icons/GitHub.png',
-		instagram: '/frutiger-aero-icons/Instagram.png',
-		youtube: '/frutiger-aero-icons/Youtube.png',
-		linkedin: '/frutiger-aero-icons/Linkedin.png',
-		share: '/frutiger-aero-icons/Share.png'
-	};
+	// Imported so Vite content-hashes them into /_app/immutable, which is cached for a
+	// year. Each is 3x its CSS size; the CSS fixes one side, so no width/height here.
+	const frutigerAeroIcons = { github, instagram, youtube, linkedin, share };
 
 	const socialLinks = [
 		{
 			icon: Github,
 			href: 'https://www.github.com/brodbeckleon',
 			text: 'GitHub',
-			png: frutigerAeroIcons.github
+			aeroIcon: frutigerAeroIcons.github
 		},
 		{
 			icon: Instagram,
 			href: 'https://www.instagram.com/leon.brodbeck/',
 			text: 'Instagram',
-			png: frutigerAeroIcons.instagram
+			aeroIcon: frutigerAeroIcons.instagram
 		},
 		{
 			icon: Youtube,
 			href: 'https://www.youtube.com/@leon.brodbeck',
 			text: 'Youtube',
-			png: frutigerAeroIcons.youtube
+			aeroIcon: frutigerAeroIcons.youtube
 		},
 		{
 			icon: Linkedin,
 			href: 'https://www.linkedin.com/in/léon-shin-ichi-brodbeck-b71786240/',
 			text: 'Linkedin',
-			png: frutigerAeroIcons.linkedin
+			aeroIcon: frutigerAeroIcons.linkedin
 		}
 	];
 
@@ -94,7 +95,7 @@
 					class:modern-minimal-dropdown-menu={era === 'modern_minimal'}
 					style:width={showIcons ? `${buttonWidth}px` : undefined}
 				>
-					{#each socialLinks as { icon: IconComponent, href, text, png } (href)}
+					{#each socialLinks as { icon: IconComponent, href, text, aeroIcon } (href)}
 						<button
 							class="mobile-dropdown-item"
 							class:flush={era === 'modern_minimal'}
@@ -109,7 +110,7 @@
 						>
 							<div class:modern-minimal-icon={era === 'modern_minimal'}>
 								{#if era === 'frutiger_aero'}
-									<img src={png} alt={text} class="frutiger-aero-icon" />
+									<img src={aeroIcon} alt={text} class="frutiger-aero-icon" />
 								{:else if showIcons}
 									<IconComponent strokeWidth={era === 'modern_minimal' ? 1.5 : 1} />
 								{:else}
@@ -151,7 +152,7 @@
 			class:earlyweb-container={era === 'early_web'}
 			class:frutiger-aero-container={era === 'frutiger_aero'}
 		>
-			{#each socialLinks as { icon: IconComponent, href, text, png } (href)}
+			{#each socialLinks as { icon: IconComponent, href, text, aeroIcon } (href)}
 				<button
 					class="link"
 					class:glassmorphism-link={era === 'glassmorphism'}
@@ -169,7 +170,7 @@
 						</div>
 					{:else if era === 'frutiger_aero'}
 						<div class="frutiger-aero-icon">
-							<img src={png} alt={text} class="frutiger-aero-icon" />
+							<img src={aeroIcon} alt={text} class="frutiger-aero-icon" />
 						</div>
 					{:else}
 						<span class:earlyweb-link-text={era === 'early_web'}>

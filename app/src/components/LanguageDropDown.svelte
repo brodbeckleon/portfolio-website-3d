@@ -3,6 +3,7 @@
 	import { getLocale, setLocale } from '$lib/paraglide/runtime';
 	import type { WebEras } from '$lib/Types.ts';
 	import { fade } from 'svelte/transition';
+	import frutigerAeroEarthIconPath from '$lib/assets/frutiger/Earth.webp';
 
 	interface LanguageDropDownProps {
 		era: WebEras;
@@ -19,8 +20,6 @@
 
 	let showLangDropdown = $state(false);
 	let buttonWidth = $state(0);
-
-	const frutigerAeroEarthIconPath: string = '/frutiger-aero-icons/Earth.png';
 
 	export const availableLocales = ['en', 'de', 'jp'] as const;
 	export const availableLocaleNames = {
