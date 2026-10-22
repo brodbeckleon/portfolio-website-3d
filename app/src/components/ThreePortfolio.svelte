@@ -733,7 +733,7 @@
 				polaroid = createPolaroid(texture);
 				const card = polaroid.object;
 				// Just above the floor text, so it lies on top of it.
-				card.position.set(0.92, 0.006, 0.17);
+				card.position.set(0.8, 0.006, 0.2);
 				card.rotation.set(-Math.PI / 2, 0, THREE.MathUtils.degToRad(-14));
 				card.updateMatrixWorld(true);
 				await compileAhead(card);
