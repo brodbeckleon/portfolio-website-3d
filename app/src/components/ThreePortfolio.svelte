@@ -1209,11 +1209,11 @@
 		}
 
 		// --- Computer handoff ---
-		// Clicking the Apple II switches it on and has it type a line before
-		// /it loads: the view settles in front of it while the tube warms up,
-		// the keys go down one by one as their letters appear, RETURN, and
-		// the view pushes into the glass. Advanced from animate() on the same
-		// clamped clock as the camera's.
+		// The Apple II is on from the moment the desk appears, its prompt
+		// blinking. Clicking it has it type a line before /it loads: the view
+		// settles in front of it, the keys go down one by one as their letters
+		// appear, RETURN, the answer, and the view pushes into the glass.
+		// Advanced from animate() on the same clamped clock as the camera's.
 
 		// A one-line Applesoft program and what it prints. The Apple II only
 		// has capitals; a character with no key of its own (see SHIFTED) still
@@ -1226,9 +1226,9 @@
 		/** Seconds from the click, like INTRO. */
 		const TERMINAL = {
 			dollyEnd: 0.7,
-			powerStart: 0.1,
-			powerEnd: 0.45,
-			typingStart: 0.7,
+			// The screen is already on, so typing starts while the view is
+			// still settling.
+			typingStart: 0.45,
 			// Between keystrokes, give or take the jitter, so it reads as typed
 			// by someone who knows the keyboard.
 			keyGap: 0.05,
@@ -1245,7 +1245,9 @@
 			keyDown: 0.03,
 			keyUp: 0.05,
 			// Half a cursor blink.
-			blink: 0.27
+			blink: 0.27,
+			// The tube warming up as the desk first appears.
+			warmUp: 0.35
 		};
 		// How far above the screen's own level the view looks from, so the
 		// keyboard stays in the shot.
@@ -1284,6 +1286,14 @@
 		}
 
 		let computerIntro: ComputerIntro | null = null;
+
+		// What the screen shows: the idle prompt, or whatever the intro has
+		// typed so far. Kept as the intro left it while the page changes.
+		const PROMPT = [']'];
+		let terminalLines = PROMPT;
+		let terminalTyping = false;
+		// elapsedTime when the desk was revealed and the tube switched on.
+		let screenOnAt: number | null = null;
 
 		/** Uneven like a person typing, but the same on every visit. */
 		function jitter(index: number) {
@@ -1430,47 +1440,31 @@
 				}
 			}
 
-			if (computerScreen) {
-				const activeTheme = prefersDarkMode ? theme.dark : theme.light;
-				const power = (time - TERMINAL.powerStart) / (TERMINAL.powerEnd - TERMINAL.powerStart);
-				const typed = intro.strokes
-					.filter((stroke) => stroke.at <= time)
-					.map((stroke) => stroke.char)
-					.join('');
-				const lines = [`]${typed}`];
-				if (time >= intro.printAt) lines.push(PRINTED_LINE, ']');
-				// Solid while the keys are going, blinking while it waits.
-				const typing = time >= TERMINAL.typingStart && time < intro.returnAt;
-				computerScreen.draw({
-					power,
-					lines,
-					cursor: typing || Math.floor(time / TERMINAL.blink) % 2 === 0
-				});
-				// A fresh tube flickers before it holds steady.
-				const warming = THREE.MathUtils.clamp(1 - power, 0, 1);
-				const flicker = 1 + 0.3 * warming * Math.sin(time * 90);
-				computerScreen.setGlow(power > 0 ? activeTheme.screenGlow * flicker : 0);
-			}
+			const typed = intro.strokes
+				.filter((stroke) => stroke.at <= time)
+				.map((stroke) => stroke.char)
+				.join('');
+			terminalLines = [`]${typed}`];
+			if (time >= intro.printAt) terminalLines.push(PRINTED_LINE, ']');
+			terminalTyping = time >= TERMINAL.typingStart && time < intro.returnAt;
 
 			if (time >= intro.end) finishComputerIntro();
 		}
 
 		function finishComputerIntro() {
-			// The screen stays lit: it is what the page transition starts from.
-			if (!restoreAfterComputerIntro(true)) return;
+			// The screen keeps what was typed: it is what the page transition
+			// starts from.
+			if (!restoreAfterComputerIntro()) return;
 			leaveFor('/it');
 		}
 
-		/** Keys up, controls back; the screen is switched off unless kept. False if no intro ran. */
-		function restoreAfterComputerIntro(keepScreen: boolean): boolean {
+		/** Keys up, controls back; false if no intro ran. */
+		function restoreAfterComputerIntro(): boolean {
 			if (!computerIntro) return false;
 			computerIntro = null;
+			terminalTyping = false;
 
 			computerKeyboard?.release();
-			if (!keepScreen) {
-				computerScreen?.draw({ power: 0, lines: [], cursor: false });
-				computerScreen?.setGlow(0);
-			}
 			refreshShadows();
 			hoverDirty = true;
 			controls.enabled = true;
@@ -1483,7 +1477,7 @@
 		abandonIntro = () => {
 			if (leavingDesk) return;
 			restoreAfterIntro();
-			restoreAfterComputerIntro(false);
+			if (restoreAfterComputerIntro()) terminalLines = PROMPT;
 		};
 
 		function leaveFor(path: '/photography' | '/it') {
@@ -1494,11 +1488,25 @@
 			goto(resolve(path)).catch(() => {
 				// The navigation failed or was overtaken: hand the desk back.
 				leavingDesk = false;
-				if (path === '/it') {
-					computerScreen?.draw({ power: 0, lines: [], cursor: false });
-					computerScreen?.setGlow(0);
-				}
+				terminalLines = PROMPT;
 			});
+		}
+
+		/** Draws the screen for this frame; the canvas is only redrawn when the picture changes. */
+		function updateScreen() {
+			if (!computerScreen) return;
+			const activeTheme = prefersDarkMode ? theme.dark : theme.light;
+			const power = screenOnAt === null ? 0 : (elapsedTime - screenOnAt) / TERMINAL.warmUp;
+			computerScreen.draw({
+				power,
+				lines: terminalLines,
+				// Solid while the keys are going, blinking while it waits.
+				cursor: terminalTyping || Math.floor(elapsedTime / TERMINAL.blink) % 2 === 0
+			});
+			// A fresh tube flickers before it holds steady.
+			const warming = THREE.MathUtils.clamp(1 - power, 0, 1);
+			const flicker = 1 + 0.3 * warming * Math.sin(elapsedTime * 90);
+			computerScreen.setGlow(power > 0 ? activeTheme.screenGlow * flicker : 0);
 		}
 
 		function onClick(event: MouseEvent) {
@@ -1585,6 +1593,10 @@
 
 		function revealScene() {
 			isLoading = false;
+			// Switched on with the reveal, so the warm-up is seen; already warm
+			// under reduced motion.
+			const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+			screenOnAt = elapsedTime - (reduceMotion ? TERMINAL.warmUp : 0);
 			// Neither is needed to show the scene, so both wait until after the
 			// frame that does.
 			setTimeout(() => {
@@ -1607,8 +1619,9 @@
 		function animate(time: number) {
 			animationFrameId = requestAnimationFrame(animate);
 
-			// Left alone, the only thing moving is the slow steam, which looks the
-			// same at 60 and at 120 fps, so high-refresh screens skip frames. One
+			// Left alone, the only things moving are the slow steam and the
+			// blinking cursor, which look the same at 60 and at 120 fps, so
+			// high-refresh screens skip frames. One
 			// is only skipped when the next still lands within 1/60 s (plus a
 			// millisecond of jitter) of the last one drawn: nothing ever updates
 			// less often than on a 60 Hz screen, and as soon as anything is
@@ -1640,6 +1653,7 @@
 
 			advanceCameraIntro(deltaTime);
 			advanceComputerIntro(deltaTime);
+			updateScreen();
 
 			// The camera counts by the matrix the pick actually reads, which trails
 			// the controls by a frame, rather than by their change event.
