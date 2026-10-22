@@ -50,13 +50,18 @@ for (const [name, resize] of Object.entries(icons)) {
 		.toFile(frutigerTarget(`${name}.webp`));
 }
 
-// --- Homepage polaroid (original in assets-src/images) ---
-// Lies on the desk, seen at a slant and never much more than 300 CSS px
+// --- Homepage polaroids (originals in assets-src/images) ---
+// They lie on the desk, seen at a slant and never much more than 300 CSS px
 // tall, so 768 px wide holds up on HiDPI screens even zoomed in. The
-// transparent rim is what the scene's alpha test cuts the outline from.
-await sharp(at('assets-src/images/polaroid.png'))
-	.resize({ width: 768 })
-	.webp({ quality: 85, alphaQuality: 90, effort: 6 })
-	.toFile(at('src/lib/assets/polaroid.webp'));
+// transparent rim is what the scene's alpha test cuts each outline from.
+// A new one also needs its import in src/lib/sceneModels.ts and an entry in
+// POLAROIDS in ThreePortfolio.svelte.
+const polaroids = ['polaroid'];
+for (const name of polaroids) {
+	await sharp(at(`assets-src/images/${name}.png`))
+		.resize({ width: 768 })
+		.webp({ quality: 85, alphaQuality: 90, effort: 6 })
+		.toFile(at(`src/lib/assets/${name}.webp`));
+}
 
 console.log('images written to src/lib/assets/frutiger and src/lib/assets');

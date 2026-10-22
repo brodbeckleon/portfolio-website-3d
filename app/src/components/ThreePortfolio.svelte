@@ -16,7 +16,7 @@
 	import { MODEL_URLS, TEXTURE_URLS } from '$lib/sceneModels.ts';
 	import { createSteam } from '$lib/steam.ts';
 	import { createHoverGlow } from '$lib/hoverGlow.ts';
-	import { createPolaroid, type Polaroid } from '$lib/polaroid.ts';
+	import { createPolaroid, CURLED, type Polaroid, type PolaroidShape } from '$lib/polaroid.ts';
 	import { rigKeyboard, type ComputerKeyboard } from '$lib/computerKeyboard.ts';
 	import { createComputerScreen, type ComputerScreen } from '$lib/computerScreen.ts';
 	import { initTheme, theme as themeStore } from '$lib/theme.svelte.ts';
@@ -31,8 +31,18 @@
 	const isHelperNeeded: boolean = false;
 	let isLoading = $state(true);
 	let loadedModels = $state(0);
-	// The four models and the polaroid's photo.
-	const totalModels = 5;
+	/**
+	 * The photos lying on the desk, bottom of the pile first: each lies a
+	 * little above the one before, so later cards cover earlier ones. A card
+	 * with another on top of it should take PRESSED_FLAT, so its curled edges
+	 * stay under the top one. x and z are desk positions, angle is degrees.
+	 */
+	const POLAROIDS: { url: string; x: number; z: number; angle: number; shape: PolaroidShape }[] = [
+		{ url: TEXTURE_URLS.polaroid, x: 0.8, z: 0.2, angle: -14, shape: CURLED }
+	];
+
+	// The four models and the photos.
+	const totalModels = 4 + POLAROIDS.length;
 
 	// Shared with the header's toggle, so switching there relights the scene
 	// instead of only recolouring the HTML around it.
@@ -86,6 +96,7 @@
 			steamColor: 0xffffff,
 			steamOpacity: 0.34,
 			steamAdditive: true,
+			polaroidShadowOpacity: 0.6,
 			// Past the bloom threshold, so the phosphor glows off the glass.
 			screenGlow: 2.2
 		},
@@ -127,6 +138,8 @@
 			steamColor: 0xffffff,
 			steamOpacity: 0.5,
 			steamAdditive: false,
+			// The pale desk needs less of it before the card stands out.
+			polaroidShadowOpacity: 0.4,
 			screenGlow: 1.6
 		}
 	};
@@ -716,13 +729,20 @@
 			});
 		});
 
-		// --- Polaroid on the desk ---
-		// Decoration only: it is not picked by the hover or the click.
-		let polaroid: Polaroid | null = null;
+		// --- Polaroids on the desk ---
+		// Decoration only: they are not picked by the hover or the click.
+		const polaroids: Polaroid[] = [];
+		// Just above the floor text, so the bottom card lies on top of it;
+		// then one layer per card, enough to clear the bend of the one below.
+		const POLAROID_HEIGHT = 0.006;
+		const POLAROID_LAYER = 0.005;
 
-		async function addPolaroid() {
+		async function addPolaroid(
+			{ url, x, z, angle, shape }: (typeof POLAROIDS)[number],
+			layer: number
+		) {
 			try {
-				const texture = await new THREE.TextureLoader().loadAsync(TEXTURE_URLS.polaroid);
+				const texture = await new THREE.TextureLoader().loadAsync(url);
 				if (disposed) {
 					texture.dispose();
 					return;
@@ -730,11 +750,11 @@
 				// Lying on the desk it is only ever seen at a slant, where plain
 				// mipmapping smears the photo.
 				texture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
-				polaroid = createPolaroid(texture);
+				const polaroid = createPolaroid(texture, shape, currentTheme.polaroidShadowOpacity);
+				polaroids.push(polaroid);
 				const card = polaroid.object;
-				// Just above the floor text, so it lies on top of it.
-				card.position.set(0.92, 0.006, 0.17);
-				card.rotation.set(-Math.PI / 2, 0, THREE.MathUtils.degToRad(-14));
+				card.position.set(x, POLAROID_HEIGHT + layer * POLAROID_LAYER, z);
+				card.rotation.set(-Math.PI / 2, 0, THREE.MathUtils.degToRad(angle));
 				card.updateMatrixWorld(true);
 				await compileAhead(card);
 				if (disposed) return;
@@ -742,12 +762,12 @@
 				refreshShadows();
 				onModelLoaded();
 			} catch (error) {
-				console.error('[scene] could not load the polaroid', error);
+				console.error(`[scene] could not load the polaroid ${url}`, error);
 				onModelSettled();
 			}
 		}
 
-		addPolaroid();
+		POLAROIDS.forEach(addPolaroid);
 
 		addModel(MODEL_URLS.coffeeCup, (model) => {
 			model.position.set(0.9, 0, -0.375);
@@ -1801,6 +1821,8 @@
 			setModelLighting(cameraModel, newTheme.cameraEnvIntensity);
 			setModelLighting(macintoshModel, newTheme.macEnvIntensity);
 
+			for (const polaroid of polaroids) polaroid.setShadowOpacity(newTheme.polaroidShadowOpacity);
+
 			hoverSpotLight.color.set(newTheme.spotLightColor);
 			hoverSpotLight.decay = newTheme.hoverDecay;
 			hoverSpotLight.penumbra = newTheme.hoverPenumbra;
@@ -1916,7 +1938,7 @@
 					// here would break the next visit to this page.
 					steam.dispose();
 					hoverGlow.dispose();
-					polaroid?.dispose();
+					for (const polaroid of polaroids) polaroid.dispose();
 					computerScreen?.dispose();
 					computerKeyboard?.dispose();
 					floorGeo.dispose();
