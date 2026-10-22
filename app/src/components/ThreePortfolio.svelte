@@ -16,6 +16,8 @@
 	import { MODEL_URLS } from '$lib/sceneModels.ts';
 	import { createSteam } from '$lib/steam.ts';
 	import { createHoverGlow } from '$lib/hoverGlow.ts';
+	import { rigKeyboard, type ComputerKeyboard } from '$lib/computerKeyboard.ts';
+	import { createComputerScreen, type ComputerScreen } from '$lib/computerScreen.ts';
 	import { initTheme, theme as themeStore } from '$lib/theme.svelte.ts';
 	import { onMount } from 'svelte';
 
@@ -39,12 +41,12 @@
 		preloadModels(Object.values(MODEL_URLS));
 	});
 
-	// Set by the scene while the desk camera intro runs. The component only
-	// unmounts once a navigation has finished, so without this a title-bar
-	// link or Back pressed mid-intro would be overridden by the intro's own
-	// goto a few frames later.
-	let abandonCameraIntro: (() => void) | null = null;
-	beforeNavigate(() => abandonCameraIntro?.());
+	// Set by the scene while the desk camera or computer intro runs. The
+	// component only unmounts once a navigation has finished, so without this
+	// a title-bar link or Back pressed mid-intro would be overridden by the
+	// intro's own goto a few frames later.
+	let abandonIntro: (() => void) | null = null;
+	beforeNavigate(() => abandonIntro?.());
 
 	const theme = {
 		dark: {
@@ -81,7 +83,9 @@
 			hoverGlowCore: 0.0,
 			steamColor: 0xffffff,
 			steamOpacity: 0.34,
-			steamAdditive: true
+			steamAdditive: true,
+			// Past the bloom threshold, so the phosphor glows off the glass.
+			screenGlow: 2.2
 		},
 		light: {
 			background: 0xf0f0f0,
@@ -120,7 +124,8 @@
 			hoverGlowCore: 0.45,
 			steamColor: 0xffffff,
 			steamOpacity: 0.5,
-			steamAdditive: false
+			steamAdditive: false,
+			screenGlow: 1.6
 		}
 	};
 
@@ -519,6 +524,10 @@
 
 		let cameraModel: THREE.Object3D;
 		let macintoshModel: THREE.Object3D;
+		let screenMesh: THREE.Mesh | null = null;
+		let keyboardMesh: THREE.Mesh | null = null;
+		let computerScreen: ComputerScreen | null = null;
+		let computerKeyboard: ComputerKeyboard | null = null;
 
 		function forEachStandardMaterial(
 			model: THREE.Object3D | undefined,
@@ -673,7 +682,23 @@
 			model.scale.set(1.8, 1.8, 1.8);
 			model.traverse((obj) => {
 				obj.castShadow = true;
+				if (!(obj instanceof Mesh) || !(obj.material instanceof MeshStandardMaterial)) return;
+				if (obj.material.name === 'monitor_screen_mat') screenMesh = obj;
+				if (obj.material.name === 'appleII_keyboard_mat') keyboardMesh = obj;
 			});
+
+			// Both are set up before the first compile and upload, so the
+			// click that runs the intro has nothing left to build.
+			if (screenMesh) {
+				computerScreen = createComputerScreen(screenMesh.material as MeshStandardMaterial);
+				screenMesh.material = computerScreen.material;
+			}
+			if (keyboardMesh) {
+				computerKeyboard = rigKeyboard(keyboardMesh);
+				if (!computerKeyboard && dev) {
+					console.warn('[scene] keyboard keys not recognised; the intro types without them');
+				}
+			}
 
 			// Near-white case: the same environment that lifts the camera blows
 			// this one out, so it gets a lot less of it.
@@ -919,7 +944,7 @@
 
 		let cameraIntro: CameraIntro | null = null;
 		// Set the moment goto is called, so nothing can navigate a second time.
-		let leavingForPhotography = false;
+		let leavingDesk = false;
 
 		/**
 		 * GLTFLoader runs node names through PropertyBinding.sanitizeNodeName,
@@ -1100,10 +1125,10 @@
 		}
 
 		function playCameraIntro() {
-			if (cameraIntro || leavingForPhotography) return;
+			if (cameraIntro || computerIntro || leavingDesk) return;
 
 			if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-				leaveForPhotography();
+				leaveFor('/photography');
 				return;
 			}
 
@@ -1161,7 +1186,7 @@
 		 */
 		function finishCameraIntro() {
 			if (!restoreAfterIntro()) return;
-			leaveForPhotography();
+			leaveFor('/photography');
 		}
 
 		/** Puts the parts back and hands the desk to the controls; false if no intro ran. */
@@ -1183,21 +1208,281 @@
 			return true;
 		}
 
+		// --- Computer handoff ---
+		// Clicking the Apple II switches it on and has it type a line before
+		// /it loads: the view settles in front of it while the tube warms up,
+		// the keys go down one by one as their letters appear, RETURN, and
+		// the view pushes into the glass. Advanced from animate() on the same
+		// clamped clock as the camera's.
+
+		// The Apple II only has capitals; anything typed here needs a key on
+		// its keyboard to be pressed, but shows on screen either way.
+		const TYPED_LINE = 'HELLO WORLD';
+
+		/** Seconds from the click, like INTRO. */
+		const TERMINAL = {
+			dollyEnd: 0.7,
+			powerStart: 0.1,
+			powerEnd: 0.45,
+			typingStart: 0.75,
+			// Between keystrokes, give or take the jitter, so it reads as typed.
+			keyGap: 0.085,
+			keyJitter: 0.035,
+			// A space is a thumb on a long bar, a touch slower.
+			spaceExtra: 0.04,
+			// From the last letter to RETURN, and from RETURN into the glass.
+			returnPause: 0.22,
+			pushDelay: 0.18,
+			pushDuration: 0.55,
+			// A key snaps down and springs back a little slower.
+			keyDown: 0.035,
+			keyUp: 0.07,
+			// Half a cursor blink.
+			blink: 0.27
+		};
+		// How far above the screen's own level the view looks from, so the
+		// keyboard stays in the shot.
+		const TERMINAL_ELEVATION = THREE.MathUtils.degToRad(16);
+		// How much of the frame the screen and keyboard fill before the push.
+		// Roomy enough to keep the monitor clear of the title bar.
+		const TERMINAL_MARGIN = 1.3;
+		// Under 1 the glass overfills the frame by the end of the push, so the
+		// bezel is gone before the page changes.
+		const PUSH_FILL = 0.7;
+		// The push aims this far above the middle of the glass, as a share of
+		// its height, so the typed line at the top stays in the shot; with
+		// PUSH_FILL it puts the top of the frame on the top of the glass.
+		const PUSH_RAISE = 0.15;
+
+		interface Keystroke {
+			label: string;
+			char: string;
+			at: number;
+		}
+
+		interface ComputerIntro {
+			elapsed: number;
+			fromPosition: THREE.Vector3;
+			fromTarget: THREE.Vector3;
+			viewPosition: THREE.Vector3;
+			viewTarget: THREE.Vector3;
+			pushPosition: THREE.Vector3;
+			pushTarget: THREE.Vector3;
+			strokes: Keystroke[];
+			returnAt: number;
+			pushStart: number;
+			end: number;
+		}
+
+		let computerIntro: ComputerIntro | null = null;
+
+		/** Uneven like a person typing, but the same on every visit. */
+		function jitter(index: number) {
+			const x = Math.sin(index * 12.9898 + 78.233) * 43758.5453;
+			return (x - Math.floor(x)) * 2 - 1;
+		}
+
+		function scheduleKeystrokes() {
+			const strokes: Keystroke[] = [];
+			let at = TERMINAL.typingStart;
+			[...TYPED_LINE].forEach((char, index) => {
+				strokes.push({ label: char, char, at });
+				at +=
+					TERMINAL.keyGap +
+					TERMINAL.keyJitter * jitter(index) +
+					(char === ' ' ? TERMINAL.spaceExtra : 0);
+			});
+			const returnAt = at - TERMINAL.keyGap + TERMINAL.returnPause;
+			strokes.push({ label: 'RETURN', char: '', at: returnAt });
+			return { strokes, returnAt };
+		}
+
+		/** 0 -> 1 -> 0 for one keystroke: snaps down, springs back. */
+		function keyTravel(sinceStroke: number) {
+			if (sinceStroke < 0) return 0;
+			if (sinceStroke < TERMINAL.keyDown) return sinceStroke / TERMINAL.keyDown;
+			return Math.max(0, 1 - (sinceStroke - TERMINAL.keyDown) / TERMINAL.keyUp);
+		}
+
+		/**
+		 * Square on to the computer, whichever way the desk was turned, at a
+		 * distance that fits the monitor and the keyboard; then a point close
+		 * enough to the glass that it fills the view.
+		 */
+		function terminalFraming(screen: THREE.Mesh, keyboard: THREE.Mesh) {
+			const screenBounds = new THREE.Box3().setFromObject(screen);
+			const keyboardBounds = new THREE.Box3().setFromObject(keyboard);
+			const screenCentre = screenBounds.getCenter(new THREE.Vector3());
+			const facing = new THREE.Vector3(0, 0, 1).applyQuaternion(
+				macintoshModel.getWorldQuaternion(new THREE.Quaternion())
+			);
+
+			const halfVertical = THREE.MathUtils.degToRad(camera.fov / 2);
+			const halfHorizontal = Math.atan(Math.tan(halfVertical) * camera.aspect);
+
+			// Weighted to the screen: it is what the shot is about.
+			const viewTarget = keyboardBounds.getCenter(new THREE.Vector3()).lerp(screenCentre, 0.65);
+			const radius = screenBounds
+				.clone()
+				.union(keyboardBounds)
+				.getBoundingSphere(new THREE.Sphere()).radius;
+			const fit = (radius / Math.sin(Math.min(halfVertical, halfHorizontal))) * TERMINAL_MARGIN;
+			const view = facing
+				.clone()
+				.multiplyScalar(Math.cos(TERMINAL_ELEVATION))
+				.setY(Math.sin(TERMINAL_ELEVATION))
+				.normalize();
+
+			const glass = screenBounds.getSize(new THREE.Vector3());
+			const fill =
+				Math.min(glass.y / 2 / Math.tan(halfVertical), glass.x / 2 / Math.tan(halfHorizontal)) *
+				PUSH_FILL;
+
+			return {
+				viewTarget,
+				viewPosition: viewTarget.clone().addScaledVector(view, fit),
+				pushTarget: screenCentre.clone().setY(screenCentre.y + glass.y * PUSH_RAISE),
+				pushPosition: screenCentre
+					.clone()
+					.setY(screenCentre.y + glass.y * PUSH_RAISE)
+					.addScaledVector(facing, fill)
+			};
+		}
+
+		function playComputerIntro() {
+			if (cameraIntro || computerIntro || leavingDesk) return;
+
+			if (
+				!screenMesh ||
+				!keyboardMesh ||
+				window.matchMedia('(prefers-reduced-motion: reduce)').matches
+			) {
+				leaveFor('/it');
+				return;
+			}
+
+			const { strokes, returnAt } = scheduleKeystrokes();
+			const pushStart = returnAt + TERMINAL.pushDelay;
+			computerIntro = {
+				elapsed: 0,
+				fromPosition: camera.position.clone(),
+				fromTarget: controls.target.clone(),
+				...terminalFraming(screenMesh, keyboardMesh),
+				strokes,
+				returnAt,
+				pushStart,
+				end: pushStart + TERMINAL.pushDuration
+			};
+			controls.enabled = false;
+		}
+
+		function easeInCubic(t: number) {
+			return t * t * t;
+		}
+
+		function advanceComputerIntro(deltaTime: number) {
+			const intro = computerIntro;
+			if (!intro) return;
+
+			intro.elapsed += deltaTime;
+			const time = intro.elapsed;
+
+			if (time < intro.pushStart) {
+				const dolly = easeInOutCubic(Math.min(time / TERMINAL.dollyEnd, 1));
+				camera.position.lerpVectors(intro.fromPosition, intro.viewPosition, dolly);
+				controls.target.lerpVectors(intro.fromTarget, intro.viewTarget, dolly);
+			} else {
+				const push = easeInCubic(Math.min((time - intro.pushStart) / TERMINAL.pushDuration, 1));
+				camera.position.lerpVectors(intro.viewPosition, intro.pushPosition, push);
+				controls.target.lerpVectors(intro.viewTarget, intro.pushTarget, push);
+			}
+			camera.lookAt(controls.target);
+
+			// L and O come up twice, so each key takes the deeper of its strokes.
+			if (computerKeyboard) {
+				const travels: Record<string, number> = {};
+				for (const stroke of intro.strokes) {
+					const travel = keyTravel(time - stroke.at);
+					travels[stroke.label] = Math.max(travels[stroke.label] ?? 0, travel);
+				}
+				for (const [label, travel] of Object.entries(travels))
+					computerKeyboard.press(label, travel);
+				// The keys cast their own small shadows while they move.
+				if (
+					time >= TERMINAL.typingStart &&
+					time <= intro.returnAt + TERMINAL.keyDown + TERMINAL.keyUp
+				) {
+					refreshShadows();
+				}
+			}
+
+			if (computerScreen) {
+				const activeTheme = prefersDarkMode ? theme.dark : theme.light;
+				const power = (time - TERMINAL.powerStart) / (TERMINAL.powerEnd - TERMINAL.powerStart);
+				const typed = intro.strokes
+					.filter((stroke) => stroke.at <= time)
+					.map((stroke) => stroke.char)
+					.join('');
+				const returned = time >= intro.returnAt;
+				// Solid while the keys are going, blinking while it waits.
+				const typing = time >= TERMINAL.typingStart && time < intro.returnAt;
+				computerScreen.draw({
+					power,
+					lines: returned ? [`]${TYPED_LINE}`, ']'] : [`]${typed}`],
+					cursor: typing || Math.floor(time / TERMINAL.blink) % 2 === 0
+				});
+				// A fresh tube flickers before it holds steady.
+				const warming = THREE.MathUtils.clamp(1 - power, 0, 1);
+				const flicker = 1 + 0.3 * warming * Math.sin(time * 90);
+				computerScreen.setGlow(power > 0 ? activeTheme.screenGlow * flicker : 0);
+			}
+
+			if (time >= intro.end) finishComputerIntro();
+		}
+
+		function finishComputerIntro() {
+			// The screen stays lit: it is what the page transition starts from.
+			if (!restoreAfterComputerIntro(true)) return;
+			leaveFor('/it');
+		}
+
+		/** Keys up, controls back; the screen is switched off unless kept. False if no intro ran. */
+		function restoreAfterComputerIntro(keepScreen: boolean): boolean {
+			if (!computerIntro) return false;
+			computerIntro = null;
+
+			computerKeyboard?.release();
+			if (!keepScreen) {
+				computerScreen?.draw({ power: 0, lines: [], cursor: false });
+				computerScreen?.setGlow(0);
+			}
+			refreshShadows();
+			hoverDirty = true;
+			controls.enabled = true;
+			return true;
+		}
+
 		// Someone else's navigation (a title-bar link, Back) won the race: drop
 		// the intro without leaving. Our own goto also passes through here, and
-		// by then leavingForPhotography is set, so it is left alone.
-		abandonCameraIntro = () => {
-			if (!leavingForPhotography) restoreAfterIntro();
+		// by then leavingDesk is set, so it is left alone.
+		abandonIntro = () => {
+			if (leavingDesk) return;
+			restoreAfterIntro();
+			restoreAfterComputerIntro(false);
 		};
 
-		function leaveForPhotography() {
+		function leaveFor(path: '/photography' | '/it') {
 			// The scene can be torn down mid-intro (Back, a header link); the
 			// page that replaced it must not then be navigated away from.
-			if (disposed || leavingForPhotography) return;
-			leavingForPhotography = true;
-			goto(resolve('/photography')).catch(() => {
+			if (disposed || leavingDesk) return;
+			leavingDesk = true;
+			goto(resolve(path)).catch(() => {
 				// The navigation failed or was overtaken: hand the desk back.
-				leavingForPhotography = false;
+				leavingDesk = false;
+				if (path === '/it') {
+					computerScreen?.draw({ power: 0, lines: [], cursor: false });
+					computerScreen?.setGlow(0);
+				}
 			});
 		}
 
@@ -1208,12 +1493,24 @@
 			}
 
 			// goto has already run; a click now must not start a second navigation.
-			if (leavingForPhotography) return;
+			if (leavingDesk) return;
 
 			// This listens on window, so it also hears the title bar over the
 			// scene. Mid-intro only a click on the scene itself skips ahead; a
 			// theme toggle or a link is meant for what it landed on.
-			if (cameraIntro && event.target !== renderer.domElement) return;
+			const intro = cameraIntro || computerIntro;
+			if (intro && event.target !== renderer.domElement) return;
+
+			// The visitor has already chosen: any click on the scene now is
+			// impatience, wherever it lands, so it skips to that page.
+			if (cameraIntro) {
+				finishCameraIntro();
+				return;
+			}
+			if (computerIntro) {
+				finishComputerIntro();
+				return;
+			}
 
 			const rect = renderer.domElement.getBoundingClientRect();
 			const clickMouse = new THREE.Vector2();
@@ -1222,28 +1519,20 @@
 
 			raycaster.setFromCamera(clickMouse, camera);
 			const intersects = raycaster.intersectObjects([cameraModel, macintoshModel], true);
+			if (intersects.length === 0) return;
 
-			if (intersects.length > 0) {
-				let current: THREE.Object3D | null = intersects[0].object;
-				while (current) {
-					if (current === macintoshModel) {
-						// Mid-intro the visitor has already chosen; a stray hit on
-						// the Macintosh must not divert them to /it.
-						if (cameraIntro) return;
-						goto(resolve('/it'));
-						return;
-					}
-					if (current === cameraModel) {
-						if (cameraIntro) finishCameraIntro();
-						else playCameraIntro();
-						return;
-					}
-					current = current.parent;
+			let current: THREE.Object3D | null = intersects[0].object;
+			while (current) {
+				if (current === macintoshModel) {
+					playComputerIntro();
+					return;
 				}
+				if (current === cameraModel) {
+					playCameraIntro();
+					return;
+				}
+				current = current.parent;
 			}
-
-			// Any other click during the intro is impatience: skip to the page.
-			if (cameraIntro) finishCameraIntro();
 		}
 
 		// Decided once: isMobile can change on resize, and the listener has to
@@ -1313,13 +1602,18 @@
 			// handoff always runs at full rate.
 			const frameInterval = time - lastFrameTime;
 			lastFrameTime = time;
-			const idle = time - lastActivity > 300 && !activeModel && hoverLevel < 0.004 && !cameraIntro;
+			const idle =
+				time - lastActivity > 300 &&
+				!activeModel &&
+				hoverLevel < 0.004 &&
+				!cameraIntro &&
+				!computerIntro;
 			if (idle && time - lastTime + frameInterval < 1000 / 60 + 1) return;
 
 			// The handoff moves the view itself. Left running, the controls
 			// would pull it back to their fixed polar angle and distance range,
 			// mid-move and again in the frames before the page swaps.
-			if (!cameraIntro && !leavingForPhotography) controls.update();
+			if (!cameraIntro && !computerIntro && !leavingDesk) controls.update();
 
 			// requestAnimationFrame pauses on a hidden tab, so the first frame
 			// back can carry a delta of many seconds. Clamping keeps every
@@ -1330,6 +1624,7 @@
 			flickerTime += deltaTime * 5;
 
 			advanceCameraIntro(deltaTime);
+			advanceComputerIntro(deltaTime);
 
 			// The camera counts by the matrix the pick actually reads, which trails
 			// the controls by a frame, rather than by their change event.
@@ -1529,7 +1824,8 @@
 				// Also what stops an intro cut short here from calling goto later.
 				disposed = true;
 				cameraIntro = null;
-				abandonCameraIntro = null;
+				computerIntro = null;
+				abandonIntro = null;
 				cancelAnimationFrame(animationFrameId);
 
 				if (tracksPointer) {
@@ -1556,6 +1852,8 @@
 					// here would break the next visit to this page.
 					steam.dispose();
 					hoverGlow.dispose();
+					computerScreen?.dispose();
+					computerKeyboard?.dispose();
 					floorGeo.dispose();
 					floorMat.dispose();
 

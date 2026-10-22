@@ -12,33 +12,43 @@
 	let { children } = $props();
 
 	const SHUTTER_CLASS = 'shutter-transition';
+	const SCREEN_CLASS = 'screen-transition';
 
 	/**
-	 * Desk camera -> photography is the one navigation that gets a transition:
-	 * the page behind the AT-1 is revealed like a frame behind a focal-plane
-	 * shutter. Everything else stays an instant swap, so the effect keeps
-	 * meaning "you just took a picture" rather than becoming page chrome.
+	 * The two desk objects are the only navigations that get a transition,
+	 * each finishing what its intro in the scene started. Desk camera ->
+	 * photography reveals the page like a frame behind a focal-plane
+	 * shutter; computer -> IT carries on the push into the monitor's glass.
+	 * Everything else stays an instant swap, so the effects keep their
+	 * meaning rather than becoming page chrome.
 	 */
+	function transitionFor(from?: string | null, to?: string | null): string | null {
+		if (from !== '/') return null;
+		if (to?.startsWith('/photography')) return SHUTTER_CLASS;
+		if (to?.startsWith('/it')) return SCREEN_CLASS;
+		return null;
+	}
+
 	onNavigate((navigation) => {
 		if (!document.startViewTransition) return;
 		if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-		if (navigation.from?.route.id !== '/') return;
-		if (!navigation.to?.route.id?.startsWith('/photography')) return;
+		const transition = transitionFor(navigation.from?.route.id, navigation.to?.route.id);
+		if (!transition) return;
 
 		const root = document.documentElement;
 
 		return new Promise<void>((resolveNavigation) => {
-			// Set before the old state is captured, so the shutter styles below
-			// apply to this transition only and never to a future one.
-			root.classList.add(SHUTTER_CLASS);
+			// Set before the old state is captured, so the styles below apply
+			// to this transition only and never to a future one.
+			root.classList.add(transition);
 
-			const transition = document.startViewTransition(async () => {
+			const viewTransition = document.startViewTransition(async () => {
 				resolveNavigation();
 				await navigation.complete;
 			});
 
-			transition.finished
-				.finally(() => root.classList.remove(SHUTTER_CLASS))
+			viewTransition.finished
+				.finally(() => root.classList.remove(transition))
 				// A cancelled navigation rejects the update callback; that is not
 				// an error here, the class just has to come off.
 				.catch(() => {});
@@ -218,12 +228,46 @@
 		}
 	}
 
-	/* JS never starts the transition under reduced motion; this covers any
+	/* Into the monitor. The scene's own push has already filled the view with
+	   the glass; the old frame keeps going in and burns out to the phosphor
+	   green, while the new page comes up through it. */
+	:global(html.screen-transition::view-transition-old(root)),
+	:global(html.screen-transition::view-transition-new(root)) {
+		mix-blend-mode: normal;
+	}
+
+	:global(html.screen-transition::view-transition-old(root)) {
+		animation: screen-dive 420ms cubic-bezier(0.55, 0, 1, 0.45) both;
+	}
+
+	:global(html.screen-transition::view-transition-new(root)) {
+		animation: screen-surface 420ms cubic-bezier(0.2, 0, 0.2, 1) 120ms both;
+	}
+
+	@keyframes screen-dive {
+		to {
+			transform: scale(1.6);
+			filter: brightness(2.2) saturate(1.4);
+			opacity: 0;
+		}
+	}
+
+	@keyframes screen-surface {
+		from {
+			opacity: 0;
+			filter: brightness(1.6) blur(6px);
+		}
+	}
+
+	/* JS never starts the transitions under reduced motion; this covers any
 	   path that might still get here. */
 	@media (prefers-reduced-motion: reduce) {
 		:global(html.shutter-transition::view-transition-group(*)),
 		:global(html.shutter-transition::view-transition-old(*)),
-		:global(html.shutter-transition::view-transition-new(*)) {
+		:global(html.shutter-transition::view-transition-new(*)),
+		:global(html.screen-transition::view-transition-group(*)),
+		:global(html.screen-transition::view-transition-old(*)),
+		:global(html.screen-transition::view-transition-new(*)) {
 			animation: none !important;
 		}
 
