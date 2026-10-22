@@ -21,8 +21,8 @@ const SEGMENTS_Y = 28;
 
 // How far the contact shadow reaches past the card, and how far it falls
 // towards the back of the desk, away from the key light in front.
-const SHADOW_SPREAD = 1.3;
-const SHADOW_OFFSET = new THREE.Vector2(0.006, 0.014);
+const SHADOW_SPREAD = 1.16;
+const SHADOW_OFFSET = new THREE.Vector2(0.004, 0.01);
 // Just under the card, in the card's own space (its z is up off the desk).
 const SHADOW_DROP = 0.0007;
 
@@ -71,17 +71,16 @@ function createShadowTexture(): THREE.CanvasTexture {
 	const context = canvas.getContext('2d')!;
 	const image = context.createImageData(width, height);
 
-	// Full strength out to the card's own outline, which hides the inside,
-	// then a falloff across the rest of the spread: all of it shows.
+	// The card's outline inside the spread, and how soft its edge is.
 	const halfX = width / 2 / SHADOW_SPREAD;
 	const halfY = height / 2 / SHADOW_SPREAD;
-	const feather = width / 2 - halfX;
+	const feather = (width / 2) * (SHADOW_SPREAD - 1) * 1.6;
 	for (let y = 0; y < height; y += 1) {
 		for (let x = 0; x < width; x += 1) {
-			const dx = Math.max(Math.abs(x + 0.5 - width / 2) - halfX, 0);
-			const dy = Math.max(Math.abs(y + 0.5 - height / 2) - halfY, 0);
+			const dx = Math.max(Math.abs(x + 0.5 - width / 2) - halfX + feather / 2, 0);
+			const dy = Math.max(Math.abs(y + 0.5 - height / 2) - halfY + feather / 2, 0);
 			const t = THREE.MathUtils.clamp(Math.hypot(dx, dy) / feather, 0, 1);
-			image.data[(y * width + x) * 4 + 3] = Math.round(255 * (1 - t) * (1 - t));
+			image.data[(y * width + x) * 4 + 3] = Math.round(255 * (1 - t * t * (3 - 2 * t)));
 		}
 	}
 	context.putImageData(image, 0, 0);

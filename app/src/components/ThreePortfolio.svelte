@@ -96,10 +96,7 @@
 			steamColor: 0xffffff,
 			steamOpacity: 0.34,
 			steamAdditive: true,
-			// Blended in HDR, before tone mapping, where the lit desk sits well
-			// above 1.0: a half-strength shadow there barely shows once the
-			// highlights are rolled off, so these run high.
-			polaroidShadowOpacity: 0.85,
+			polaroidShadowOpacity: 0.6,
 			// Past the bloom threshold, so the phosphor glows off the glass.
 			screenGlow: 2.2
 		},
@@ -141,7 +138,8 @@
 			steamColor: 0xffffff,
 			steamOpacity: 0.5,
 			steamAdditive: false,
-			polaroidShadowOpacity: 0.9,
+			// The pale desk needs less of it before the card stands out.
+			polaroidShadowOpacity: 0.4,
 			screenGlow: 1.6
 		}
 	};
