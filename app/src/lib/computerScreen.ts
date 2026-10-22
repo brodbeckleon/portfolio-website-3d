@@ -18,9 +18,9 @@ const AREA = {
 	height: (0.874 - 0.126) * SIZE
 };
 
-// About half the Apple II's 40 columns, so the line still reads with the
-// whole computer in view.
-const COLUMNS = 18;
+// Fewer than the Apple II's 40 columns, so the program still reads with the
+// whole computer in view, but enough to fit it on one line.
+const COLUMNS = 24;
 const CHAR_WIDTH = AREA.width / COLUMNS;
 // Monospace faces are around 0.6em wide.
 const FONT_SIZE = Math.round(CHAR_WIDTH / 0.6);

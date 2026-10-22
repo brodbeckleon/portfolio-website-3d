@@ -1215,28 +1215,35 @@
 		// the view pushes into the glass. Advanced from animate() on the same
 		// clamped clock as the camera's.
 
-		// The Apple II only has capitals; anything typed here needs a key on
-		// its keyboard to be pressed, but shows on screen either way.
-		const TYPED_LINE = 'HELLO WORLD';
+		// A one-line Applesoft program and what it prints. The Apple II only
+		// has capitals; a character with no key of its own (see SHIFTED) still
+		// shows on screen, just without a key going down.
+		const TYPED_LINE = 'PRINT "HELLO WORLD"';
+		const PRINTED_LINE = 'HELLO WORLD';
+		// Characters the Apple II types with SHIFT and another key.
+		const SHIFTED: Record<string, string> = { '"': '2', '!': '1', '?': '/' };
 
 		/** Seconds from the click, like INTRO. */
 		const TERMINAL = {
 			dollyEnd: 0.7,
 			powerStart: 0.1,
 			powerEnd: 0.45,
-			typingStart: 0.75,
-			// Between keystrokes, give or take the jitter, so it reads as typed.
-			keyGap: 0.085,
-			keyJitter: 0.035,
+			typingStart: 0.7,
+			// Between keystrokes, give or take the jitter, so it reads as typed
+			// by someone who knows the keyboard.
+			keyGap: 0.05,
+			keyJitter: 0.018,
 			// A space is a thumb on a long bar, a touch slower.
-			spaceExtra: 0.04,
-			// From the last letter to RETURN, and from RETURN into the glass.
-			returnPause: 0.22,
-			pushDelay: 0.18,
+			spaceExtra: 0.025,
+			// From the last character to RETURN, from RETURN to the answer
+			// (the interpreter takes a moment), and from the answer into the glass.
+			returnPause: 0.15,
+			printDelay: 0.12,
+			pushDelay: 0.35,
 			pushDuration: 0.55,
 			// A key snaps down and springs back a little slower.
-			keyDown: 0.035,
-			keyUp: 0.07,
+			keyDown: 0.03,
+			keyUp: 0.05,
 			// Half a cursor blink.
 			blink: 0.27
 		};
@@ -1255,7 +1262,8 @@
 		const PUSH_RAISE = 0.15;
 
 		interface Keystroke {
-			label: string;
+			/** Every key that goes down for it: SHIFT as well, for a shifted one. */
+			labels: string[];
 			char: string;
 			at: number;
 		}
@@ -1270,6 +1278,7 @@
 			pushTarget: THREE.Vector3;
 			strokes: Keystroke[];
 			returnAt: number;
+			printAt: number;
 			pushStart: number;
 			end: number;
 		}
@@ -1286,14 +1295,15 @@
 			const strokes: Keystroke[] = [];
 			let at = TERMINAL.typingStart;
 			[...TYPED_LINE].forEach((char, index) => {
-				strokes.push({ label: char, char, at });
+				const shifted = SHIFTED[char];
+				strokes.push({ labels: shifted ? ['SHIFT', shifted] : [char], char, at });
 				at +=
 					TERMINAL.keyGap +
 					TERMINAL.keyJitter * jitter(index) +
 					(char === ' ' ? TERMINAL.spaceExtra : 0);
 			});
 			const returnAt = at - TERMINAL.keyGap + TERMINAL.returnPause;
-			strokes.push({ label: 'RETURN', char: '', at: returnAt });
+			strokes.push({ labels: ['RETURN'], char: '', at: returnAt });
 			return { strokes, returnAt };
 		}
 
@@ -1362,7 +1372,8 @@
 			}
 
 			const { strokes, returnAt } = scheduleKeystrokes();
-			const pushStart = returnAt + TERMINAL.pushDelay;
+			const printAt = returnAt + TERMINAL.printDelay;
+			const pushStart = printAt + TERMINAL.pushDelay;
 			computerIntro = {
 				elapsed: 0,
 				fromPosition: camera.position.clone(),
@@ -1370,6 +1381,7 @@
 				...terminalFraming(screenMesh, keyboardMesh),
 				strokes,
 				returnAt,
+				printAt,
 				pushStart,
 				end: pushStart + TERMINAL.pushDuration
 			};
@@ -1398,12 +1410,14 @@
 			}
 			camera.lookAt(controls.target);
 
-			// L and O come up twice, so each key takes the deeper of its strokes.
+			// Keys come up more than once (L, O, R, SHIFT), so each takes the deepest of its strokes.
 			if (computerKeyboard) {
 				const travels: Record<string, number> = {};
 				for (const stroke of intro.strokes) {
 					const travel = keyTravel(time - stroke.at);
-					travels[stroke.label] = Math.max(travels[stroke.label] ?? 0, travel);
+					for (const label of stroke.labels) {
+						travels[label] = Math.max(travels[label] ?? 0, travel);
+					}
 				}
 				for (const [label, travel] of Object.entries(travels))
 					computerKeyboard.press(label, travel);
@@ -1423,12 +1437,13 @@
 					.filter((stroke) => stroke.at <= time)
 					.map((stroke) => stroke.char)
 					.join('');
-				const returned = time >= intro.returnAt;
+				const lines = [`]${typed}`];
+				if (time >= intro.printAt) lines.push(PRINTED_LINE, ']');
 				// Solid while the keys are going, blinking while it waits.
 				const typing = time >= TERMINAL.typingStart && time < intro.returnAt;
 				computerScreen.draw({
 					power,
-					lines: returned ? [`]${TYPED_LINE}`, ']'] : [`]${typed}`],
+					lines,
 					cursor: typing || Math.floor(time / TERMINAL.blink) % 2 === 0
 				});
 				// A fresh tube flickers before it holds steady.
