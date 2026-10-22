@@ -1,6 +1,6 @@
 /**
- * Rebuilds the Frutiger Aero images in src/lib/assets/frutiger from their
- * originals. The photography page's photos are not handled here:
+ * Rebuilds the Frutiger Aero images in src/lib/assets/frutiger, and the
+ * homepage's polaroid texture, from their originals. The photography page's photos are not handled here:
  * @sveltejs/enhanced-img encodes those at build time.
  *
  * sharp is not an app dependency, so install it ad hoc first:
@@ -50,4 +50,13 @@ for (const [name, resize] of Object.entries(icons)) {
 		.toFile(frutigerTarget(`${name}.webp`));
 }
 
-console.log('images written to src/lib/assets/frutiger');
+// --- Homepage polaroid (original in assets-src/images) ---
+// Lies on the desk, seen at a slant and never much more than 300 CSS px
+// tall, so 768 px wide holds up on HiDPI screens even zoomed in. The
+// transparent rim is what the scene's alpha test cuts the outline from.
+await sharp(at('assets-src/images/polaroid.png'))
+	.resize({ width: 768 })
+	.webp({ quality: 85, alphaQuality: 90, effort: 6 })
+	.toFile(at('src/lib/assets/polaroid.webp'));
+
+console.log('images written to src/lib/assets/frutiger and src/lib/assets');

@@ -13,9 +13,10 @@
 	import { resolve } from '$app/paths';
 	import { m } from '$lib/paraglide/messages';
 	import { loadModel, preloadModels } from '$lib/modelCache.ts';
-	import { MODEL_URLS } from '$lib/sceneModels.ts';
+	import { MODEL_URLS, TEXTURE_URLS } from '$lib/sceneModels.ts';
 	import { createSteam } from '$lib/steam.ts';
 	import { createHoverGlow } from '$lib/hoverGlow.ts';
+	import { createPolaroid, type Polaroid } from '$lib/polaroid.ts';
 	import { rigKeyboard, type ComputerKeyboard } from '$lib/computerKeyboard.ts';
 	import { createComputerScreen, type ComputerScreen } from '$lib/computerScreen.ts';
 	import { initTheme, theme as themeStore } from '$lib/theme.svelte.ts';
@@ -30,7 +31,8 @@
 	const isHelperNeeded: boolean = false;
 	let isLoading = $state(true);
 	let loadedModels = $state(0);
-	const totalModels = 4;
+	// The four models and the polaroid's photo.
+	const totalModels = 5;
 
 	// Shared with the header's toggle, so switching there relights the scene
 	// instead of only recolouring the HTML around it.
@@ -713,6 +715,39 @@
 				obj.castShadow = true;
 			});
 		});
+
+		// --- Polaroid on the desk ---
+		// Decoration only: it is not picked by the hover or the click.
+		let polaroid: Polaroid | null = null;
+
+		async function addPolaroid() {
+			try {
+				const texture = await new THREE.TextureLoader().loadAsync(TEXTURE_URLS.polaroid);
+				if (disposed) {
+					texture.dispose();
+					return;
+				}
+				// Lying on the desk it is only ever seen at a slant, where plain
+				// mipmapping smears the photo.
+				texture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+				polaroid = createPolaroid(texture);
+				const card = polaroid.object;
+				// Just above the floor text, so it lies on top of it.
+				card.position.set(0.92, 0.006, 0.17);
+				card.rotation.set(-Math.PI / 2, 0, THREE.MathUtils.degToRad(-14));
+				card.updateMatrixWorld(true);
+				await compileAhead(card);
+				if (disposed) return;
+				scene.add(card);
+				refreshShadows();
+				onModelLoaded();
+			} catch (error) {
+				console.error('[scene] could not load the polaroid', error);
+				onModelSettled();
+			}
+		}
+
+		addPolaroid();
 
 		addModel(MODEL_URLS.coffeeCup, (model) => {
 			model.position.set(0.9, 0, -0.375);
@@ -1867,6 +1902,7 @@
 					// here would break the next visit to this page.
 					steam.dispose();
 					hoverGlow.dispose();
+					polaroid?.dispose();
 					computerScreen?.dispose();
 					computerKeyboard?.dispose();
 					floorGeo.dispose();

@@ -10,9 +10,16 @@ import { paraglideMiddleware } from '$lib/paraglide/server';
 // Imported dynamically on purpose: SvelteKit copies every asset that server
 // code imports statically into the serverless function, and the hook only
 // needs the URLs, not 2 MB of models.
-const modelPreloads = import('$lib/sceneModels.ts').then(({ MODEL_URLS }) =>
-	Object.values(MODEL_URLS).map((url) => `<${url}>; rel=preload; as=fetch; crossorigin=anonymous`)
-);
+// TextureLoader loads through an image element, also with crossorigin set to
+// anonymous, so the textures are hinted as images.
+const modelPreloads = import('$lib/sceneModels.ts').then(({ MODEL_URLS, TEXTURE_URLS }) => [
+	...Object.values(MODEL_URLS).map(
+		(url) => `<${url}>; rel=preload; as=fetch; crossorigin=anonymous`
+	),
+	...Object.values(TEXTURE_URLS).map(
+		(url) => `<${url}>; rel=preload; as=image; crossorigin=anonymous`
+	)
+]);
 
 const handleParaglide: Handle = ({ event, resolve }) =>
 	paraglideMiddleware(event.request, async ({ request, locale }) => {
