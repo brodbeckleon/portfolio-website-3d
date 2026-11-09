@@ -2,6 +2,7 @@
 	import '@fontsource-variable/bodoni-moda/opsz.css';
 	import '@fontsource/shippori-mincho/400.css';
 	import TitleBar from '../TitleBar.svelte';
+	import Seo from '../Seo.svelte';
 	import PaperGrain from './PaperGrain.svelte';
 	import InkCursor from './InkCursor.svelte';
 	import PhotoHero from './PhotoHero.svelte';
@@ -74,18 +75,25 @@
 	});
 </script>
 
-<svelte:head>
-	{#if openPhoto}
-		<title>{m.photo_page_title({ name: openPhoto.alt() })}</title>
-		<meta property="og:title" content={openPhoto.alt()} />
-		<meta property="og:image" content={new URL(openPhoto.image.img.src, page.url).href} />
-		<meta property="og:image:width" content={String(openPhoto.image.img.w)} />
-		<meta property="og:image:height" content={String(openPhoto.image.img.h)} />
-		<meta property="og:image:alt" content={openPhoto.alt()} />
-	{:else}
-		<title>{m.photography()} · {m.leon_shinichi()}</title>
-	{/if}
-</svelte:head>
+{#if openPhoto}
+	<Seo
+		title={m.seo_photo_title({ name: openPhoto.alt() })}
+		description={m.seo_photo_description({ name: openPhoto.alt() })}
+		path={`/photography/${openPhoto.id}`}
+		image={{
+			src: openPhoto.image.img.src,
+			width: openPhoto.image.img.w,
+			height: openPhoto.image.img.h,
+			alt: openPhoto.alt()
+		}}
+	/>
+{:else}
+	<Seo
+		title={m.seo_photography_title()}
+		description={m.seo_photography_description()}
+		path="/photography"
+	/>
+{/if}
 
 <div class="photography-page paper-ink modern-minimal-font">
 	<PaperGrain />

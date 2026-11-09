@@ -1,6 +1,7 @@
 <script lang="ts">
 	import ThreeStateToggle from '../../components/it/ThreeStateToggle.svelte';
 	import TitleBar from '../../components/TitleBar.svelte';
+	import Seo from '../../components/Seo.svelte';
 	import type { WebEras } from '$lib/Types.ts';
 	import { m } from '$lib/paraglide/messages';
 	import { browser } from '$app/environment';
@@ -73,6 +74,8 @@
 		return () => window.removeEventListener('resize', checkIfMobile);
 	});
 </script>
+
+<Seo title={m.seo_it_title()} description={m.seo_it_description()} path="/it" />
 
 <div
 	class="it-page"
