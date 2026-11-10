@@ -7,8 +7,8 @@
  */
 export const SITE_URL = 'https://brodbeck-leon-shinichi.vercel.app';
 
-/** The name people search for. The wordmark on the page only shows the first names. */
-export const PERSON_NAME = 'Léon Brodbeck';
+/** The full name, as the wordmark shows it. */
+export const PERSON_NAME = "Léon Shin'ichi Brodbeck";
 
 /** Profiles that are the same person, so Google can tie them to this site. */
 export const PROFILES = [
@@ -22,13 +22,17 @@ export function absoluteUrl(path: string): string {
 	return new URL(path, SITE_URL).href;
 }
 
-/** schema.org Person for the homepage, the page a name search should land on. */
-export function personJsonLd(description: string): string {
-	const data = {
-		'@context': 'https://schema.org',
+/**
+ * schema.org data for the homepage, the page a name search should land on:
+ * the Person, and the WebSite whose name Google shows above the result. On a
+ * shared host like vercel.app it otherwise falls back to the host's name.
+ */
+export function homeJsonLd(description: string): string {
+	const person = {
 		'@type': 'Person',
+		'@id': absoluteUrl('/#person'),
 		name: PERSON_NAME,
-		alternateName: ['Leon Brodbeck', "Léon Shin'ichi Brodbeck", "Léon Shin'ichi"],
+		alternateName: ['Léon Brodbeck', 'Leon Brodbeck', 'Leon Shinichi Brodbeck', "Léon Shin'ichi"],
 		givenName: 'Léon',
 		familyName: 'Brodbeck',
 		url: absoluteUrl('/'),
@@ -43,6 +47,14 @@ export function personJsonLd(description: string): string {
 		},
 		sameAs: PROFILES
 	};
+	const website = {
+		'@type': 'WebSite',
+		name: PERSON_NAME,
+		alternateName: 'Léon Brodbeck',
+		url: absoluteUrl('/'),
+		author: { '@id': person['@id'] }
+	};
+	const data = { '@context': 'https://schema.org', '@graph': [website, person] };
 	// A "</script>" inside a string would close the tag early.
 	return JSON.stringify(data).replace(/</g, '\\u003c');
 }

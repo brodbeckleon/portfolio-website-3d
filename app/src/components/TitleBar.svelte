@@ -215,6 +215,10 @@
 			height: 48px;
 			margin: 0;
 			text-align: center;
+			/* The full name has to stay on one line in the fixed-height bar,
+			   next to the theme toggle on content routes, on a 360px phone. */
+			font-size: clamp(1.125rem, 6vw, 2rem);
+			white-space: nowrap;
 		}
 
 		.mobile-footer {
