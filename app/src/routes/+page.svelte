@@ -3,7 +3,7 @@
 	import TitleBar from '../components/TitleBar.svelte';
 	import Seo from '../components/Seo.svelte';
 	import { m } from '$lib/paraglide/messages';
-	import { personJsonLd } from '$lib/seo';
+	import { homeJsonLd } from '$lib/seo';
 	import { resolve } from '$app/paths';
 	import { browser } from '$app/environment';
 	import { onMount } from 'svelte';
@@ -37,8 +37,7 @@
 
 <svelte:head>
 	<!-- eslint-disable-next-line svelte/no-at-html-tags -- built from our own constants -->
-	{@html `<script type="application/ld+json">${personJsonLd(m.seo_home_description())}</` +
-		`script>`}
+	{@html `<script type="application/ld+json">${homeJsonLd(m.seo_home_description())}</` + `script>`}
 </svelte:head>
 
 <div class="home-page">
