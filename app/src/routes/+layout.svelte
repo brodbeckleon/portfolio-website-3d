@@ -1,5 +1,5 @@
 <script lang="ts">
-	import favicon from '$lib/assets/favicon.svg';
+	import favicon from /assets/favicon.svg;
 	import '@fontsource-variable/inter/wght.css';
 	import '$lib/styles/layout.css';
 	import '$lib/styles/glassmorphism.css';
@@ -60,13 +60,16 @@
 	<link rel="icon" href={favicon} />
 </svelte:head>
 
-<div class="wip-banner" role="status" aria-live="polite">
+{@render children()}
+
+<!-- After the page in the markup, so the first text a crawler reads is the
+     page's own heading and not this notice; `order` still lays it out first.
+     data-nosnippet keeps it out of Google's result snippets altogether. -->
+<div class="wip-banner" role="status" aria-live="polite" data-nosnippet>
 	<span class="wip-banner__dot" aria-hidden="true"></span>
 	<strong>{m.wip_banner_title()}</strong>
 	<span class="wip-banner__body">{m.wip_banner_body()}</span>
 </div>
-
-{@render children()}
 
 <!-- The curtain's leading edge. Hidden except during the shutter transition,
      where it is captured as its own layer so it can run ahead of the wipe. -->
@@ -84,6 +87,8 @@
 		position: sticky;
 		top: 0;
 		z-index: 1100;
+		/* Body is a flex column (below): first on screen, last in the markup. */
+		order: -1;
 		display: flex;
 		flex-wrap: wrap;
 		gap: 0.5rem;
