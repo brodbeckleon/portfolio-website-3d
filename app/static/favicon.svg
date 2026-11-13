@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+	<!-- A viewfinder framing a terminal prompt: the photographer and the
+	     developer in one mark. Ground and frame are the homepage's dark and
+	     light grounds, the prompt is the phosphor green of its computer screen. -->
+	<rect width="64" height="64" rx="14" fill="#2a1e15" />
+	<g fill="none" stroke-linecap="round" stroke-linejoin="round">
+		<path stroke="#e0d5c8" stroke-width="5" d="M13 22V13h9M42 13h9v9M51 42v9h-9M22 51h-9v-9" />
+		<path stroke="#5dff8a" stroke-width="5.5" d="M21.5 23.5l8.5 8.5-8.5 8.5M35 41.5h8.5" />
+	</g>
+</svg>

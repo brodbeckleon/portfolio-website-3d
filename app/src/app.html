@@ -8,6 +8,12 @@
 		<meta name="apple-mobile-web-app-capable" content="yes" />
 		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 		<meta name="google-site-verification" content="xee6o_1elBHpFB2ecRxF0jNW3Apri5ILPRugI8gkUq8" />
+		<!-- The .ico names its sizes so that browsers which read SVG prefer the
+		     SVG; Google and older browsers take the .ico. -->
+		<link rel="icon" href="%sveltekit.assets%/favicon.ico" sizes="16x16 32x32 48x48" />
+		<link rel="icon" href="%sveltekit.assets%/favicon.svg" type="image/svg+xml" />
+		<link rel="apple-touch-icon" href="%sveltekit.assets%/apple-touch-icon.png" />
+		<link rel="manifest" href="%sveltekit.assets%/site.webmanifest" />
 		<style>
 			html {
 				min-height: 100%;

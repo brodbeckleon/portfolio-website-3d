@@ -1,5 +1,4 @@
 <script lang="ts">
-	import favicon from /assets/favicon.svg;
 	import '@fontsource-variable/inter/wght.css';
 	import '$lib/styles/layout.css';
 	import '$lib/styles/glassmorphism.css';
@@ -55,10 +54,6 @@
 		});
 	});
 </script>
-
-<svelte:head>
-	<link rel="icon" href={favicon} />
-</svelte:head>
 
 {@render children()}
 
