@@ -12,7 +12,7 @@ export const PERSON_NAME = "Léon Shin'ichi Brodbeck";
 
 /** Profiles that are the same person, so Google can tie them to this site. */
 export const PROFILES = [
-	'https://www.github.com/brodbeckleon',
+	'https://github.com/brodbeckleon',
 	'https://www.instagram.com/leon.brodbeck/',
 	'https://www.youtube.com/@leon.brodbeck',
 	'https://www.linkedin.com/in/léon-shin-ichi-brodbeck-b71786240/'
