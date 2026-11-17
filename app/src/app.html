@@ -40,10 +40,12 @@
 		</style>
 		<script>
 			// Apply the stored theme before first paint so there is no flash of
-			// the wrong colour scheme. "system" simply leaves data-theme unset.
+			// the wrong colour scheme. "system" simply leaves data-theme unset,
+			// and so does a phone: it has no switch and always follows the system.
 			try {
 				const stored = localStorage.getItem('theme');
-				if (stored === 'light' || stored === 'dark') {
+				const isMobile = window.matchMedia('(max-width: 768px)').matches;
+				if (!isMobile && (stored === 'light' || stored === 'dark')) {
 					document.documentElement.dataset.theme = stored;
 				}
 			} catch {
