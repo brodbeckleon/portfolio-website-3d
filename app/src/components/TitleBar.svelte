@@ -18,7 +18,8 @@
 
 	let isModernMinimal = $derived(era === 'modern_minimal');
 
-	// Only these eras read data-theme, so only they get a light/dark switch.
+	// Only these eras read data-theme, so only they get a light/dark switch,
+	// and only on desktop: phones always follow the system.
 	let hasThemeToggle = $derived(era === 'modern_minimal' || era === 'glassmorphism');
 </script>
 
@@ -80,17 +81,9 @@
 					{m.leon_shinichi()}
 				</a>
 			</h1>
-			{#if compact && hasThemeToggle}
-				<div class="mobile-header-actions">
-					<ThemeToggle {era} />
-				</div>
-			{/if}
 		</div>
 		<div class="mobile-footer" style:z-index="1000">
 			<Socials {era} {isMobile} />
-			{#if !compact && hasThemeToggle}
-				<ThemeToggle {era} />
-			{/if}
 			<LanguageDropDown {era} {isMobile} />
 		</div>
 	{/if}
@@ -179,11 +172,6 @@
 		padding: 0;
 	}
 
-	.mobile-header-actions {
-		display: flex;
-		align-items: center;
-	}
-
 	/** mobile **/
 	@media (max-width: 768px) {
 		.title-bar {
@@ -215,8 +203,8 @@
 			height: 48px;
 			margin: 0;
 			text-align: center;
-			/* The full name has to stay on one line in the fixed-height bar,
-			   next to the theme toggle on content routes, on a 360px phone. */
+			/* The full name has to stay on one line in the fixed-height bar
+			   on a 360px phone. */
 			font-size: clamp(1.125rem, 6vw, 2rem);
 			white-space: nowrap;
 		}
